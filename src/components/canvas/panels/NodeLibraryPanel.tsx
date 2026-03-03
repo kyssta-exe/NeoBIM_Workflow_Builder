@@ -31,6 +31,9 @@ function getIcon(name: string, size = 13): React.ReactNode {
   return <LucideIcons.Box size={size} strokeWidth={1.5} />;
 }
 
+// ─── Live vs Preview badge ───────────────────────────────────────────────────
+const LIVE_NODE_IDS = new Set(["TR-003", "GN-003", "TR-008", "EX-002"]);
+
 // ─── Filter chips ─────────────────────────────────────────────────────────────
 
 const FILTERS: { label: string; value: "all" | NodeCategory }[] = [
@@ -230,11 +233,30 @@ function NodeItem({
       {/* Text */}
       <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
         <div style={{
-          fontSize: 13, fontWeight: 500, color: "#F0F0F5",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          lineHeight: 1.2,
+          display: "flex", alignItems: "center", gap: 5,
         }}>
-          {highlightText(node.name)}
+          <span style={{
+            fontSize: 13, fontWeight: 500, color: "#F0F0F5",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            lineHeight: 1.2, flex: 1,
+          }}>
+            {highlightText(node.name)}
+          </span>
+          {LIVE_NODE_IDS.has(node.id) ? (
+            <span style={{
+              fontSize: 8, fontWeight: 700, color: "#10B981",
+              padding: "1px 4px", borderRadius: 3,
+              background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)",
+              flexShrink: 0,
+            }}>LIVE</span>
+          ) : (
+            <span style={{
+              fontSize: 8, fontWeight: 600, color: "#3A3A4E",
+              padding: "1px 4px", borderRadius: 3,
+              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+              flexShrink: 0,
+            }}>PREVIEW</span>
+          )}
         </div>
         <div style={{ fontSize: 10, color: "#3A3A4E", marginTop: 2 }}>
           {node.id} · {node.executionTime ?? "—"}

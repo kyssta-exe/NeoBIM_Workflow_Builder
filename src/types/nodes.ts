@@ -52,6 +52,7 @@ export interface WorkflowNodeData extends Record<string, unknown> {
   icon: string;
   executionTime?: string; // e.g. "< 2s"
   artifactId?: string;   // ID of artifact produced during execution
+  inputValue?: string;   // User-editable value for IN-001 (text) and IN-004 (file path)
 }
 
 export interface WorkflowEdge {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   Workflow,
@@ -15,6 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
+  LogOut,
+  History,
 } from "lucide-react";
 import { PREBUILT_WORKFLOWS } from "@/constants/prebuilt-workflows";
 
@@ -23,6 +26,7 @@ import { PREBUILT_WORKFLOWS } from "@/constants/prebuilt-workflows";
 const NAV_ITEMS = [
   { href: "/dashboard",            label: "Dashboard",   icon: LayoutDashboard, exact: true },
   { href: "/dashboard/workflows",  label: "My Workflows",icon: Workflow },
+  { href: "/dashboard/history",    label: "History",     icon: History },
   { href: "/dashboard/templates",  label: "Templates",   icon: BookOpen,  badge: String(PREBUILT_WORKFLOWS.length) },
   { href: "/dashboard/community",  label: "Community",   icon: Globe },
   { href: "/dashboard/settings",   label: "Settings",    icon: Settings },
@@ -32,6 +36,7 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname    = usePathname();
+  const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
 
   // Delay label appearance on expand so the sidebar opens first
@@ -153,52 +158,70 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* ── Free plan card ───────────────────────────────────────────────── */}
+      {/* ── User info + sign out ─────────────────────────────────────────── */}
       {showLabels && (
         <div style={{ padding: "10px 10px 12px", borderTop: "1px solid #1E1E2E", flexShrink: 0 }}>
-          {/* Gradient border wrapper */}
-          <div style={{
-            borderRadius: 10,
-            padding: "1px",
-            background: "linear-gradient(135deg, rgba(79,138,255,0.5) 0%, rgba(139,92,246,0.5) 100%)",
-          }}>
-            <div style={{ borderRadius: 9, background: "#0E0E16", padding: "10px 11px" }}>
-              {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
-                  <span style={{ fontSize: 10, fontWeight: 600, color: "#10B981" }}>Free Plan</span>
-                </div>
-                <span style={{ fontSize: 9, color: "#3A3A50", fontVariantNumeric: "tabular-nums" }}>3 / 10 runs</span>
-              </div>
-
-              {/* Progress bar */}
-              <div style={{ height: 3, borderRadius: 2, background: "#1A1A26", marginBottom: 8, overflow: "hidden" }}>
+          {session?.user ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* User row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{
-                  height: "100%", width: "30%", borderRadius: 2,
-                  background: "linear-gradient(90deg, #4F8AFF 0%, #8B5CF6 100%)",
-                }} />
+                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                  background: "linear-gradient(135deg, #4F8AFF 0%, #8B5CF6 100%)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, fontWeight: 700, color: "#fff",
+                  overflow: "hidden",
+                }}>
+                  {session.user.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={session.user.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    (session.user.name ?? session.user.email ?? "U")[0].toUpperCase()
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#E0E0EA", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {session.user.name ?? "User"}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#55556A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {session.user.email}
+                  </div>
+                </div>
               </div>
 
-              <p style={{ fontSize: 10, color: "#55556A", lineHeight: 1.5, margin: "0 0 7px" }}>
-                Upgrade for unlimited executions &amp; publishing.
-              </p>
+              {/* Upgrade + Sign out row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Link
+                  href="/dashboard/settings"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 600, color: "#4F8AFF", textDecoration: "none" }}
+                >
+                  <TrendingUp size={9} />
+                  Upgrade
+                </Link>
 
-              <Link
-                href="/dashboard/settings"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 4,
-                  fontSize: 10, fontWeight: 600, color: "#4F8AFF",
-                  textDecoration: "none", transition: "color 0.1s",
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#7AABFF"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#4F8AFF"; }}
-              >
-                <TrendingUp size={9} />
-                Upgrade to Pro
-              </Link>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    fontSize: 10, color: "#55556A", background: "none", border: "none",
+                    cursor: "pointer", padding: 0, transition: "color 0.1s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "#EF4444"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "#55556A"; }}
+                >
+                  <LogOut size={10} />
+                  Sign out
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <Link
+              href="/login"
+              style={{ display: "block", textAlign: "center", fontSize: 11, color: "#4F8AFF", textDecoration: "none" }}
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import type { WorkflowNode, WorkflowEdge, NodeStatus } from "@/types/nodes";
 import type { Workflow, WorkflowTemplate, CreationMode } from "@/types/workflow";
 import { generateId } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface WorkflowState {
   // Current workflow
@@ -40,12 +41,17 @@ interface WorkflowState {
   markClean: () => void;
   setSaving: (isSaving: boolean) => void;
 
+  // Async DB persistence
+  saveWorkflow: (name?: string) => Promise<string | null>; // returns workflow id
+  loadWorkflow: (id: string) => Promise<void>;
+  deleteWorkflow: (id: string) => Promise<void>;
+
   // Reset
   resetCanvas: () => void;
 }
 
 export const useWorkflowStore = create<WorkflowState>()(
-  subscribeWithSelector((set) => ({
+  subscribeWithSelector((set, get) => ({
     currentWorkflow: null,
     nodes: [],
     edges: [],
@@ -175,6 +181,75 @@ export const useWorkflowStore = create<WorkflowState>()(
     markDirty: () => set({ isDirty: true }),
     markClean: () => set({ isDirty: false }),
     setSaving: (isSaving) => set({ isSaving }),
+
+    saveWorkflow: async (name) => {
+      const state = get();
+      set({ isSaving: true });
+      try {
+        const tileGraph = { nodes: state.nodes, edges: state.edges };
+        if (state.currentWorkflow?.id && !state.currentWorkflow.id.includes("-")) {
+          // Has a real DB id — update
+          await api.workflows.update(state.currentWorkflow.id, {
+            name: name ?? state.currentWorkflow.name,
+            tileGraph,
+          });
+          set({ isDirty: false });
+          return state.currentWorkflow.id;
+        } else {
+          // Create new
+          const { workflow } = await api.workflows.create({
+            name: name ?? state.currentWorkflow?.name ?? "Untitled Workflow",
+            description: state.currentWorkflow?.description ?? undefined,
+            tags: state.currentWorkflow?.tags ?? [],
+            tileGraph,
+          });
+          set((s) => ({
+            isDirty: false,
+            currentWorkflow: s.currentWorkflow
+              ? { ...s.currentWorkflow, id: workflow.id }
+              : null,
+          }));
+          return workflow.id;
+        }
+      } catch (err) {
+        console.error("Save failed:", err);
+        return null;
+      } finally {
+        set({ isSaving: false });
+      }
+    },
+
+    loadWorkflow: async (id) => {
+      try {
+        const { workflow } = await api.workflows.get(id);
+        const tileGraph = workflow.tileGraph as { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
+        set({
+          currentWorkflow: {
+            id: workflow.id,
+            ownerId: "",
+            name: workflow.name,
+            description: workflow.description ?? undefined,
+            tags: workflow.tags,
+            tileGraph,
+            version: workflow.version,
+            isPublished: workflow.isPublished,
+            isTemplate: false,
+            complexity: "simple",
+            createdAt: new Date(workflow.createdAt),
+            updatedAt: new Date(workflow.updatedAt),
+          },
+          nodes: tileGraph.nodes,
+          edges: tileGraph.edges,
+          isDirty: false,
+        });
+      } catch (err) {
+        console.error("Load failed:", err);
+      }
+    },
+
+    deleteWorkflow: async (id) => {
+      await api.workflows.delete(id);
+    },
 
     resetCanvas: () =>
       set({

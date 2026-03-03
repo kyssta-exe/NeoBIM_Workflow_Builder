@@ -1,9 +1,58 @@
-import { Header } from "@/components/dashboard/Header";
-import { User, Key, Shield } from "lucide-react";
+"use client";
 
-export const metadata = { title: "Settings" };
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { Header } from "@/components/dashboard/Header";
+import { User, Key, Shield, Save } from "lucide-react";
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
+  const [openAiKey, setOpenAiKey] = useState("");
+  const [stabilityKey, setStabilityKey] = useState("");
+  const [savingKeys, setSavingKeys] = useState(false);
+  const [loadingKeys, setLoadingKeys] = useState(true);
+
+  // Load existing API keys
+  useEffect(() => {
+    fetch("/api/user/api-keys")
+      .then(r => r.json())
+      .then(({ apiKeys }) => {
+        if (apiKeys?.openai) setOpenAiKey(apiKeys.openai);
+        if (apiKeys?.stability) setStabilityKey(apiKeys.stability);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingKeys(false));
+  }, []);
+
+  async function handleSaveKeys() {
+    setSavingKeys(true);
+    try {
+      const apiKeys: Record<string, string> = {};
+      if (openAiKey.trim()) apiKeys.openai = openAiKey.trim();
+      if (stabilityKey.trim()) apiKeys.stability = stabilityKey.trim();
+
+      const res = await fetch("/api/user/api-keys", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKeys }),
+      });
+
+      if (res.ok) {
+        toast.success("API keys saved");
+      } else {
+        toast.error("Failed to save API keys");
+      }
+    } finally {
+      setSavingKeys(false);
+    }
+  }
+
+  const user = session?.user;
+  const initials = user?.name
+    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : (user?.email?.[0] ?? "U").toUpperCase();
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <Header title="Settings" subtitle="Manage your account and preferences" />
@@ -18,16 +67,18 @@ export default function SettingsPage() {
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#4F8AFF] to-[#8B5CF6] flex items-center justify-center text-lg font-bold text-white">
-                  U
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#4F8AFF] to-[#8B5CF6] flex items-center justify-center text-lg font-bold text-white overflow-hidden">
+                  {user?.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.image} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    initials
+                  )}
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-[#F0F0F5]">User Name</div>
-                  <div className="text-xs text-[#55556A]">user@example.com</div>
+                  <div className="text-sm font-medium text-[#F0F0F5]">{user?.name ?? "User"}</div>
+                  <div className="text-xs text-[#55556A]">{user?.email ?? "—"}</div>
                 </div>
-                <button className="ml-auto rounded-lg border border-[#2A2A3E] bg-[#1A1A26] px-3 py-1.5 text-xs text-[#8888A0] hover:text-[#F0F0F5] hover:border-[#3A3A4E] transition-all">
-                  Edit Profile
-                </button>
               </div>
             </div>
           </section>
@@ -38,28 +89,49 @@ export default function SettingsPage() {
               <Key size={15} className="text-[#8B5CF6]" />
               <h2 className="text-sm font-semibold text-[#F0F0F5]">API Keys</h2>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-4">
               <p className="text-xs text-[#55556A] leading-relaxed">
-                Add your own API keys to use with nodes. Platform-managed keys are used by default.
+                Add your own API keys to use real AI execution. Keys are encrypted and stored securely.
               </p>
-              {[
-                { label: "OpenAI API Key", placeholder: "sk-...", hint: "Used by: Requirements Extractor, Image Generator" },
-                { label: "Stability AI Key", placeholder: "sk-...", hint: "Alternative for image generation" },
-                { label: "Azure Document Intelligence", placeholder: "Endpoint URL", hint: "Used by: Document Parser" },
-              ].map((field) => (
-                <div key={field.label} className="space-y-1.5">
-                  <label className="text-xs font-medium text-[#F0F0F5]">{field.label}</label>
-                  <input
-                    type="password"
-                    placeholder={field.placeholder}
-                    className="w-full h-8 rounded-lg border border-[#2A2A3E] bg-[#0A0A0F] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A4E] focus:outline-none focus:border-[#4F8AFF] transition-colors"
-                  />
-                  <p className="text-[10px] text-[#3A3A4E]">{field.hint}</p>
-                </div>
-              ))}
-              <button className="rounded-lg bg-[#4F8AFF] px-4 py-2 text-xs font-semibold text-white hover:bg-[#3D7AFF] transition-all mt-2">
-                Save API Keys
-              </button>
+
+              {loadingKeys ? (
+                <div className="text-xs text-[#55556A]">Loading…</div>
+              ) : (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[#F0F0F5]">OpenAI API Key</label>
+                    <input
+                      type="password"
+                      value={openAiKey}
+                      onChange={e => setOpenAiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full h-8 rounded-lg border border-[#2A2A3E] bg-[#0A0A0F] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A4E] focus:outline-none focus:border-[#4F8AFF] transition-colors"
+                    />
+                    <p className="text-[10px] text-[#3A3A4E]">Used by: Building Description (TR-003) + Concept Image (GN-003)</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[#F0F0F5]">Stability AI Key</label>
+                    <input
+                      type="password"
+                      value={stabilityKey}
+                      onChange={e => setStabilityKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full h-8 rounded-lg border border-[#2A2A3E] bg-[#0A0A0F] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A4E] focus:outline-none focus:border-[#4F8AFF] transition-colors"
+                    />
+                    <p className="text-[10px] text-[#3A3A4E]">Alternative for image generation</p>
+                  </div>
+
+                  <button
+                    onClick={handleSaveKeys}
+                    disabled={savingKeys}
+                    className="flex items-center gap-2 rounded-lg bg-[#4F8AFF] px-4 py-2 text-xs font-semibold text-white hover:bg-[#3D7AFF] transition-all disabled:opacity-60"
+                  >
+                    <Save size={11} />
+                    {savingKeys ? "Saving…" : "Save API Keys"}
+                  </button>
+                </>
+              )}
             </div>
           </section>
 
@@ -78,12 +150,11 @@ export default function SettingsPage() {
                   </div>
                   <p className="text-xs text-[#55556A] mt-1">50 executions / month</p>
                 </div>
-                <button className="rounded-lg bg-gradient-to-r from-[#4F8AFF] to-[#8B5CF6] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                <button className="rounded-lg bg-linear-to-r from-[#4F8AFF] to-[#8B5CF6] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
                   Upgrade to Pro
                 </button>
               </div>
 
-              {/* Usage bar */}
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px] text-[#55556A]">
                   <span>Executions this month</span>

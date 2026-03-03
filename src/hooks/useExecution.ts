@@ -4,14 +4,56 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { useWorkflowStore } from "@/stores/workflow-store";
 import { useExecutionStore } from "@/stores/execution-store";
-import { executeNode } from "@/services/mock-executor";
+import { executeNode as mockExecuteNode } from "@/services/mock-executor";
 import { generateId } from "@/lib/utils";
-import type { Execution } from "@/types/execution";
+import type { Execution, ExecutionArtifact } from "@/types/execution";
 import type { WorkflowNode } from "@/types/nodes";
+import type { LogEntry } from "@/components/canvas/ExecutionLog";
+
+// Node IDs that have real API implementations
+const REAL_NODE_IDS = new Set(["TR-003", "GN-003", "IN-004", "TR-008", "EX-002"]);
+
+// Route execution to real API or mock
+async function executeNode(
+  node: WorkflowNode,
+  executionId: string,
+  previousArtifact?: ExecutionArtifact | null,
+  useRealExecution = false
+): Promise<ExecutionArtifact> {
+  const { catalogueId, inputValue } = node.data as { catalogueId: string; inputValue?: string };
+
+  if (useRealExecution && REAL_NODE_IDS.has(catalogueId)) {
+    const res = await fetch("/api/execute-node", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        catalogueId,
+        executionId,
+        tileInstanceId: node.id,
+        inputData: previousArtifact?.data ?? { prompt: inputValue ?? "" },
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Execution failed" }));
+      throw new Error((err as { error?: string }).error ?? "Node execution failed");
+    }
+
+    const { artifact } = await res.json() as { artifact: ExecutionArtifact };
+    return { ...artifact, createdAt: new Date() };
+  }
+
+  // Fall back to mock
+  return mockExecuteNode(catalogueId, executionId, node.id);
+}
 
 const FLOW_DURATION_MS = 1600;
 
-export function useExecution() {
+interface UseExecutionOptions {
+  onLog?: (entry: LogEntry) => void;
+}
+
+export function useExecution({ onLog }: UseExecutionOptions = {}) {
   const { nodes, currentWorkflow, updateNodeStatus, setEdgeFlowing } = useWorkflowStore();
   const {
     startExecution,
@@ -21,6 +63,10 @@ export function useExecution() {
     setProgress,
     isExecuting,
   } = useExecutionStore();
+
+  const log = useCallback((type: LogEntry["type"], message: string, detail?: string) => {
+    onLog?.({ timestamp: new Date(), type, message, detail });
+  }, [onLog]);
 
   const runWorkflow = useCallback(async () => {
     if (isExecuting) return;
@@ -41,21 +87,49 @@ export function useExecution() {
     };
 
     startExecution(execution);
+    log("start", "Workflow execution started", `${nodes.length} nodes queued`);
+
+    // Determine if we should use real execution (OPENAI_API_KEY configured)
+    const useReal = process.env.NEXT_PUBLIC_ENABLE_MOCK_EXECUTION !== "true";
+
     toast.success("Workflow running…", { duration: 2000 });
+
+    // Persist execution to DB if workflow is saved
+    let dbExecutionId: string | null = null;
+    const workflowId = currentWorkflow?.id;
+    if (workflowId && workflowId !== "unsaved") {
+      try {
+        const res = await fetch("/api/executions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ workflowId, triggerType: "manual" }),
+        });
+        if (res.ok) {
+          const { execution: dbEx } = await res.json() as { execution: { id: string } };
+          dbExecutionId = dbEx.id;
+          log("info", "Execution record created", dbExecutionId);
+        }
+      } catch {
+        // Non-fatal — DB save is best-effort
+      }
+    }
 
     // Left-to-right topological order based on x position
     const orderedNodes = [...nodes].sort((a, b) => a.position.x - b.position.x);
 
     let hasError = false;
+    let previousArtifact: ExecutionArtifact | null = null;
 
     for (let i = 0; i < orderedNodes.length; i++) {
       const node = orderedNodes[i] as WorkflowNode;
       setProgress(Math.round((i / orderedNodes.length) * 100));
 
       updateNodeStatus(node.id, "running");
+      log("running", `Running: ${node.data.label}`, node.data.catalogueId);
 
       try {
-        const artifact = await executeNode(node.data.catalogueId, executionId, node.id);
+        const artifact = await executeNode(node, executionId, previousArtifact, useReal);
+        previousArtifact = artifact;
 
         addArtifact(node.id, artifact);
         addTileResult({
@@ -68,6 +142,22 @@ export function useExecution() {
         });
 
         updateNodeStatus(node.id, "success");
+        log("success", `${node.data.label} completed`, String(artifact.type));
+
+        // Persist artifact to DB (stored in tileResults JSON on the Execution)
+        if (dbExecutionId) {
+          fetch(`/api/executions/${dbExecutionId}/artifacts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nodeId: node.id,
+              nodeLabel: node.data.label,
+              type: artifact.type,
+              title: String(artifact.type),
+              data: artifact.data,
+            }),
+          }).catch(() => {/* best-effort */});
+        }
 
         // Animate outgoing edges as data flows to the next node
         setEdgeFlowing(node.id, true);
@@ -76,13 +166,15 @@ export function useExecution() {
       } catch (error) {
         hasError = true;
         updateNodeStatus(node.id, "error");
+        const errMsg = error instanceof Error ? error.message : "Unknown error";
+        log("error", `${node.data.label} failed`, errMsg);
         addTileResult({
           tileInstanceId: node.id,
           catalogueId: node.data.catalogueId,
           status: "error",
           startedAt: new Date(),
           completedAt: new Date(),
-          errorMessage: error instanceof Error ? error.message : "Unknown error",
+          errorMessage: errMsg,
         });
         toast.error(`Node "${node.data.label}" failed`, { duration: 4000 });
         break;
@@ -91,6 +183,19 @@ export function useExecution() {
 
     setProgress(100);
     completeExecution(hasError ? "partial" : "success");
+    log(hasError ? "error" : "success",
+      hasError ? "Workflow completed with errors" : "Workflow completed successfully",
+      `${orderedNodes.length} nodes executed`
+    );
+
+    // Update DB execution status
+    if (dbExecutionId) {
+      fetch(`/api/executions/${dbExecutionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: hasError ? "PARTIAL" : "SUCCESS" }),
+      }).catch(() => {/* best-effort */});
+    }
 
     if (!hasError) {
       toast.success("Workflow completed", {
@@ -109,6 +214,7 @@ export function useExecution() {
     addTileResult,
     completeExecution,
     setProgress,
+    log,
   ]);
 
   const resetExecution = useCallback(() => {

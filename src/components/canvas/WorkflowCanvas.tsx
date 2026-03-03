@@ -29,6 +29,12 @@ import { AnimatedEdge } from "./edges/AnimatedEdge";
 import { NodeLibraryPanel } from "./panels/NodeLibraryPanel";
 import { CanvasToolbar } from "./toolbar/CanvasToolbar";
 import { ArtifactCard } from "./artifacts/ArtifactCard";
+import { StepIndicator } from "./StepIndicator";
+import { ExecutionLog } from "./ExecutionLog";
+import { OnboardingTour } from "./OnboardingTour";
+import { AIChatPanel } from "./panels/AIChatPanel";
+import type { ChatMessage } from "./panels/AIChatPanel";
+import type { LogEntry } from "./ExecutionLog";
 import type { ContextMenuState } from "./ContextMenu";
 import { PromptInput } from "@/components/ai/PromptInput";
 
@@ -234,11 +240,24 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
     isSaving,
     markDirty,
     setCreationMode,
+    saveWorkflow,
   } = useWorkflowStore();
 
   const { artifacts, executionProgress, removeArtifact, clearArtifacts } = useExecutionStore();
   const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary } = useUIStore();
-  const { runWorkflow, isExecuting } = useExecution();
+
+  // Chat / execution log state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showLog, setShowLog] = useState(false);
+
+  const addLogEntry = useCallback((entry: LogEntry) => {
+    setLogEntries(prev => [...prev, entry]);
+    setShowLog(true);
+  }, []);
+
+  const { runWorkflow, isExecuting } = useExecution({ onLog: addLogEntry });
 
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes as unknown as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges as Edge[]);
@@ -363,13 +382,23 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
   }, []);
 
   const handleRun  = useCallback(async () => { await runWorkflow(); }, [runWorkflow]);
-  const handleSave = useCallback(() => { toast.success("Workflow saved", { duration: 2000 }); }, []);
+  const handleSave = useCallback(async () => {
+    const id = await saveWorkflow();
+    if (id) {
+      toast.success("Workflow saved", { duration: 2000 });
+    } else {
+      toast.error("Save failed — check your connection");
+    }
+  }, [saveWorkflow]);
   const handleShare = useCallback(() => { toast.info("Share feature coming soon", { duration: 2000 }); }, []);
 
   const workflowName = currentWorkflow?.name ?? "Untitled Workflow";
 
   return (
     <div className="relative flex h-full w-full">
+      {/* Onboarding tour (fixed overlay, renders once) */}
+      <OnboardingTour />
+
       {/* AI Prompt overlay */}
       <AnimatePresence>
         {isPromptModeActive && (
@@ -410,6 +439,9 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           onToggleLibrary={toggleNodeLibrary}
         />
 
+        {/* Step indicator bar — 40px, sits right below toolbar */}
+        <StepIndicator />
+
         {/* Execution progress bar */}
         <AnimatePresence>
           {isExecuting && (
@@ -437,7 +469,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
         </AnimatePresence>
 
         {/* React Flow */}
-        <div className="absolute inset-0 pt-[52px]">
+        <div className="absolute inset-0 pt-[92px]">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -529,7 +561,27 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
               <CanvasEmptyState onPromptMode={() => setPromptModeActive(true)} />
             )}
           </AnimatePresence>
+
+          {/* Execution log — slides up from bottom */}
+          <AnimatePresence>
+            {showLog && (
+              <ExecutionLog
+                entries={logEntries}
+                isRunning={isExecuting}
+                onClose={() => { setShowLog(false); setLogEntries([]); }}
+              />
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* AI Chat Panel — floats on right edge */}
+        <AIChatPanel
+          messages={chatMessages}
+          onAddMessage={(msg) => setChatMessages(prev => [...prev, msg])}
+          onClear={() => setChatMessages([])}
+          isOpen={isChatOpen}
+          onToggle={() => setIsChatOpen(o => !o)}
+        />
 
         {/* Artifact results panel */}
         <AnimatePresence>

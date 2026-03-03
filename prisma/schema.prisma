@@ -19,6 +19,7 @@ model User {
   name          String?
   image         String?
   emailVerified DateTime?
+  password      String?   // null for OAuth users
   role          UserRole  @default(FREE)
   bio           String?
   apiKeys       Json?     @default("{}")

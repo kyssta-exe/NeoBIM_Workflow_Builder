@@ -1,13 +1,28 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Play, Zap, GitFork, Clock, Plus } from "lucide-react";
 import { Header } from "@/components/dashboard/Header";
 import { WorkflowCard } from "@/components/community/WorkflowCard";
 import { PREBUILT_WORKFLOWS } from "@/constants/prebuilt-workflows";
-
-export const metadata = { title: "Dashboard" };
+import { api } from "@/lib/api";
 
 export default function DashboardPage() {
   const featuredWorkflows = PREBUILT_WORKFLOWS.slice(0, 3);
+  const [workflowCount, setWorkflowCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    api.workflows.list()
+      .then(({ workflows }) => setWorkflowCount(workflows.length))
+      .catch(() => setWorkflowCount(0));
+  }, []);
+
+  const stats = [
+    { label: "My Workflows", value: workflowCount === null ? "…" : String(workflowCount), icon: "⬡", color: "#4F8AFF", href: "/dashboard/workflows" },
+    { label: "Templates", value: `${PREBUILT_WORKFLOWS.length}`, icon: "⊞", color: "#8B5CF6", href: "/dashboard/templates" },
+    { label: "Community", value: "500+", icon: "◉", color: "#F59E0B", href: "/dashboard/community" },
+  ];
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -18,13 +33,8 @@ export default function DashboardPage() {
 
       <main className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Quick stats */}
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { label: "My Workflows", value: "0", icon: "⬡", color: "#4F8AFF", href: "/dashboard/workflows" },
-            { label: "Executions", value: "0", icon: "▶", color: "#10B981", href: "/dashboard/workflows" },
-            { label: "Templates", value: `${PREBUILT_WORKFLOWS.length}`, icon: "⊞", color: "#8B5CF6", href: "/dashboard/templates" },
-            { label: "Community", value: "500+", icon: "◉", color: "#F59E0B", href: "/dashboard/community" },
-          ].map((stat) => (
+        <div className="grid grid-cols-3 gap-4">
+          {stats.map((stat) => (
             <Link
               key={stat.label}
               href={stat.href}

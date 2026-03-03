@@ -6,6 +6,9 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import type { WorkflowNodeData, NodeCategory, NodeStatus } from "@/types/nodes";
+import { InputNodeContent } from "./InputNode";
+
+const INPUT_NODE_IDS = new Set(["IN-001","IN-002","IN-003","IN-004","IN-005","IN-006","IN-007"]);
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -123,11 +126,15 @@ function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
   );
 }
 
+// ─── InputField — editable area for IN-001 and IN-004 ────────────────────────
+
+// InputField removed — replaced by InputNodeContent from InputNode.tsx
+
 // ─── BaseNode ─────────────────────────────────────────────────────────────────
 
 type BaseNodeProps = NodeProps & { data: WorkflowNodeData };
 
-export const BaseNode = memo(function BaseNode({ data, selected }: BaseNodeProps) {
+export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeProps) {
   const [isHovered, setIsHovered] = useState(false);
   const prefersReduced = useReducedMotion();
 
@@ -135,6 +142,7 @@ export const BaseNode = memo(function BaseNode({ data, selected }: BaseNodeProps
   const status   = data.status   as NodeStatus;
   const color    = CATEGORY_COLOR[category];
   const rgb      = hexToRgb(color);
+  const isInput  = INPUT_NODE_IDS.has(data.catalogueId);
 
   const borderColor =
     status === "error"   ? "#EF4444" :
@@ -160,7 +168,7 @@ export const BaseNode = memo(function BaseNode({ data, selected }: BaseNodeProps
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        width: 220,
+        width: isInput ? 280 : 220,
         background: "rgba(18, 18, 26, 0.88)",
         border: `1px solid rgba(${borderRgb}, ${borderOpacity})`,
         borderRadius: 10,
@@ -203,7 +211,7 @@ export const BaseNode = memo(function BaseNode({ data, selected }: BaseNodeProps
       {/* Content */}
       <div style={{ padding: "10px 12px 10px 16px" }}>
 
-        {/* Row 1: icon + name + status */}
+        {/* Row 1: icon + name + status + INPUT badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <div style={{ color, flexShrink: 0 }}>
             {getIcon(data.icon, 14)}
@@ -215,6 +223,17 @@ export const BaseNode = memo(function BaseNode({ data, selected }: BaseNodeProps
           }}>
             {data.label}
           </span>
+          {isInput && (
+            <span style={{
+              fontSize: 8, fontWeight: 700, color: color,
+              padding: "1px 5px", borderRadius: 4,
+              background: `${color}18`,
+              border: `1px solid ${color}40`,
+              flexShrink: 0, letterSpacing: 0.5,
+            }}>
+              INPUT
+            </span>
+          )}
           <AnimatePresence mode="wait">
             {status === "success" && (
               <motion.div key="s"
@@ -251,6 +270,9 @@ export const BaseNode = memo(function BaseNode({ data, selected }: BaseNodeProps
             {typeLabel}
           </div>
         )}
+
+        {/* Row 2b: interactive input for all 7 input node types */}
+        {isInput && <InputNodeContent nodeId={id} data={data} />}
 
         {/* Row 3: progress + time */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
