@@ -20,6 +20,7 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "My Workflows", value: workflowCount === null ? "..." : String(workflowCount), icon: "⬡", color: "#4F8AFF", topBorder: "#4F8AFF", href: "/dashboard/workflows" },
+    { label: "Executions", value: "—", icon: "▶", color: "#10B981", topBorder: "#10B981", href: "/dashboard/history" },
     { label: "Templates", value: `${PREBUILT_WORKFLOWS.length}`, icon: "⊞", color: "#8B5CF6", topBorder: "#8B5CF6", href: "/dashboard/templates" },
     { label: "Community", value: "500+", icon: "◉", color: "#F59E0B", topBorder: "#F59E0B", href: "/dashboard/community" },
   ];
@@ -33,7 +34,7 @@ export default function DashboardPage() {
 
       <main className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Link
               key={stat.label}
