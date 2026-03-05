@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Header } from "@/components/dashboard/Header";
-import { User, Key, Shield, Save } from "lucide-react";
+import { User, Key, Shield, Save, Loader2, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -12,17 +12,37 @@ export default function SettingsPage() {
   const [stabilityKey, setStabilityKey] = useState("");
   const [savingKeys, setSavingKeys] = useState(false);
   const [loadingKeys, setLoadingKeys] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Load existing API keys
   useEffect(() => {
-    fetch("/api/user/api-keys")
-      .then(r => r.json())
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    fetch("/api/user/api-keys", { signal: controller.signal })
+      .then(r => {
+        clearTimeout(timeoutId);
+        if (!r.ok) throw new Error(`API returned ${r.status}`);
+        return r.json();
+      })
       .then(({ apiKeys }) => {
         if (apiKeys?.openai) setOpenAiKey(apiKeys.openai);
         if (apiKeys?.stability) setStabilityKey(apiKeys.stability);
+        setLoadError(null);
       })
-      .catch(() => {})
+      .catch((err) => {
+        const errorMsg = err instanceof Error && err.name === 'AbortError' 
+          ? "Request timed out" 
+          : "Failed to load API keys";
+        setLoadError(errorMsg);
+        toast.error(errorMsg);
+      })
       .finally(() => setLoadingKeys(false));
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   async function handleSaveKeys() {
@@ -32,17 +52,27 @@ export default function SettingsPage() {
       if (openAiKey.trim()) apiKeys.openai = openAiKey.trim();
       if (stabilityKey.trim()) apiKeys.stability = stabilityKey.trim();
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const res = await fetch("/api/user/api-keys", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ apiKeys }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
-        toast.success("API keys saved");
+        toast.success("API keys saved successfully!");
       } else {
-        toast.error("Failed to save API keys");
+        throw new Error(`API returned ${res.status}`);
       }
+    } catch (err) {
+      const errorMsg = err instanceof Error && err.name === 'AbortError' 
+        ? "Request timed out" 
+        : "Failed to save API keys";
+      toast.error(errorMsg);
     } finally {
       setSavingKeys(false);
     }
@@ -95,43 +125,71 @@ export default function SettingsPage() {
               </p>
 
               {loadingKeys ? (
-                <div className="text-xs text-[#5C5C78]">Loading…</div>
-              ) : (
-                <>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#F0F0F5]">OpenAI API Key</label>
-                    <input
-                      type="password"
-                      value={openAiKey}
-                      onChange={e => setOpenAiKey(e.target.value)}
-                      placeholder="sk-..."
-                      className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0B0B13] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors"
-                    />
-                    <p className="text-[10px] text-[#3A3A50]">Used by: Building Description (TR-003) + Concept Image (GN-003)</p>
+                <div className="flex items-center gap-2 text-xs text-[#5C5C78] py-4">
+                  <Loader2 size={14} className="animate-spin" />
+                  Loading API keys…
+                </div>
+              ) : loadError ? (
+                <div className="p-4 rounded-lg border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.05)]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle size={14} className="text-[#EF4444]" />
+                    <span className="text-xs font-semibold text-[#EF4444]">{loadError}</span>
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[#F0F0F5]">Stability AI Key</label>
-                    <input
-                      type="password"
-                      value={stabilityKey}
-                      onChange={e => setStabilityKey(e.target.value)}
-                      placeholder="sk-..."
-                      className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0B0B13] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors"
-                    />
-                    <p className="text-[10px] text-[#3A3A50]">Alternative for image generation</p>
-                  </div>
-
+                  <p className="text-[10px] text-[#8888A0] mb-3">
+                    Unable to load your saved keys. You can still enter new keys below.
+                  </p>
                   <button
-                    onClick={handleSaveKeys}
-                    disabled={savingKeys}
-                    className="flex items-center gap-2 rounded-lg bg-[#4F8AFF] px-4 py-2 text-xs font-semibold text-white hover:bg-[#3D7AFF] transition-all disabled:opacity-60"
+                    onClick={() => window.location.reload()}
+                    className="text-[10px] text-[#4F8AFF] hover:underline"
                   >
-                    <Save size={11} />
-                    {savingKeys ? "Saving…" : "Save API Keys"}
+                    Try again
                   </button>
-                </>
-              )}
+                </div>
+              ) : null}
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#F0F0F5]">OpenAI API Key</label>
+                <input
+                  type="password"
+                  value={openAiKey}
+                  onChange={e => setOpenAiKey(e.target.value)}
+                  placeholder="sk-..."
+                  disabled={loadingKeys}
+                  className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0B0B13] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-[10px] text-[#3A3A50]">Used by: Building Description (TR-003) + Concept Image (GN-003)</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#F0F0F5]">Stability AI Key</label>
+                <input
+                  type="password"
+                  value={stabilityKey}
+                  onChange={e => setStabilityKey(e.target.value)}
+                  placeholder="sk-..."
+                  disabled={loadingKeys}
+                  className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0B0B13] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-[10px] text-[#3A3A50]">Alternative for image generation</p>
+              </div>
+
+              <button
+                onClick={handleSaveKeys}
+                disabled={savingKeys || loadingKeys}
+                className="flex items-center gap-2 rounded-lg bg-[#4F8AFF] px-4 py-2 text-xs font-semibold text-white hover:bg-[#3D7AFF] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {savingKeys ? (
+                  <>
+                    <Loader2 size={11} className="animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    <Save size={11} />
+                    Save API Keys
+                  </>
+                )}
+              </button>
             </div>
           </section>
 
@@ -150,7 +208,7 @@ export default function SettingsPage() {
                   </div>
                   <p className="text-xs text-[#5C5C78] mt-1">50 executions / month</p>
                 </div>
-                <button className="rounded-lg bg-linear-to-r from-[#4F8AFF] to-[#8B5CF6] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
+                <button className="rounded-lg bg-gradient-to-r from-[#4F8AFF] to-[#8B5CF6] px-4 py-2 text-xs font-semibold text-white hover:opacity-90 transition-opacity">
                   Upgrade to Pro
                 </button>
               </div>
