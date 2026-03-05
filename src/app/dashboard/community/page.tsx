@@ -315,6 +315,8 @@ export default function CommunityPage() {
   const router = useRouter();
 
   const filtered = useMemo(() => {
+    // Defensive: if no workflows loaded, return empty
+    if (!ALL_COMMUNITY || ALL_COMMUNITY.length === 0) return [];
     let list = [...ALL_COMMUNITY];
     if (search.trim()) {
       const q = search.toLowerCase();
