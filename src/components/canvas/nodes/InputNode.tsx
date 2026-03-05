@@ -26,7 +26,7 @@ export function TextPromptInput({ nodeId, data }: { nodeId: string; data: Workfl
 
   const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     updateNode(nodeId, { data: { ...data, inputValue: e.target.value } });
-  }, [nodeId, updateNode, data]);
+  }, [nodeId, updateNode]); // Fixed: removed 'data' to prevent stale closure
 
   const isEmpty = !value.trim();
 
