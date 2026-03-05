@@ -180,7 +180,7 @@ export const NODE_CATALOGUE: NodeCatalogueItem[] = [
     outputs: [{ id: "report-out", label: "Compliance Report", type: "json" }],
     apiEngine: "IFCOpenShell + OpenAI GPT",
     tags: ["compliance", "zoning", "regulations", "check", "bim"],
-    executionTime: "< 30s",
+    executionTime: "2-3 min",
   },
   {
     id: "TR-007",
@@ -239,7 +239,7 @@ export const NODE_CATALOGUE: NodeCatalogueItem[] = [
     outputs: [{ id: "delta-out", label: "Delta Report", type: "json" }],
     apiEngine: "IFCOpenShell",
     tags: ["delta", "compare", "versioning", "changes", "ifc"],
-    executionTime: "< 30s",
+    executionTime: "2-3 min",
   },
   {
     id: "TR-011",
@@ -285,7 +285,7 @@ export const NODE_CATALOGUE: NodeCatalogueItem[] = [
     ],
     apiEngine: "Rhino.Compute",
     tags: ["massing", "3d", "geometry", "building", "volume"],
-    executionTime: "< 30s",
+    executionTime: "2-3 min",
   },
   {
     id: "GN-002",
@@ -318,7 +318,7 @@ export const NODE_CATALOGUE: NodeCatalogueItem[] = [
     outputs: [{ id: "images-out", label: "Concept Images", type: "image" }],
     apiEngine: "OpenAI DALL·E / Stability AI",
     tags: ["image", "render", "visualization", "concept", "ai"],
-    executionTime: "< 30s",
+    executionTime: "2-3 min",
   },
   {
     id: "GN-004",
@@ -369,7 +369,7 @@ export const NODE_CATALOGUE: NodeCatalogueItem[] = [
   {
     id: "EX-001",
     name: "IFC Exporter",
-    description: "Export geometry and metadata as a standards-compliant IFC file",
+    description: "Export geometry and metadata as a IFC-format export (basic)",
     category: "export",
     icon: "Download",
     inputs: [

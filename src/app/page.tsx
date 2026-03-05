@@ -280,7 +280,7 @@ function AvatarRow() {
         ))}
       </div>
       <span style={{ fontSize: 12, color: "#9898B0" }}>
-        Join <strong style={{ color: "#F0F0F5" }}>2,400+</strong> AEC professionals
+        <strong style={{ color: "#F0F0F5" }}>Join architects</strong> building the future
       </span>
     </div>
   );
@@ -312,7 +312,7 @@ const FEATURES = [
   },
 ];
 
-const COMPANIES = ["Foster+Partners", "Arup", "SOM", "BIG", "Zaha Hadid Architects", "HOK"];
+// REMOVED: Fake company names - replaced with Early Access banner
 
 // ─── Showcase workflows ───────────────────────────────────────────────────────
 
@@ -491,43 +491,30 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── Logo strip ────────────────────────────────────────────── */}
+      {/* ── Early Access Banner ────────────────────────────────────────────── */}
       <div style={{
         borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)",
         padding: "20px 48px",
         display: "flex", alignItems: "center", justifyContent: "center", gap: 0,
+        background: "rgba(79,138,255,0.03)",
       }}>
         <div style={{
-          display: "flex", alignItems: "center", gap: 32,
+          display: "flex", alignItems: "center", gap: 16,
         }}>
           <div style={{
-            display: "flex", alignItems: "center", gap: 16,
+            padding: "6px 16px",
+            borderRadius: 20,
+            background: "linear-gradient(135deg, #4F8AFF, #6366F1)",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "white",
+            letterSpacing: "0.8px",
           }}>
-            <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.06)" }} />
-            <span style={{ fontSize: 11, color: "#5C5C78", whiteSpace: "nowrap", fontWeight: 500 }}>
-              Trusted by teams at
-            </span>
-            <div style={{ height: 1, width: 40, background: "rgba(255,255,255,0.06)" }} />
+            EARLY ACCESS
           </div>
-          <div style={{
-            display: "flex", gap: 36, flexWrap: "wrap", justifyContent: "center",
-            maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
-          }}>
-            {COMPANIES.map(c => (
-              <span key={c} style={{
-                fontSize: 13, fontWeight: 600, color: "#5C5C78",
-                letterSpacing: "0.5px",
-                transition: "color 0.15s",
-                cursor: "default",
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#9898B0"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#5C5C78"; }}
-              >
-                {c}
-              </span>
-            ))}
-          </div>
+          <span style={{ fontSize: 13, color: "#9898B0", fontWeight: 500 }}>
+            Join architects building the future of AEC workflows
+          </span>
         </div>
       </div>
 

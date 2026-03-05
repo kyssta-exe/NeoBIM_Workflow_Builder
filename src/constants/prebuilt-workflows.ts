@@ -297,11 +297,11 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
     id: "wf-05",
     name: "Massing → IFC Export",
     description:
-      "Bridge to BIM. Take any 3D massing model and export it as a standards-compliant IFC file ready for use in Revit, ArchiCAD, or any BIM viewer.",
+      "Bridge to BIM. Take any 3D massing model and export it as a IFC-format export (basic) ready for use in Revit, ArchiCAD, or any BIM viewer.",
     tags: ["ifc", "bim", "export", "bridge"],
     category: "BIM Export",
     complexity: "simple",
-    estimatedRunTime: "~30 seconds",
+    estimatedRunTime: "2-3 minutes",
     requiredInputs: ["3D massing model"],
     expectedOutputs: ["Downloadable IFC file (.ifc)", "Export summary with element list"],
     thumbnail: "https://picsum.photos/seed/wf05/600/400",

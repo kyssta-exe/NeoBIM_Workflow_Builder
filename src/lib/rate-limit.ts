@@ -62,7 +62,6 @@ export async function checkRateLimit(
   // ADMIN BYPASS: If user email matches ADMIN_EMAIL env variable, skip rate limiting
   const adminEmail = process.env.ADMIN_EMAIL;
   if (adminEmail && userEmail && userEmail.toLowerCase() === adminEmail.toLowerCase()) {
-    console.log("[rate-limit] Admin bypass for:", userEmail);
     return {
       success: true,
       limit: 999999,

@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  console.log('[STRIPE_WEBHOOK] Event received:', event.type);
 
   try {
     switch (event.type) {
@@ -67,7 +66,6 @@ export async function POST(req: NextRequest) {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log('[STRIPE_WEBHOOK] Payment succeeded for invoice:', invoice.id);
         
         // Optionally send receipt email or notification
         break;
@@ -82,7 +80,6 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        console.log('[STRIPE_WEBHOOK] Unhandled event type:', event.type);
     }
 
     return NextResponse.json({ received: true });
@@ -148,5 +145,4 @@ async function cancelUserSubscription(stripeCustomerId: string) {
     },
   });
 
-  console.log('[STRIPE_WEBHOOK] Canceled user subscription:', user.id);
 }
