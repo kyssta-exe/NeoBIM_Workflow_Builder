@@ -37,7 +37,7 @@ Then follow the 24 checkboxes. That's it!
 **Implement Stripe subscriptions for NeoBIM Workflow Builder**
 
 **What you're building:**
-- 3 pricing tiers: FREE ($0), PRO ($79/mo), TEAM ($149/mo)
+- 3 pricing tiers: FREE ($0), PRO ($79/mo), TEAM ($199/mo)
 - Stripe Checkout for payments
 - Stripe Customer Portal for billing management
 - Webhook system to auto-upgrade users after payment

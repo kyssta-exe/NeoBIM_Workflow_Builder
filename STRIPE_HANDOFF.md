@@ -86,7 +86,7 @@ All routes created, tested for TypeScript errors, and build passing:
    ```
 
 2. **Stripe Dashboard Setup (15 min)**
-   - Create products: Pro ($79/mo), Team ($149/mo)
+   - Create products: Pro ($79/mo), Team ($199/mo)
    - Create webhook endpoint: `https://your-domain.com/api/stripe/webhook`
    - Select events (see README for full list)
 

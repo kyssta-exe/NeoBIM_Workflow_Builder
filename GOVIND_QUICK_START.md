@@ -10,7 +10,7 @@
 
 **What we're building:**
 - Stripe subscriptions for NeoBIM
-- 3 tiers: FREE ($0), PRO ($79/mo), TEAM ($149/mo)
+- 3 tiers: FREE ($0), PRO ($79/mo), TEAM ($199/mo)
 - User clicks "Upgrade" → Stripe Checkout → Webhook updates DB → Done
 
 **Your job:**
@@ -109,7 +109,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 **Product 2: NeoBIM Team**
 - Name: `NeoBIM Team`
 - Description: `500 executions/month + team features`
-- Price: $149.00 USD, Monthly
+- Price: $199.00 USD, Monthly
 - Save → **Copy Price ID** → Add to `.env.local` as `STRIPE_TEAM_PRICE_ID`
 
 **[ ] 13. Setup webhooks (for local testing)**

@@ -11,7 +11,7 @@
 This plan implements Stripe subscriptions with 3 pricing tiers:
 - **FREE** ($0/month) - 5 workflow executions/month
 - **PRO** ($79/month) - 50 executions/month + priority support
-- **TEAM** ($149/month) - 500 executions/month + team features
+- **TEAM** ($199/month) - 500 executions/month + team features
 
 **Flow:**
 1. User clicks "Upgrade" → Stripe Checkout
@@ -883,7 +883,7 @@ export default function BillingPage() {
 - Description: `Team plan with 500 executions/month`
 - Pricing:
   - Recurring: Monthly
-  - Price: $149.00 USD
+  - Price: $199.00 USD
 - Click **Save product**
 - **Copy the Price ID** → Add to `.env.local` as `STRIPE_TEAM_PRICE_ID`
 

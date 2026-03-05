@@ -75,7 +75,7 @@ export default function BillingPage() {
       name: "Pro",
       price: "$79",
       period: "per month",
-      description: "Pays for itself in 1 project",
+      description: "Save $2,000 per project, pay $79/month = 25x ROI",
       features: [
         "Unlimited workflow runs",
         "Priority execution queue",
@@ -92,7 +92,7 @@ export default function BillingPage() {
     },
     {
       name: "Team",
-      price: "$99",
+      price: "$199",
       period: "per month",
       description: "Collaborate with your team",
       features: [

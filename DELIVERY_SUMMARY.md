@@ -86,7 +86,7 @@
 **Pricing Tiers:**
 - FREE: $0/month, 5 executions
 - PRO: $79/month, 50 executions
-- TEAM: $149/month, 500 executions
+- TEAM: $199/month, 500 executions
 
 **Flow:**
 1. User clicks "Upgrade" → Stripe Checkout
@@ -187,7 +187,7 @@ open START_HERE_GOVIND.md
 
 **Revenue Potential:**
 - PRO: $79/month per user
-- TEAM: $149/month per user
+- TEAM: $199/month per user
 - Target: 10 PRO + 5 TEAM = $1,535 MRR (Month 1)
 
 **Time Savings:**
