@@ -34,18 +34,19 @@ export const AnimatedEdge = memo(function AnimatedEdge({
   const [edgePath] = getSmoothStepPath({
     sourceX, sourceY, sourcePosition,
     targetX, targetY, targetPosition,
-    borderRadius: 12,
+    borderRadius: 14,
   });
 
   // Unique IDs so multiple edges don't conflict
   const gradientId = `eg-${id}`;
   const glowId     = `ef-${id}`;
   const arrowId    = `ea-${id}`;
+  const animGradId = `ag-${id}`;
 
   // Visual states
   const active     = selected || isHovered;
-  const strokeW    = isFlowing ? 2.5 : active ? 3 : 2;
-  const strokeOp   = isFlowing ? 1   : active ? 0.85 : 0.4;
+  const strokeW    = isFlowing ? 3 : active ? 3.5 : 2;
+  const strokeOp   = isFlowing ? 1 : active ? 0.9 : 0.45;
   const glowColor  = targetColor;
 
   return (
@@ -58,13 +59,35 @@ export const AnimatedEdge = memo(function AnimatedEdge({
           x1={sourceX} y1={sourceY}
           x2={targetX} y2={targetY}
         >
-          <stop offset="0%"   stopColor={sourceColor} stopOpacity={0.9} />
-          <stop offset="100%" stopColor={targetColor}  stopOpacity={0.9} />
+          <stop offset="0%"   stopColor={sourceColor} stopOpacity={0.95} />
+          <stop offset="50%"  stopColor={`color-mix(in srgb, ${sourceColor} 50%, ${targetColor})`} stopOpacity={0.95} />
+          <stop offset="100%" stopColor={targetColor}  stopOpacity={0.95} />
+        </linearGradient>
+
+        {/* Animated gradient for flowing state */}
+        <linearGradient id={animGradId}>
+          <stop offset="0%" stopColor={sourceColor} stopOpacity={1}>
+            <animate
+              attributeName="stop-opacity"
+              values="1;0.5;1"
+              dur="2s"
+              repeatCount="indefinite"
+            />
+          </stop>
+          <stop offset="50%" stopColor={`color-mix(in srgb, ${sourceColor} 50%, ${targetColor})`} stopOpacity={0.95} />
+          <stop offset="100%" stopColor={targetColor} stopOpacity={1}>
+            <animate
+              attributeName="stop-opacity"
+              values="0.5;1;0.5"
+              dur="2s"
+              repeatCount="indefinite"
+            />
+          </stop>
         </linearGradient>
 
         {/* Glow filter for hover/selected */}
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -74,15 +97,15 @@ export const AnimatedEdge = memo(function AnimatedEdge({
         {/* Arrowhead marker — target color */}
         <marker
           id={arrowId}
-          viewBox="0 0 8 8"
-          refX="7"
-          refY="4"
-          markerWidth="7"
-          markerHeight="7"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
           orient="auto-start-reverse"
         >
           <path
-            d="M0,0.5 L7,4 L0,7.5 Z"
+            d="M0,1 L9,5 L0,9 Z"
             fill={targetColor}
             opacity={strokeOp}
           />
@@ -94,21 +117,24 @@ export const AnimatedEdge = memo(function AnimatedEdge({
         d={edgePath}
         fill="none"
         stroke="transparent"
-        strokeWidth={20}
+        strokeWidth={24}
         style={{ cursor: "pointer" }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       />
 
-      {/* Glow halo (behind main line, only when active) */}
+      {/* Outer glow halo (behind main line, only when active) */}
       {active && (
         <path
           d={edgePath}
           fill="none"
           stroke={glowColor}
-          strokeWidth={strokeW + 4}
-          strokeOpacity={0.1}
+          strokeWidth={strokeW + 6}
+          strokeOpacity={0.12}
           strokeLinecap="round"
+          style={{
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
         />
       )}
 
@@ -116,14 +142,14 @@ export const AnimatedEdge = memo(function AnimatedEdge({
       <path
         d={edgePath}
         fill="none"
-        stroke={`url(#${gradientId})`}
+        stroke={isFlowing ? `url(#${animGradId})` : `url(#${gradientId})`}
         strokeWidth={strokeW}
         strokeOpacity={strokeOp}
         strokeLinecap="round"
         markerEnd={`url(#${arrowId})`}
         filter={active ? `url(#${glowId})` : undefined}
         style={{
-          transition: "stroke-width 0.15s ease, stroke-opacity 0.15s ease",
+          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -135,12 +161,15 @@ export const AnimatedEdge = memo(function AnimatedEdge({
           d={edgePath}
           fill="none"
           stroke={sourceColor}
-          strokeWidth={1}
-          strokeOpacity={active ? 0.4 : 0.15}
-          strokeDasharray="5 18"
+          strokeWidth={1.2}
+          strokeOpacity={active ? 0.45 : 0.18}
+          strokeDasharray="6 20"
           strokeLinecap="round"
           className="edge-dash-idle"
-          style={{ pointerEvents: "none" }}
+          style={{
+            pointerEvents: "none",
+            transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
         />
       )}
 
@@ -151,21 +180,36 @@ export const AnimatedEdge = memo(function AnimatedEdge({
           <path
             d={edgePath}
             fill="none"
-            stroke={`url(#${gradientId})`}
-            strokeWidth={2.5}
-            strokeOpacity={0.9}
+            stroke={`url(#${animGradId})`}
+            strokeWidth={3}
+            strokeOpacity={0.95}
             strokeLinecap="round"
             style={{ pointerEvents: "none" }}
           />
-          {/* Travelling dot */}
-          <circle r="4.5" fill="white" opacity={0.95} style={{ filter: `drop-shadow(0 0 5px ${targetColor})` }}>
-            <animateMotion
-              dur="1.1s"
-              repeatCount="indefinite"
-              calcMode="linear"
-              path={edgePath}
-            />
-          </circle>
+          {/* Travelling dot with tail */}
+          <g>
+            {/* Dot tail (gradient fade) */}
+            <circle r="3" fill={targetColor} opacity={0.4}>
+              <animateMotion
+                dur="1.4s"
+                repeatCount="indefinite"
+                calcMode="linear"
+                path={edgePath}
+                begin="0.15s"
+              />
+            </circle>
+            {/* Main dot */}
+            <circle r="5" fill="white" opacity={1} style={{
+              filter: `drop-shadow(0 0 6px ${targetColor})`,
+            }}>
+              <animateMotion
+                dur="1.4s"
+                repeatCount="indefinite"
+                calcMode="linear"
+                path={edgePath}
+              />
+            </circle>
+          </g>
         </>
       )}
     </>
