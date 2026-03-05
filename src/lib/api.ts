@@ -24,12 +24,13 @@ export type WorkflowDetail = {
 };
 
 export type ExecutionSummary = {
-  id: string;
-  workflowId: string;
-  status: string;
   startedAt: string;
-  completedAt: string | null;
-  workflow: { id: string; name: string };
+  id: string;
+  status: string;
+  workflowId: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { artifacts: number };
 };
 
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
