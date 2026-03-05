@@ -46,7 +46,7 @@ const FILTERS: { label: string; value: "all" | NodeCategory }[] = [
 
 // ─── Tooltip ──────────────────────────────────────────────────────────────────
 
-function NodeTooltip({ node, anchorY }: { node: NodeCatalogueItem; anchorY: number }) {
+function NodeTooltip({ node, anchorY, panelWidth }: { node: NodeCatalogueItem; anchorY: number; panelWidth: number }) {
   const cfg = CATEGORY_CONFIG[node.category];
   const rgb = hexToRgb(cfg.color);
 
@@ -58,7 +58,7 @@ function NodeTooltip({ node, anchorY }: { node: NodeCatalogueItem; anchorY: numb
       transition={{ duration: 0.15 }}
       style={{
         position: "fixed",
-        left: 296,
+        left: panelWidth + 16,
         top: Math.max(8, Math.min(anchorY - 64, window.innerHeight - 260)),
         width: 240,
         background: "rgba(14, 14, 22, 0.97)",
@@ -385,9 +385,17 @@ function CategorySection({
 
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 
+const MIN_WIDTH = 240;
+const MAX_WIDTH = 420;
+const DEFAULT_WIDTH = 280;
+
 export function NodeLibraryPanel() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
+  const [isResizing, setIsResizing] = useState(false);
   const [search, setSearch] = useState("");
+  const resizeStartX = useRef(0);
+  const resizeStartWidth = useRef(0);
   const [activeFilter, setActiveFilter] = useState<"all" | NodeCategory>("all");
   const [openCategories, setOpenCategories] = useState<Record<NodeCategory, boolean>>({
     input: true, transform: false, generate: false, export: false,
@@ -438,6 +446,35 @@ export function NodeLibraryPanel() {
     setTooltip(null);
   }, []);
 
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    resizeStartX.current = e.clientX;
+    resizeStartWidth.current = panelWidth;
+  }, [panelWidth]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - resizeStartX.current;
+      const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, resizeStartWidth.current + delta));
+      setPanelWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isResizing]);
+
   const toggleCategory = useCallback((cat: NodeCategory) => {
     setOpenCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
   }, []);
@@ -462,7 +499,7 @@ export function NodeLibraryPanel() {
   return (
     <motion.div
       initial={{ x: -300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1, width: isCollapsed ? 48 : 280 }}
+      animate={{ x: 0, opacity: 1, width: isCollapsed ? 48 : panelWidth }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       style={{
@@ -475,6 +512,32 @@ export function NodeLibraryPanel() {
         flexShrink: 0,
       }}
     >
+      {/* Resize handle */}
+      {!isCollapsed && (
+        <div
+          onMouseDown={handleResizeStart}
+          style={{
+            position: "absolute", top: 0, right: 0, bottom: 0,
+            width: 6,
+            cursor: "ew-resize",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            opacity: isResizing ? 1 : 0,
+            background: "rgba(79, 138, 255, 0.1)",
+            borderRight: isResizing ? "2px solid rgba(79, 138, 255, 0.4)" : "none",
+            transition: "opacity 0.15s ease, background 0.15s ease",
+            zIndex: 100,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
+          onMouseLeave={e => { if (!isResizing) e.currentTarget.style.opacity = "0"; }}
+        >
+          <div style={{
+            width: 3, height: 40, borderRadius: 2,
+            background: "rgba(79, 138, 255, 0.3)",
+            display: isResizing ? "block" : "none",
+          }} />
+        </div>
+      )}
+
       {isCollapsed ? (
         // ── Icon-only strip ───────────────────────────────────────────────────
         <div style={{
@@ -666,7 +729,7 @@ export function NodeLibraryPanel() {
 
       {/* Floating tooltip — fixed positioned, renders outside scroll container */}
       <AnimatePresence>
-        {tooltip && <NodeTooltip node={tooltip.node} anchorY={tooltip.y} />}
+        {tooltip && <NodeTooltip node={tooltip.node} anchorY={tooltip.y} panelWidth={panelWidth} />}
       </AnimatePresence>
     </motion.div>
   );

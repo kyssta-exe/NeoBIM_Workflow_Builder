@@ -8,6 +8,7 @@ import {
   Loader2, CheckCircle2, Pencil,
 } from "lucide-react";
 import type { CreationMode } from "@/types/workflow";
+import { useWorkflowStore } from "@/stores/workflow-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -91,14 +92,14 @@ function TBBtn({ onClick, icon, title, disabled }: TBBtnProps) {
 const pulseKeyframes = `
 @keyframes runButtonPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(79, 138, 255, 0.7),
-                0 0 20px rgba(79, 138, 255, 0.3),
-                0 2px 12px rgba(79, 138, 255, 0.25);
+    box-shadow: 0 0 0 0 rgba(79, 138, 255, 0.8),
+                0 0 24px rgba(79, 138, 255, 0.4),
+                0 4px 16px rgba(79, 138, 255, 0.3);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(79, 138, 255, 0),
-                0 0 30px rgba(79, 138, 255, 0.5),
-                0 4px 20px rgba(79, 138, 255, 0.35);
+    box-shadow: 0 0 0 10px rgba(79, 138, 255, 0),
+                0 0 36px rgba(79, 138, 255, 0.6),
+                0 6px 24px rgba(79, 138, 255, 0.4);
   }
 }
 `;
@@ -192,7 +193,8 @@ export function CanvasToolbar({
 
   // Check if workflow is ready to run (has nodes)
   // In real implementation, you'd check from Zustand store
-  const isWorkflowReady = true; // TODO: Replace with actual check from useWorkflowStore
+  const { nodes } = useWorkflowStore();
+  const isWorkflowReady = nodes.length > 0 && !isExecuting;
 
   return (
     <>
@@ -521,7 +523,7 @@ export function CanvasToolbar({
                   color: "#fff", fontSize: 14, fontWeight: 600,
                   cursor: isWorkflowReady ? "pointer" : "not-allowed",
                   transition: "all 0.15s ease",
-                  
+                  animation: isWorkflowReady ? "runButtonPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
                   opacity: isWorkflowReady ? 1 : 0.6,
                 }}
                 onMouseEnter={e => {
