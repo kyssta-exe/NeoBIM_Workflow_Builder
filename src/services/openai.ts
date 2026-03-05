@@ -75,6 +75,36 @@ export interface BuildingDescription {
   narrative: string; // 8-section professional narrative (TR-003 v2)
 }
 
+
+// ─── Helper: Parse user requirements ─────────────────────────────────────────
+
+function parseUserRequirements(prompt: string): { floors?: number; location?: string } {
+  const requirements: { floors?: number; location?: string } = {};
+  const floorMatch = prompt.match(/(\d+)[-\s]?(story|stories|floor|floors)/i);
+  if (floorMatch) requirements.floors = parseInt(floorMatch[1]);
+  const cities = ["Berlin", "Mumbai", "London", "New York", "Paris", "Tokyo", "Dubai", "Singapore"];
+  for (const city of cities) {
+    if (prompt.toLowerCase().includes(city.toLowerCase())) {
+      requirements.location = city;
+      break;
+    }
+  }
+  return requirements;
+}
+
+function enforceUserRequirements(desc: BuildingDescription, req: ReturnType<typeof parseUserRequirements>): BuildingDescription {
+  if (req.floors && desc.floors !== req.floors) {
+    console.warn(`[TR-003] Forcing floors from ${desc.floors} to ${req.floors}`);
+    desc.floors = req.floors;
+    desc.narrative = desc.narrative.replace(/\b\d+[-\s]?(story|stories)/gi, `${req.floors}-story`);
+    desc.totalArea = req.floors * 800;
+  }
+  if (req.location && !desc.projectName.toLowerCase().includes(req.location.toLowerCase())) {
+    desc.projectName = `${req.location} ${desc.buildingType}`;
+  }
+  return desc;
+}
+
 // ─── generateBuildingDescription ─────────────────────────────────────────────
 
 export async function generateBuildingDescription(
@@ -90,9 +120,7 @@ export async function generateBuildingDescription(
       messages: [
         {
           role: "system",
-          content: `ABSOLUTE RULE: You MUST extract and use the EXACT details from the user's input. If the user says 7-story, you output 7-story. If the user says Berlin, you output Berlin. If the user says mixed-use with retail, you include retail. NEVER invent a different location, floor count, building name, or program. The user's text is your source of truth. Repeat their key facts verbatim.
-
-You are an expert architectural writer for competition boards and award submissions. Generate professional building descriptions suitable for client presentations.
+          content: `You are an expert architectural writer for competition boards and award submissions. Generate professional building descriptions suitable for client presentations.
 
 ⚠️ CRITICAL REQUIREMENT: FOLLOW USER INPUT EXACTLY
 - If user says "7-story" → output MUST have floors: 7
@@ -171,33 +199,10 @@ TARGET: 9/10 quality. Reference: architectural magazine features, design competi
 
     const content = completion.choices[0]?.message?.content;
     if (!content) throw new Error("OpenAI returned empty response");
-    
+
     const description = JSON.parse(content) as BuildingDescription;
-    console.log('[TR-003] GPT response:', {floors: description.floors, name: description.projectName});
-    
-    // FORCE user input
-    const floorMatch = prompt.match(/(\d+)[-\s]?(story|stories|floor|floors)/i);
-    if (floorMatch) {
-      const userFloors = parseInt(floorMatch[1]);
-      if (description.floors !== userFloors) {
-        console.warn(`[TR-003] FORCING floors from  to `);
-        description.floors = userFloors;
-        description.narrative = description.narrative.replace(/\b\d+[-\s]?(story|stories)/gi, `-story`);
-      }
-    }
-    
-    const cities = ['Berlin', 'Mumbai', 'London', 'New York', 'Paris', 'Tokyo'];
-    for (const city of cities) {
-      if (prompt.toLowerCase().includes(city.toLowerCase())) {
-        if (!description.projectName.toLowerCase().includes(city.toLowerCase())) {
-          console.warn(`[TR-003] FORCING location: `);
-          description.projectName = ` `;
-        }
-        break;
-      }
-    }
-    
-    return description;
+    const requirements = parseUserRequirements(prompt);
+    return enforceUserRequirements(description, requirements);
   });
 }
 
