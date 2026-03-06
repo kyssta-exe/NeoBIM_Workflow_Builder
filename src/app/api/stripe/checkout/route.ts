@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { priceId, plan } = await req.json();
+    const { plan } = await req.json();
 
     // Validate plan
     if (!plan || !['PRO', 'TEAM_ADMIN'].includes(plan)) {
@@ -29,11 +29,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate priceId
-    if (!priceId || typeof priceId !== 'string') {
+    // Resolve priceId server-side from env
+    const priceId = plan === 'PRO' ? process.env.STRIPE_PRICE_ID : process.env.STRIPE_PRICE_ID;
+    if (!priceId) {
       return NextResponse.json(
-        formatErrorResponse(FormErrors.REQUIRED_FIELD("priceId")),
-        { status: 400 }
+        formatErrorResponse({
+          title: "Configuration error",
+          message: "Stripe price is not configured. Please contact support.",
+          code: "STRIPE_CONFIG",
+        }),
+        { status: 500 }
       );
     }
 
