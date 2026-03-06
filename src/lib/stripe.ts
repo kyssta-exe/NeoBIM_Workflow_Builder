@@ -1,12 +1,8 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
-}
-
 // Initialize Stripe with API version
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2026-02-25.clover',
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2025-02-24.acacia' as Stripe.LatestApiVersion,
   typescript: true,
 });
 
@@ -31,7 +27,7 @@ export const STRIPE_PLANS = {
   PRO: {
     name: 'Pro',
     price: 79,
-    priceId: process.env.STRIPE_PRO_PRICE_ID, // Set in .env
+    priceId: process.env.STRIPE_PRICE_ID, // Set in .env
     features: [
       'Unlimited workflow runs',
       'All tiles & nodes',

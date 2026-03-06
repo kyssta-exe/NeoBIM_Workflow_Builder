@@ -90,12 +90,11 @@ export default function BillingPage() {
     setUpgradingTo(plan);
     try {
       const planKey = plan === 'PRO' ? 'PRO' : 'TEAM';
-      const priceId = plan === 'PRO' ? process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID : process.env.NEXT_PUBLIC_STRIPE_TEAM_PRICE_ID;
-      
+
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId, plan: planKey }),
+        body: JSON.stringify({ plan: planKey }),
       });
 
       const data = await res.json();
