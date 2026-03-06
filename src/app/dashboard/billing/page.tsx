@@ -4,23 +4,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Header } from "@/components/dashboard/Header";
 import { useSession } from "next-auth/react";
-import { Check, Sparkles, Shield, Zap, Loader2, Lock, CreditCard } from "lucide-react";
+import { Check, Sparkles, Zap, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface UsageStats {
   used: number;
   limit: number;
   resetDate: string;
-}
-
-// Security Badge Component
-function SecurityBadge({ icon: Icon, label }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string }) {
-  return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#16162A] border border-[rgba(255,255,255,0.05)]">
-      <Icon size={14} className="text-[#10B981]" />
-      <span className="text-xs text-[#7C7C96] font-medium">{label}</span>
-    </div>
-  );
 }
 
 export default function BillingPage() {
@@ -239,18 +229,7 @@ export default function BillingPage() {
           </div>
         </motion.div>
 
-        {/* Security Trust Badges */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex items-center justify-center gap-3"
-        >
-          <SecurityBadge icon={Shield} label="256-bit SSL Encryption" />
-          <SecurityBadge icon={CreditCard} label="Powered by Stripe" />
-          <SecurityBadge icon={Lock} label="SOC 2 Compliant" />
-          <SecurityBadge icon={Check} label="GDPR Ready" />
-        </motion.div>
+        {/* Security section removed for security best practices */}
 
         {/* Current Usage (if FREE) */}
         {userRole === "FREE" && (
@@ -427,35 +406,7 @@ export default function BillingPage() {
           </div>
         </motion.div>
 
-        {/* FAQ / Help */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-          className="rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[#111120] p-6"
-        >
-          <h3 className="text-lg font-bold text-[#F0F0F5] mb-5">Frequently Asked Questions</h3>
-          <div className="space-y-4 text-sm">
-            <div>
-              <h4 className="font-semibold text-[#F0F0F5] mb-2">Can I switch plans anytime?</h4>
-              <p className="text-[#C0C0D0] leading-relaxed">
-                Yes! Upgrade or downgrade anytime. Changes take effect immediately, and we&apos;ll prorate your billing.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-[#F0F0F5] mb-2">Do you offer refunds?</h4>
-              <p className="text-[#C0C0D0] leading-relaxed">
-                Absolutely. We offer a 14-day money-back guarantee on all paid plans. No questions asked.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-[#F0F0F5] mb-2">What payment methods do you accept?</h4>
-              <p className="text-[#C0C0D0] leading-relaxed">
-                We accept all major credit cards via Stripe. Enterprise customers can also pay via invoice.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+        {/* FAQ section removed */}
       </main>
 
       <style jsx global>{`

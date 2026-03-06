@@ -47,6 +47,11 @@ export default function SettingsPage() {
   }, []);
 
   async function handleSaveKeys() {
+    if (!openAiKey.trim() && !stabilityKey.trim()) {
+      toast.error("Please enter at least one API key before saving.");
+      return;
+    }
+
     setSavingKeys(true);
     try {
       const apiKeys: Record<string, string> = {};

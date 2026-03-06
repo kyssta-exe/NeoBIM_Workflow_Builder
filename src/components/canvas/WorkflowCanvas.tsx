@@ -241,6 +241,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
     markDirty,
     setCreationMode,
     saveWorkflow,
+    undo,
+    redo,
   } = useWorkflowStore();
 
   const { artifacts, executionProgress, removeArtifact, clearArtifacts } = useExecutionStore();
@@ -386,7 +388,28 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-  const handleRun  = useCallback(async () => { await runWorkflow(); }, [runWorkflow]);
+  const handleRun  = useCallback(async () => {
+    // #1: Validate that input nodes have content before running
+    const inputNodes = nodes.filter((n) => {
+      const data = n.data as Record<string, unknown>;
+      const catId = data.catalogueId as string;
+      return catId?.startsWith("IN-");
+    });
+    const hasEmptyInput = inputNodes.some((n) => {
+      const data = n.data as Record<string, unknown>;
+      const val = (data.inputValue as string) ?? "";
+      return val.trim() === "";
+    });
+    if (inputNodes.length > 0 && hasEmptyInput) {
+      toast.error("Please provide input for all input nodes before running the workflow.", { duration: 4000 });
+      return;
+    }
+    if (nodes.length === 0) {
+      toast.error("Add nodes to your workflow first.", { duration: 3000 });
+      return;
+    }
+    await runWorkflow();
+  }, [runWorkflow, nodes]);
   const handleSave = useCallback(async () => {
     if (isDemoMode) {
       toast.info("Create a free account to save workflows", { duration: 3000 });
@@ -437,8 +460,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           onRun={handleRun}
           onStop={() => {}}
           onSave={handleSave}
-          onUndo={() => {}}
-          onRedo={() => {}}
+          onUndo={undo}
+          onRedo={redo}
           onZoomIn={() => zoomIn({ duration: 250 })}
           onZoomOut={() => zoomOut({ duration: 250 })}
           onFitView={() => fitView({ padding: 0.15, duration: 400 })}
@@ -446,6 +469,14 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           onModeChange={setCreationMode}
           onPromptMode={() => setPromptModeActive(true)}
           onToggleLibrary={toggleNodeLibrary}
+          onNameChange={async (newName: string) => {
+            if (currentWorkflow) {
+              currentWorkflow.name = newName;
+              markDirty();
+              await saveWorkflow(newName);
+              toast.success(`Workflow renamed to "${newName}"`, { duration: 2000 });
+            }
+          }}
         />
 
         {/* Execution progress bar */}
