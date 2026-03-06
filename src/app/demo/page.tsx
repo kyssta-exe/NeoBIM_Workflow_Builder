@@ -88,8 +88,10 @@ function DemoBanner({ hasRun }: { hasRun: boolean }) {
         gap: 12,
         padding: "10px 24px",
         background:
-          "linear-gradient(90deg, rgba(79,138,255,0.12) 0%, rgba(139,92,246,0.08) 100%)",
-        borderBottom: "1px solid rgba(79,138,255,0.2)",
+          "linear-gradient(90deg, rgba(79,138,255,0.08) 0%, rgba(139,92,246,0.05) 50%, rgba(79,138,255,0.04) 100%)",
+        borderBottom: "1px solid rgba(79,138,255,0.15)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         zIndex: 100,
         flexShrink: 0,
       }}
@@ -145,8 +147,9 @@ function DemoBanner({ hasRun }: { hasRun: boolean }) {
       <span
         style={{
           fontSize: 12,
-          color: "#9898B0",
+          color: "#7C7C96",
           flex: 1,
+          letterSpacing: "-0.005em",
         }}
       >
         {hasRun
@@ -179,7 +182,7 @@ function DemoBanner({ hasRun }: { hasRun: boolean }) {
                 fontWeight: 600,
                 textDecoration: "none",
                 boxShadow:
-                  "0 2px 10px rgba(79,138,255,0.3)",
+                  "0 2px 10px rgba(79,138,255,0.25), inset 0 1px 0 rgba(255,255,255,0.1)",
               }}
             >
               Create Free Account

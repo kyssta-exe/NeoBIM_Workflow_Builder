@@ -92,10 +92,10 @@ export default function SettingsPage() {
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Profile */}
-          <section className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#12121E] overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(255,255,255,0.06)]">
+          <section className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(18,18,30,0.95)] overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(255,255,255,0.05)]">
               <User size={15} className="text-[#4F8AFF]" />
-              <h2 className="text-sm font-semibold text-[#F0F0F5]">Profile</h2>
+              <h2 className="text-sm font-semibold text-[#F0F0F5] tracking-[-0.01em]">Profile</h2>
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4">
@@ -116,10 +116,10 @@ export default function SettingsPage() {
           </section>
 
           {/* API Keys */}
-          <section className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#12121E] overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(255,255,255,0.06)]">
+          <section className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(18,18,30,0.95)] overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(255,255,255,0.05)]">
               <Key size={15} className="text-[#8B5CF6]" />
-              <h2 className="text-sm font-semibold text-[#F0F0F5]">API Keys</h2>
+              <h2 className="text-sm font-semibold text-[#F0F0F5] tracking-[-0.01em]">API Keys</h2>
             </div>
             <div className="p-5 space-y-4">
               <p className="text-xs text-[#5C5C78] leading-relaxed">
@@ -157,7 +157,7 @@ export default function SettingsPage() {
                   onChange={e => setOpenAiKey(e.target.value)}
                   placeholder="sk-..."
                   disabled={loadingKeys}
-                  className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0B0B13] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(7,7,13,0.8)] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-[10px] text-[#3A3A50]">Used by: Building Description (TR-003) + Concept Image (GN-003)</p>
               </div>
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                   onChange={e => setStabilityKey(e.target.value)}
                   placeholder="sk-..."
                   disabled={loadingKeys}
-                  className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#0B0B13] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-8 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(7,7,13,0.8)] px-3 text-xs text-[#F0F0F5] placeholder:text-[#3A3A50] focus:outline-none focus:border-[#4F8AFF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-[10px] text-[#3A3A50]">Alternative for image generation</p>
               </div>
@@ -196,10 +196,10 @@ export default function SettingsPage() {
           </section>
 
           {/* Plan */}
-          <section className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#12121E] overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(255,255,255,0.06)]">
+          <section className="rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(18,18,30,0.95)] overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-[rgba(255,255,255,0.05)]">
               <Shield size={15} className="text-[#10B981]" />
-              <h2 className="text-sm font-semibold text-[#F0F0F5]">Plan & Usage</h2>
+              <h2 className="text-sm font-semibold text-[#F0F0F5] tracking-[-0.01em]">Plan & Usage</h2>
             </div>
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">

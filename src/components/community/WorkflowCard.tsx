@@ -122,14 +122,14 @@ export function WorkflowCard({
         border: isFeatured
           ? "1px solid rgba(245,158,11,0.4)"
           : "1px solid rgba(255,255,255,0.06)",
-        background: "#12121E",
+        background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))",
         overflow: "hidden",
         cursor: "default",
         position: "relative",
         boxShadow: isFeatured
           ? "0 0 24px rgba(245,158,11,0.08)"
-          : "none",
-        transition: "border-color 0.15s, box-shadow 0.15s",
+          : "0 1px 3px rgba(0,0,0,0.1)",
+        transition: "border-color 0.2s, box-shadow 0.2s",
       }}
       onMouseEnter={e => {
         if (!isFeatured) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.12)";
@@ -158,7 +158,7 @@ export function WorkflowCard({
       <div style={{
         height: 130,
         background: "#0B0B13",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
         position: "relative",
         overflow: "hidden",
       }}>
@@ -197,7 +197,7 @@ export function WorkflowCard({
 
         {/* Description */}
         <p style={{
-          fontSize: 12, color: "#9898B0", lineHeight: 1.5,
+          fontSize: 12, color: "#7C7C96", lineHeight: 1.5,
           display: "-webkit-box",
           WebkitLineClamp: 2,
           WebkitBoxOrient: "vertical" as const,

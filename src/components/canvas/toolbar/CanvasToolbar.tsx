@@ -46,7 +46,7 @@ const MODE_CONFIG: Record<CreationMode, { label: string; icon: React.ReactNode; 
 
 function Sep() {
   return (
-    <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.06)", margin: "0 4px", flexShrink: 0 }} />
+    <div style={{ width: 1, height: 18, background: "rgba(255,255,255,0.04)", margin: "0 6px", flexShrink: 0 }} />
   );
 }
 
@@ -201,11 +201,12 @@ export function CanvasToolbar({
           position: "absolute", top: 0, left: 0, right: 0, zIndex: 1000,
           height: 52,
           alignItems: "center", justifyContent: "space-between",
-          padding: "0 12px",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "rgba(10, 10, 18, 0.88)",
+          padding: "0 14px",
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
+          background: "linear-gradient(180deg, rgba(10,10,18,0.92) 0%, rgba(8,8,14,0.95) 100%)",
           backdropFilter: "blur(20px) saturate(1.3)",
           WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
         }}
       >
         {/* ── Left group ──────────────────────────────────────────────────── */}

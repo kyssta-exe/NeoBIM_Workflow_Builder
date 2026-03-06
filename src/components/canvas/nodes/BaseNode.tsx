@@ -175,19 +175,20 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
         onMouseLeave={() => setIsHovered(false)}
         style={{
           width: isInput ? 290 : 230,
-          background: "rgba(18, 18, 30, 0.90)",
+          background: "linear-gradient(145deg, rgba(18,18,30,0.92), rgba(14,14,24,0.95))",
           border: `1px solid rgba(${borderRgb}, ${borderOpacity})`,
           borderRadius: 12,
           boxShadow: `
-            0 4px 24px rgba(0,0,0,0.28),
-            0 0 0 1px rgba(255,255,255,0.04),
-            0 0 24px rgba(${rgb}, ${glowOpacity})
+            0 4px 20px rgba(0,0,0,0.3),
+            0 1px 3px rgba(0,0,0,0.15),
+            0 0 0 1px rgba(255,255,255,0.03) inset,
+            0 0 20px rgba(${rgb}, ${glowOpacity})
             ${stateGlow ? `, ${stateGlow}` : ""}
           `,
           backdropFilter: "blur(16px) saturate(1.3)",
           WebkitBackdropFilter: "blur(16px) saturate(1.3)",
-          transform: isHovered && !selected ? "scale(1.015)" : "scale(1)",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          transform: isHovered && !selected ? "scale(1.012)" : "scale(1)",
+          transition: "all 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
           overflow: "hidden",
           cursor: "pointer",
           position: "relative",
@@ -258,7 +259,7 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
               {getIcon(data.icon, 14)}
             </div>
             <span style={{
-              fontSize: 13, fontWeight: 600, color: "#F0F0F5",
+              fontSize: 12.5, fontWeight: 600, color: "#F0F0F5", letterSpacing: "-0.01em",
               flex: 1, overflow: "hidden", textOverflow: "ellipsis",
               whiteSpace: "nowrap", lineHeight: 1.3,
             }}>

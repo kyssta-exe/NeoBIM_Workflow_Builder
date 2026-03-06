@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 32, color: "#5C5C78", fontSize: 13 }}>
+      <div style={{ padding: 32, color: "#7C7C96", fontSize: 13 }}>
         Loading analytics...
       </div>
     );
@@ -99,14 +99,14 @@ export default function AnalyticsPage() {
     return (
       <div style={{ padding: 32 }}>
         <div style={{
-          background: "#12121E", border: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)",
           borderRadius: 12, padding: "48px 32px", textAlign: "center",
         }}>
           <BarChart3 size={40} style={{ color: "#3A3A50", margin: "0 auto 12px" }} />
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#F0F0F5", margin: "0 0 8px" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#F0F0F5", margin: "0 0 8px", letterSpacing: "-0.02em" }}>
             {error ? "Unable to load analytics" : "No analytics data yet"}
           </h2>
-          <p style={{ fontSize: 13, color: "#5C5C78", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#7C7C96", margin: 0 }}>
             Run your first workflow to start seeing analytics here.
           </p>
         </div>
@@ -120,10 +120,10 @@ export default function AnalyticsPage() {
     <div style={{ padding: "24px 32px", maxWidth: 1100, margin: "0 auto" }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F0F0F5", margin: "0 0 4px" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F0F0F5", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
           Analytics
         </h1>
-        <p style={{ fontSize: 13, color: "#5C5C78", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "#7C7C96", margin: 0 }}>
           Workflow execution insights over the last 7 days
         </p>
       </div>
@@ -140,10 +140,10 @@ export default function AnalyticsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         {/* Daily Executions */}
         <div style={{
-          background: "#12121E", border: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)",
           borderRadius: 12, padding: 20,
         }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", margin: "0 0 16px" }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", margin: "0 0 16px", letterSpacing: "-0.01em" }}>
             Daily Executions
           </h3>
           {data.dailyStats.some(d => d.total > 0) ? (
@@ -155,10 +155,10 @@ export default function AnalyticsPage() {
 
         {/* Node Usage */}
         <div style={{
-          background: "#12121E", border: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)",
           borderRadius: 12, padding: 20,
         }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", margin: "0 0 16px" }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", margin: "0 0 16px", letterSpacing: "-0.01em" }}>
             Node Usage
           </h3>
           {data.nodeStats.length > 0 ? (
@@ -188,10 +188,10 @@ export default function AnalyticsPage() {
 
       {/* Top Workflows */}
       <div style={{
-        background: "#12121E", border: "1px solid rgba(255,255,255,0.06)",
+        background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)",
         borderRadius: 12, padding: 20,
       }}>
-        <h3 style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", margin: "0 0 16px" }}>
+        <h3 style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", margin: "0 0 16px", letterSpacing: "-0.01em" }}>
           Most Used Workflows
         </h3>
         {data.topWorkflows.length > 0 ? (
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
                 <span style={{ flex: 1, fontSize: 12, color: "#E0E0EA", fontWeight: 500 }}>
                   {w.name}
                 </span>
-                <span style={{ fontSize: 12, color: "#5C5C78" }}>
+                <span style={{ fontSize: 12, color: "#7C7C96" }}>
                   {w.runs} run{w.runs !== 1 ? "s" : ""}
                 </span>
                 <TrendingUp size={12} style={{ color: "#10B981" }} />
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
         ) : (
-          <div style={{ padding: "24px 0", textAlign: "center", fontSize: 12, color: "#5C5C78" }}>
+          <div style={{ padding: "24px 0", textAlign: "center", fontSize: 12, color: "#7C7C96" }}>
             No workflows have been run yet. Execute a workflow to see it here.
           </div>
         )}
@@ -236,12 +236,12 @@ export default function AnalyticsPage() {
 function KPICard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
   return (
     <div style={{
-      background: "#12121E", border: "1px solid rgba(255,255,255,0.06)",
+      background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)",
       borderRadius: 12, padding: "16px 18px",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
         <div style={{ color }}>{icon}</div>
-        <span style={{ fontSize: 11, color: "#5C5C78", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+        <span style={{ fontSize: 11, color: "#7C7C96", textTransform: "uppercase", letterSpacing: "0.4px" }}>
           {label}
         </span>
       </div>

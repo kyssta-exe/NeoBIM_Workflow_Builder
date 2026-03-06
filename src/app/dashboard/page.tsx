@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, Zap, GitFork, Clock, Plus, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowRight, Play, Zap, GitFork, Clock, Plus, TrendingUp, Sparkles, Layers, BarChart3, Timer, LayoutGrid } from "lucide-react";
 import { Header } from "@/components/dashboard/Header";
 import { WorkflowCard } from "@/components/community/WorkflowCard";
 import { PREBUILT_WORKFLOWS } from "@/constants/prebuilt-workflows";
@@ -12,12 +12,17 @@ import { api } from "@/lib/api";
 // Skeleton loader for stat cards
 function StatCardSkeleton() {
   return (
-    <div className="rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#12121E] p-5 animate-pulse">
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-5 h-5 bg-[#1A1A2A] rounded" />
+    <div
+      className="rounded-[14px] border border-[rgba(255,255,255,0.05)] p-5 animate-pulse"
+      style={{
+        background: "linear-gradient(135deg, rgba(18,18,30,0.9) 0%, rgba(15,15,24,0.95) 100%)",
+      }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-10 h-10 bg-[#1A1A2A] rounded-[10px]" />
         <div className="w-3 h-3 bg-[#1A1A2A] rounded" />
       </div>
-      <div className="w-16 h-8 bg-[#1A1A2A] rounded mb-2" />
+      <div className="w-20 h-9 bg-[#1A1A2A] rounded-lg mb-2" />
       <div className="w-24 h-3 bg-[#1A1A2A] rounded" />
     </div>
   );
@@ -26,7 +31,7 @@ function StatCardSkeleton() {
 // Animated counter component
 function AnimatedCounter({ value, suffix = "" }: { value: number | string; suffix?: string }) {
   const [displayValue, setDisplayValue] = useState(0);
-  
+
   useEffect(() => {
     if (typeof value === "number") {
       let start = 0;
@@ -35,7 +40,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: number | string; suffi
       const stepTime = 30;
       const steps = duration / stepTime;
       const increment = end / steps;
-      
+
       const timer = setInterval(() => {
         start += increment;
         if (start >= end) {
@@ -45,14 +50,21 @@ function AnimatedCounter({ value, suffix = "" }: { value: number | string; suffi
           setDisplayValue(Math.floor(start));
         }
       }, stepTime);
-      
+
       return () => clearInterval(timer);
     }
   }, [value]);
-  
+
   if (typeof value === "string") return <>{value}{suffix}</>;
   return <>{displayValue}{suffix}</>;
 }
+
+const statIcons = [
+  <Layers key="layers" size={18} />,
+  <BarChart3 key="bar" size={18} />,
+  <Timer key="timer" size={18} />,
+  <LayoutGrid key="grid" size={18} />,
+];
 
 export default function DashboardPage() {
   const featuredWorkflows = PREBUILT_WORKFLOWS.slice(0, 3);
@@ -83,11 +95,10 @@ export default function DashboardPage() {
   }, []);
 
   const stats = [
-    { 
-      label: "My Workflows", 
-      value: workflowCount === null ? "..." : workflowCount, 
-      icon: "⬡", 
-      color: "#4F8AFF", 
+    {
+      label: "My Workflows",
+      value: workflowCount === null ? "..." : workflowCount,
+      color: "#4F8AFF",
       gradient: "linear-gradient(135deg, #4F8AFF 0%, #6B9FFF 100%)",
       href: "/dashboard/workflows",
       trend: workflowCount !== null && workflowCount > 0 ? `${workflowCount} total` : null
@@ -95,7 +106,6 @@ export default function DashboardPage() {
     {
       label: "Executions",
       value: executionCount === null ? "..." : executionCount,
-      icon: "▶",
       color: "#10B981",
       gradient: "linear-gradient(135deg, #10B981 0%, #34D399 100%)",
       href: "/dashboard/history",
@@ -105,7 +115,6 @@ export default function DashboardPage() {
       label: "Hours Saved",
       value: hoursSaved === 0 ? "..." : hoursSaved,
       suffix: "h",
-      icon: "⏱",
       color: "#F59E0B",
       gradient: "linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)",
       href: "/dashboard/history",
@@ -114,7 +123,6 @@ export default function DashboardPage() {
     {
       label: "Templates",
       value: PREBUILT_WORKFLOWS.length,
-      icon: "⊞",
       color: "#8B5CF6",
       gradient: "linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)",
       href: "/dashboard/templates",
@@ -130,7 +138,7 @@ export default function DashboardPage() {
       />
 
       <main className="flex-1 overflow-y-auto p-6 space-y-8">
-        {/* Premium Stat Cards */}
+        {/* Stat Cards */}
         <div className="grid grid-cols-4 gap-4">
           {isLoading ? (
             <>
@@ -143,59 +151,61 @@ export default function DashboardPage() {
             stats.map((stat, index) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
+                transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Link
                   href={stat.href}
-                  className="group block relative rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[#12121E] p-6 hover:border-[rgba(255,255,255,0.12)] transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                  className="group block relative rounded-[14px] border border-[rgba(255,255,255,0.06)] p-6 hover:border-[rgba(255,255,255,0.14)] transition-all duration-300 hover:-translate-y-1"
                   style={{
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,255,255,0.02) inset",
+                    background: "linear-gradient(145deg, rgba(18,18,30,0.95) 0%, rgba(14,14,22,0.98) 100%)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.02) inset",
                   }}
                 >
-                  {/* Gradient glow on hover */}
-                  <div 
-                    className="absolute inset-0 rounded-[16px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{
-                      background: `radial-gradient(circle at 50% 0%, ${stat.color}15, transparent 70%)`,
-                    }}
-                  />
-                  
-                  {/* Top bar accent */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-[2px] rounded-t-[16px]"
+                  {/* Top gradient accent */}
+                  <div
+                    className="absolute top-0 left-4 right-4 h-[1.5px] rounded-b-full opacity-60 group-hover:opacity-100 transition-opacity"
                     style={{ background: stat.gradient }}
                   />
-                  
+
+                  {/* Hover glow */}
+                  <div
+                    className="absolute inset-0 rounded-[14px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(ellipse at 50% -10%, ${stat.color}12, transparent 65%)`,
+                    }}
+                  />
+
                   <div className="relative">
-                    <div className="flex items-start justify-between mb-4">
-                      <div 
-                        className="w-10 h-10 rounded-[10px] flex items-center justify-center text-lg transition-transform group-hover:scale-110"
-                        style={{ 
-                          background: `${stat.color}15`,
-                          border: `1px solid ${stat.color}25`,
-                          color: stat.color
+                    <div className="flex items-start justify-between mb-5">
+                      <div
+                        className="w-10 h-10 rounded-[10px] flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${stat.color}18, ${stat.color}08)`,
+                          border: `1px solid ${stat.color}20`,
+                          color: stat.color,
+                          boxShadow: `0 0 0 0 ${stat.color}00`,
                         }}
                       >
-                        {stat.icon}
+                        {statIcons[index]}
                       </div>
                       <ArrowRight
-                        size={14}
-                        className="text-[#2A2A3E] group-hover:text-[#4F8AFF] group-hover:translate-x-1 transition-all"
+                        size={13}
+                        className="text-[#2A2A3E] group-hover:text-[#5C5C78] group-hover:translate-x-0.5 transition-all duration-300"
                       />
                     </div>
-                    
-                    <div className="text-[36px] font-bold text-[#F0F0F5] leading-none mb-2 tracking-tight">
+
+                    <div className="text-[34px] font-bold text-[#F0F0F5] leading-none mb-1.5 tracking-[-0.03em] tabular-nums">
                       <AnimatedCounter value={stat.value} suffix={stat.suffix || ""} />
                     </div>
-                    
-                    <div className="text-[13px] font-medium text-[#9898B0]">{stat.label}</div>
-                    
+
+                    <div className="text-[12.5px] font-medium text-[#6C6C8A] tracking-[-0.005em]">{stat.label}</div>
+
                     {stat.trend && (
-                      <div className="flex items-center gap-1 mt-2 text-[11px] text-[#5C5C78]">
-                        <TrendingUp size={10} />
-                        <span>{stat.trend}</span>
+                      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-[rgba(255,255,255,0.04)]">
+                        <TrendingUp size={10} className="text-[#3A3A50]" />
+                        <span className="text-[10.5px] text-[#4A4A64]">{stat.trend}</span>
                       </div>
                     )}
                   </div>
@@ -209,26 +219,26 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.4 }}
+          transition={{ delay: 0.35, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-[#F0F0F5]">Quick Actions</h2>
-              <p className="text-xs text-[#5C5C78] mt-0.5">Get started in seconds</p>
+              <h2 className="text-[13px] font-semibold text-[#E0E0EE] tracking-[-0.01em]">Quick Actions</h2>
+              <p className="text-[11.5px] text-[#4A4A64] mt-0.5">Get started in seconds</p>
             </div>
-            <div className="flex items-center gap-1 text-xs text-[#5C5C78]">
-              <Sparkles size={11} className="text-[#F59E0B]" />
+            <div className="flex items-center gap-1.5 text-[11px] text-[#4A4A64]">
+              <Sparkles size={10} className="text-[#F59E0B]" />
               <span>Choose your path</span>
             </div>
           </div>
-          
-          <div className="grid grid-cols-3 gap-4">
+
+          <div className="grid grid-cols-3 gap-3.5">
             {[
               {
                 title: "New Blank Workflow",
                 description: "Drag-and-drop nodes to build from scratch",
                 href: "/dashboard/workflows/new",
-                icon: <Plus size={20} className="text-[#4F8AFF]" />,
+                icon: <Plus size={19} strokeWidth={2.2} />,
                 color: "#4F8AFF",
                 badge: null,
               },
@@ -236,7 +246,7 @@ export default function DashboardPage() {
                 title: "Use AI Prompt",
                 description: "Describe your workflow in plain English",
                 href: "/dashboard/workflows/new?mode=prompt",
-                icon: <Zap size={20} className="text-[#8B5CF6]" />,
+                icon: <Zap size={19} />,
                 color: "#8B5CF6",
                 badge: "AI",
               },
@@ -244,49 +254,61 @@ export default function DashboardPage() {
                 title: "Browse Templates",
                 description: "Start from a curated AEC workflow",
                 href: "/dashboard/templates",
-                icon: <GitFork size={20} className="text-[#10B981]" />,
+                icon: <GitFork size={19} />,
                 color: "#10B981",
                 badge: "Popular",
               },
             ].map((action, index) => (
               <motion.div
                 key={action.title}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+                transition={{ delay: 0.45 + index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Link
                   href={action.href}
-                  className="group relative flex items-start gap-4 rounded-[14px] border border-[rgba(255,255,255,0.06)] bg-[#12121E] p-5 hover:border-[rgba(255,255,255,0.12)] hover:bg-[#1A1A2A] transition-all hover:-translate-y-0.5"
+                  className="group relative flex items-start gap-4 rounded-[13px] border border-[rgba(255,255,255,0.05)] p-5 transition-all duration-300 hover:-translate-y-0.5"
+                  style={{
+                    background: "linear-gradient(145deg, rgba(18,18,30,0.9) 0%, rgba(14,14,22,0.95) 100%)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = `${action.color}30`;
+                    e.currentTarget.style.boxShadow = `0 4px 20px rgba(0,0,0,0.2), 0 0 0 1px ${action.color}15`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.08)";
+                  }}
                 >
-                  {/* Badge */}
                   {action.badge && (
-                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                    <div className="absolute top-3.5 right-3.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.06em]"
                       style={{
-                        background: `${action.color}15`,
+                        background: `${action.color}12`,
                         color: action.color,
-                        border: `1px solid ${action.color}25`,
+                        border: `1px solid ${action.color}20`,
                       }}
                     >
                       {action.badge}
                     </div>
                   )}
-                  
+
                   <div
-                    className="h-11 w-11 rounded-[10px] flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
-                    style={{ 
-                      backgroundColor: `${action.color}12`, 
-                      border: `1px solid ${action.color}25` 
+                    className="h-11 w-11 rounded-[10px] flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105"
+                    style={{
+                      background: `linear-gradient(135deg, ${action.color}15, ${action.color}08)`,
+                      border: `1px solid ${action.color}20`,
+                      color: action.color,
                     }}
                   >
                     {action.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[15px] font-semibold text-[#F0F0F5] group-hover:text-[#4F8AFF] transition-colors flex items-center gap-2 mb-1">
+                    <div className="text-[14px] font-semibold text-[#E0E0EE] group-hover:text-white transition-colors flex items-center gap-2 mb-1 tracking-[-0.01em]">
                       {action.title}
-                      <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight size={11} className="opacity-0 -translate-x-1 group-hover:opacity-60 group-hover:translate-x-0 transition-all duration-300" />
                     </div>
-                    <div className="text-[13px] text-[#9898B0] leading-relaxed">{action.description}</div>
+                    <div className="text-[12.5px] text-[#6C6C8A] leading-relaxed">{action.description}</div>
                   </div>
                 </Link>
               </motion.div>
@@ -298,19 +320,19 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.4 }}
+          transition={{ delay: 0.7, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-[#F0F0F5]">Featured Templates</h2>
-              <p className="text-xs text-[#5C5C78] mt-0.5">Ready-to-use AEC workflows</p>
+              <h2 className="text-[13px] font-semibold text-[#E0E0EE] tracking-[-0.01em]">Featured Templates</h2>
+              <p className="text-[11.5px] text-[#4A4A64] mt-0.5">Ready-to-use AEC workflows</p>
             </div>
             <Link
               href="/dashboard/templates"
-              className="flex items-center gap-1.5 text-xs text-[#4F8AFF] hover:text-[#3D7AFF] transition-colors group"
+              className="flex items-center gap-1.5 text-[11.5px] text-[#4F8AFF] hover:text-[#6BA0FF] transition-colors group font-medium"
             >
               View all
-              <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform duration-300" />
             </Link>
           </div>
 
@@ -331,55 +353,97 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.4 }}
-          className="relative rounded-[16px] border border-[rgba(79,138,255,0.25)] bg-gradient-to-r from-[rgba(79,138,255,0.06)] to-[rgba(139,92,246,0.06)] p-6 overflow-hidden group hover:border-[rgba(79,138,255,0.4)] transition-all"
+          transition={{ delay: 0.9, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Animated background gradient */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="absolute inset-0" style={{
-              background: "radial-gradient(circle at 30% 50%, rgba(79,138,255,0.1), transparent 60%)",
-            }} />
-          </div>
-          
-          <div className="relative flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-6 w-6 rounded-lg bg-[rgba(79,138,255,0.2)] flex items-center justify-center">
-                  <Play size={11} className="text-[#4F8AFF]" fill="#4F8AFF" />
+          <Link
+            href="/dashboard/templates"
+            className="group block relative rounded-[16px] border border-[rgba(79,138,255,0.15)] p-7 overflow-hidden transition-all duration-500 hover:border-[rgba(79,138,255,0.35)]"
+            style={{
+              background: "linear-gradient(135deg, rgba(79,138,255,0.04) 0%, rgba(139,92,246,0.04) 50%, rgba(79,138,255,0.02) 100%)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.02)",
+            }}
+          >
+            {/* Atmospheric mesh gradient */}
+            <div className="absolute inset-0 opacity-30 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none">
+              <div className="absolute inset-0" style={{
+                background: "radial-gradient(ellipse at 20% 50%, rgba(79,138,255,0.12), transparent 55%), radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.08), transparent 50%)",
+              }} />
+            </div>
+
+            {/* Animated shimmer line on hover */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{
+                background: "linear-gradient(90deg, transparent, rgba(79,138,255,0.5) 50%, transparent)",
+              }}
+            />
+
+            <div className="relative flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div
+                    className="h-7 w-7 rounded-[8px] flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(79,138,255,0.2), rgba(99,102,241,0.15))",
+                      border: "1px solid rgba(79,138,255,0.2)",
+                    }}
+                  >
+                    <Play size={10} className="text-[#4F8AFF] ml-0.5" fill="#4F8AFF" />
+                  </div>
+                  <span className="text-[10.5px] font-bold text-[#4F8AFF] uppercase tracking-[0.08em]">
+                    Hero Workflow
+                  </span>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.05em]"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))",
+                      color: "#F59E0B",
+                      border: "1px solid rgba(245,158,11,0.2)",
+                    }}
+                  >
+                    Most Popular
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-[#4F8AFF] uppercase tracking-[0.08em]">
-                  Hero Workflow
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-[rgba(245,158,11,0.15)] text-[#F59E0B] text-[9px] font-bold uppercase tracking-wider border border-[rgba(245,158,11,0.3)]">
-                  Most Popular
-                </span>
+                <h3 className="text-[18px] font-bold text-[#F0F0F5] mb-2 tracking-[-0.02em]">
+                  PDF Brief → Full Pipeline (Beta)
+                </h3>
+                <p className="text-[13px] text-[#7C7C96] max-w-2xl leading-[1.6] mb-4">
+                  The definitive end-to-end AEC workflow. Upload a project brief PDF and get extracted requirements, 3D massing variants, and concept renders in one automated pipeline. (IFC export in development)
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 text-[11.5px] text-[#5C5C78]">
+                    <Clock size={11} />
+                    <span>~3 minutes</span>
+                  </div>
+                  <div className="text-[11.5px] text-[#5C5C78]">6 nodes</div>
+                  <div
+                    className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                    style={{
+                      background: "rgba(245,158,11,0.08)",
+                      color: "#F59E0B",
+                      border: "1px solid rgba(245,158,11,0.15)",
+                    }}
+                  >
+                    Advanced
+                  </div>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-[#F0F0F5] mb-2">
-                PDF Brief → Full Pipeline (Beta)
-              </h3>
-              <p className="text-sm text-[#9898B0] max-w-2xl leading-relaxed mb-4">
-                The definitive end-to-end AEC workflow. Upload a project brief PDF and get extracted requirements, 3D massing variants, and concept renders in one automated pipeline. (IFC export in development)
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-xs text-[#5C5C78]">
-                  <Clock size={12} />
-                  <span>~3 minutes</span>
-                </div>
-                <div className="text-xs text-[#5C5C78]">6 nodes</div>
-                <div className="px-2 py-0.5 rounded-full bg-[rgba(245,158,11,0.1)] text-[#F59E0B] text-[10px] font-semibold border border-[rgba(245,158,11,0.2)]">
-                  Advanced
-                </div>
+              <div
+                className="flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-[13px] font-semibold text-white shrink-0 ml-8 transition-all duration-300 group-hover:shadow-[0_0_24px_rgba(79,138,255,0.3)] group-hover:-translate-y-0.5"
+                style={{
+                  background: "linear-gradient(135deg, #4F8AFF 0%, #6366F1 100%)",
+                  boxShadow: "0 2px 8px rgba(79,138,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1)",
+                }}
+              >
+                <Play size={11} fill="white" />
+                <span>Try it now</span>
               </div>
             </div>
-            <Link
-              href="/dashboard/templates"
-              className="flex items-center gap-2 rounded-[10px] bg-gradient-to-r from-[#4F8AFF] to-[#6366F1] px-5 py-2.5 text-sm font-semibold text-white hover:shadow-[0_0_20px_rgba(79,138,255,0.4)] transition-all shrink-0 ml-6 group"
-            >
-              <Play size={12} fill="white" />
-              <span>Try it now</span>
-            </Link>
-          </div>
+          </Link>
         </motion.div>
+
+        {/* Bottom spacer */}
+        <div className="h-2" />
       </main>
     </div>
   );

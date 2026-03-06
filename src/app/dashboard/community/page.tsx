@@ -166,7 +166,7 @@ function PublishDialog({ onClose }: { onClose: () => void }) {
         transition={{ type: "spring", stiffness: 420, damping: 34 }}
         onClick={e => e.stopPropagation()}
         style={{
-          width: 480, background: "#12121E",
+          width: 480, background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))",
           borderRadius: 14, border: "1px solid #1E1E2E",
           boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
           overflow: "hidden",
@@ -177,7 +177,7 @@ function PublishDialog({ onClose }: { onClose: () => void }) {
           display: "flex", alignItems: "center",
           padding: "16px 20px", borderBottom: "1px solid #1A1A26",
         }}>
-          <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: "#F0F0F5" }}>
+          <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: "#F0F0F5", letterSpacing: "-0.02em" }}>
             Publish to Community
           </span>
           <button
@@ -198,7 +198,7 @@ function PublishDialog({ onClose }: { onClose: () => void }) {
         {/* Form */}
         <div style={{ padding: "20px" }}>
           {/* Title */}
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#8888A0", display: "block", marginBottom: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#7C7C96", display: "block", marginBottom: 6 }}>
             Title <span style={{ color: "#EF4444" }}>*</span>
           </label>
           <input
@@ -214,11 +214,11 @@ function PublishDialog({ onClose }: { onClose: () => void }) {
               transition: "border-color 0.1s",
             }}
             onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "#4F8AFF"; }}
-            onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
+            onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)"; }}
           />
 
           {/* Description */}
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#8888A0", display: "block", marginBottom: 6 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#7C7C96", display: "block", marginBottom: 6 }}>
             Description <span style={{ color: "#EF4444" }}>*</span>
           </label>
           <textarea
@@ -236,11 +236,11 @@ function PublishDialog({ onClose }: { onClose: () => void }) {
               transition: "border-color 0.1s",
             }}
             onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "#4F8AFF"; }}
-            onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
+            onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)"; }}
           />
 
           {/* Tags */}
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#8888A0", display: "block", marginBottom: 8 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: "#7C7C96", display: "block", marginBottom: 8 }}>
             Tags
           </label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
@@ -271,12 +271,12 @@ function PublishDialog({ onClose }: { onClose: () => void }) {
               onClick={onClose}
               style={{
                 padding: "8px 18px", borderRadius: 8, cursor: "pointer",
-                fontSize: 12, fontWeight: 600, color: "#8888A0",
+                fontSize: 12, fontWeight: 600, color: "#7C7C96",
                 background: "transparent", border: "1px solid #1E1E2E",
                 transition: "all 0.1s",
               }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2A2A3E"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)"; }}
             >
               Cancel
             </button>
@@ -366,7 +366,7 @@ export default function CommunityPage() {
           <div style={{ display: "flex", gap: 32 }}>
             {STATS.map(s => (
               <div key={s.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: s.color, letterSpacing: "-0.02em" }}>{s.value}</span>
                 <span style={{ fontSize: 10, color: "#55556A" }}>{s.label}</span>
               </div>
             ))}
@@ -419,13 +419,13 @@ export default function CommunityPage() {
                   width: "100%", paddingLeft: 32, paddingRight: 12,
                   height: 34, borderRadius: 8,
                   border: "1px solid #1E1E2E",
-                  background: "#12121E", color: "#F0F0F5",
+                  background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", color: "#F0F0F5",
                   fontSize: 12, outline: "none",
                   boxSizing: "border-box",
                   transition: "border-color 0.1s",
                 }}
                 onFocus={e => { (e.currentTarget as HTMLElement).style.borderColor = "#4F8AFF"; }}
-                onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
+                onBlur={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)"; }}
               />
             </div>
 
@@ -459,8 +459,8 @@ export default function CommunityPage() {
                 style={{
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 8, cursor: "pointer",
-                  fontSize: 11, color: "#8888A0",
-                  background: "#12121E", border: "1px solid #1E1E2E",
+                  fontSize: 11, color: "#7C7C96",
+                  background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid #1E1E2E",
                 }}
               >
                 <span style={{ color: "#55556A" }}>Sort:</span>
@@ -477,7 +477,7 @@ export default function CommunityPage() {
                     style={{
                       position: "absolute", top: "calc(100% + 6px)", right: 0,
                       width: 170, zIndex: 50,
-                      background: "#12121E", borderRadius: 10,
+                      background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", borderRadius: 10,
                       border: "1px solid #1E1E2E",
                       boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
                       overflow: "hidden", padding: "4px 0",

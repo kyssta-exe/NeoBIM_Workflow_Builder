@@ -48,11 +48,13 @@ function StickyNav() {
       transition={{ type: "spring", stiffness: 340, damping: 30 }}
       style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 9000,
-        height: 56, display: "flex", alignItems: "center",
+        height: 52, display: "flex", alignItems: "center",
         padding: "0 40px",
-        background: "rgba(7,7,13,0.88)",
-        backdropFilter: "blur(16px) saturate(1.2)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(7,7,13,0.92)",
+        backdropFilter: "blur(20px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
       }}
     >
       <Link href="/" style={{
@@ -73,8 +75,8 @@ function StickyNav() {
 
       {["Features", "Workflows", "Pricing", "Community"].map(l => (
         <a key={l} href={`#${l.toLowerCase()}`} style={{
-          fontSize: 13, color: "#9898B0", textDecoration: "none",
-          margin: "0 16px", transition: "color 0.15s",
+          fontSize: 12.5, color: "#7C7C96", textDecoration: "none",
+          margin: "0 16px", transition: "color 0.2s", letterSpacing: "-0.005em",
         }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#F0F0F5"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#9898B0"; }}
@@ -192,10 +194,10 @@ function HeroAnimation() {
       transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
       style={{
         borderRadius: 16, overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.06)",
-        boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 80px rgba(79,138,255,0.06)",
-        background: "rgba(11,11,19,0.8)",
-        backdropFilter: "blur(8px)",
+        border: "1px solid rgba(255,255,255,0.05)",
+        boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(79,138,255,0.05)",
+        background: "rgba(11,11,19,0.85)",
+        backdropFilter: "blur(12px)",
       }}
     >
       {/* Toolbar mockup */}
@@ -339,11 +341,12 @@ export default function LandingPage() {
       {/* ── Static top nav ───────────────────────────────────────── */}
       <header>
       <nav style={{
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
         display: "flex", alignItems: "center",
-        padding: "0 48px", height: 60,
-        background: "rgba(7,7,13,0.6)",
-        backdropFilter: "blur(12px)",
+        padding: "0 48px", height: 56,
+        background: "rgba(7,7,13,0.7)",
+        backdropFilter: "blur(16px) saturate(1.2)",
+        WebkitBackdropFilter: "blur(16px) saturate(1.2)",
       }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", marginRight: "auto" }}>
           <div style={{
@@ -406,9 +409,9 @@ export default function LandingPage() {
           style={{ flex: "0 0 52%", minWidth: 0 }}
         >
           <p style={{
-            fontSize: 11, fontWeight: 700,
-            textTransform: "uppercase", letterSpacing: "3px", marginBottom: 20,
-            background: "linear-gradient(90deg, #4F8AFF, #8B5CF6)",
+            fontSize: 10.5, fontWeight: 700,
+            textTransform: "uppercase", letterSpacing: "3px", marginBottom: 22,
+            background: "linear-gradient(90deg, #4F8AFF, #A78BFA)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -417,10 +420,10 @@ export default function LandingPage() {
           </p>
 
           <h1 style={{
-            fontSize: 56, fontWeight: 800, lineHeight: 1.05,
-            color: "#F0F0F5", marginBottom: 20,
-            letterSpacing: "-0.03em",
-            textShadow: "0 0 80px rgba(79, 138, 255, 0.15)",
+            fontSize: 54, fontWeight: 800, lineHeight: 1.04,
+            color: "#F0F0F5", marginBottom: 22,
+            letterSpacing: "-0.035em",
+            textShadow: "0 0 80px rgba(79, 138, 255, 0.12)",
           }}>
             <span style={{
               background: "linear-gradient(135deg, #4F8AFF 0%, #8B5CF6 100%)",
@@ -434,8 +437,9 @@ export default function LandingPage() {
           </h1>
 
           <p style={{
-            fontSize: 18, color: "#9898B0", lineHeight: 1.7,
-            maxWidth: 540, marginBottom: 24,
+            fontSize: 17, color: "#7C7C96", lineHeight: 1.7,
+            maxWidth: 520, marginBottom: 24,
+            letterSpacing: "-0.005em",
           }}>
             Turn project briefs into 3D massing models and photorealistic concept renders. (IFC export in development) 
             No-code workflows built for architects who value their time.
@@ -565,8 +569,8 @@ export default function LandingPage() {
               const rgb = hexToRgb(f.color);
               return (
                 <motion.div key={f.title} variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{
-                  background: "#12121E", borderRadius: 16,
-                  border: "1px solid rgba(255,255,255,0.06)", padding: 32,
+                  background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", borderRadius: 16,
+                  border: "1px solid rgba(255,255,255,0.05)", padding: 32,
                   transition: "border-color 0.15s, transform 0.2s, box-shadow 0.2s",
                   cursor: "default",
                   position: "relative",
@@ -666,10 +670,10 @@ export default function LandingPage() {
           variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }}
           style={{ textAlign: "center", marginBottom: 52 }}
         >
-          <h2 style={{ fontSize: 32, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.01em" }}>
+          <h2 style={{ fontSize: 30, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.025em" }}>
             Everything you need to automate AEC workflows
           </h2>
-          <p style={{ fontSize: 16, color: "#9898B0", maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: "#7C7C96", maxWidth: 520, margin: "0 auto", lineHeight: 1.6, letterSpacing: "-0.005em" }}>
             Purpose-built for architects, engineers, and construction professionals.
           </p>
         </motion.div>
@@ -747,7 +751,7 @@ export default function LandingPage() {
             variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }}
             style={{ textAlign: "center", marginBottom: 52 }}
           >
-            <h2 style={{ fontSize: 32, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.01em" }}>
+            <h2 style={{ fontSize: 30, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.025em" }}>
               From brief to building in minutes
             </h2>
             <p style={{ fontSize: 16, color: "#9898B0" }}>
@@ -842,7 +846,7 @@ export default function LandingPage() {
           variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }}
           style={{ textAlign: "center", marginBottom: 52 }}
         >
-          <h2 style={{ fontSize: 32, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.01em" }}>
+          <h2 style={{ fontSize: 30, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.025em" }}>
             Three ways to build
           </h2>
         </motion.div>
@@ -933,7 +937,7 @@ export default function LandingPage() {
             variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }}
             style={{ textAlign: "center", marginBottom: 52 }}
           >
-            <h2 style={{ fontSize: 32, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.01em" }}>
+            <h2 style={{ fontSize: 30, fontWeight: 700, color: "#F0F0F5", marginBottom: 12, letterSpacing: "-0.025em" }}>
               Simple, transparent pricing
             </h2>
             <p style={{ fontSize: 16, color: "#9898B0" }}>
@@ -947,7 +951,7 @@ export default function LandingPage() {
             style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}
           >
             {/* FREE */}
-            <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{ background: "#12121E", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "32px 28px" }}>
+            <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{ background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "32px 28px" }}>
               <div style={{ marginBottom: 24 }}>
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: "#F0F0F5", marginBottom: 6 }}>Free</h3>
                 <p style={{ fontSize: 13, color: "#7878A0" }}>Perfect for trying out workflows</p>
@@ -964,7 +968,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* PRO (MOST POPULAR) */}
-            <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{ background: "#12121E", border: "2px solid rgba(79,138,255,0.35)", borderRadius: 16, padding: "32px 28px", position: "relative", boxShadow: "0 0 0 1px rgba(79,138,255,0.1), 0 8px 32px rgba(79,138,255,0.08)" }}>
+            <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{ background: "linear-gradient(145deg, rgba(18,18,34,0.98), rgba(14,14,24,1))", border: "1.5px solid rgba(79,138,255,0.3)", borderRadius: 16, padding: "32px 28px", position: "relative", boxShadow: "0 0 0 1px rgba(79,138,255,0.08), 0 8px 40px rgba(79,138,255,0.08), inset 0 1px 0 rgba(255,255,255,0.02)" }}>
               <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", padding: "3px 12px", borderRadius: 20, background: "linear-gradient(135deg, #4F8AFF, #6366F1)", fontSize: 10, fontWeight: 700, color: "white", letterSpacing: "0.8px" }}>MOST POPULAR</div>
               <div style={{ marginBottom: 24 }}>
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: "#F0F0F5", marginBottom: 6 }}>Pro</h3>
@@ -985,7 +989,7 @@ export default function LandingPage() {
             </motion.div>
 
             {/* ENTERPRISE */}
-            <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{ background: "#12121E", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "32px 28px" }}>
+            <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }} style={{ background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "32px 28px" }}>
               <div style={{ marginBottom: 24 }}>
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: "#F0F0F5", marginBottom: 6 }}>Enterprise</h3>
                 <p style={{ fontSize: 13, color: "#7878A0" }}>For large teams & organizations</p>
@@ -1015,10 +1019,10 @@ export default function LandingPage() {
           variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }}
           style={{ maxWidth: 600, margin: "0 auto" }}
         >
-          <h2 style={{ fontSize: 36, fontWeight: 700, color: "#F0F0F5", marginBottom: 14, letterSpacing: "-0.01em" }}>
+          <h2 style={{ fontSize: 34, fontWeight: 700, color: "#F0F0F5", marginBottom: 14, letterSpacing: "-0.03em" }}>
             Ready to transform your<br />AEC workflow?
           </h2>
-          <p style={{ fontSize: 16, color: "#9898B0", marginBottom: 32, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: "#7C7C96", marginBottom: 32, lineHeight: 1.6, letterSpacing: "-0.005em" }}>
             Free to start. No credit card required.
           </p>
           <Link href="/dashboard" style={{
@@ -1067,10 +1071,11 @@ export default function LandingPage() {
 
       {/* ── Footer ────────────────────────────────────────────────── */}
       <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        padding: "20px 48px",
+        borderTop: "1px solid rgba(255,255,255,0.04)",
+        padding: "18px 48px",
         display: "flex", alignItems: "center",
         maxWidth: "100%",
+        background: "rgba(7,7,13,0.8)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <div style={{
@@ -1111,7 +1116,7 @@ export default function LandingPage() {
           }
 
           /* Hero title */
-          h1[style*="fontSize: 56"] {
+          h1[style*="fontSize: 54"] {
             font-size: 36px !important;
           }
 
@@ -1175,7 +1180,7 @@ export default function LandingPage() {
 
         @media (max-width: 480px) {
           /* Extra small screens */
-          h1[style*="fontSize: 56"] {
+          h1[style*="fontSize: 54"] {
             font-size: 28px !important;
           }
 
@@ -1190,100 +1195,6 @@ export default function LandingPage() {
         }
       `}</style>
       
-      {/* Mobile Responsive Styles */}
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          /* Hero section - stack vertically */
-          section[style*="minHeight: calc(100vh - 60px)"] {
-            flex-direction: column !important;
-            padding: 40px 24px !important;
-            gap: 32px !important;
-          }
-          
-          section[style*="minHeight: calc(100vh - 60px)"] > div {
-            flex: 1 !important;
-            max-width: 100% !important;
-          }
-
-          /* Hero title */
-          h1[style*="fontSize: 56"] {
-            font-size: 36px !important;
-          }
-
-          /* All grid layouts - 1 column on mobile */
-          div[style*="gridTemplateColumns: repeat(3, 1fr)"],
-          div[style*="gridTemplateColumns: repeat(4, 1fr)"] {
-            grid-template-columns: 1fr !important;
-            gap: 16px !important;
-          }
-
-          /* How it works section - stack the steps */
-          div[style*="gridTemplateColumns: 1fr 40px 1fr 40px 1fr"] {
-            grid-template-columns: 1fr !important;
-            gap: 16px !important;
-          }
-
-          /* Hide arrows between steps on mobile */
-          div[style*="gridTemplateColumns: 1fr 40px 1fr 40px 1fr"] > div[style*="display: flex"][style*="justifyContent: center"]:has(svg) {
-            display: none !important;
-          }
-
-          /* Navigation - adjust padding */
-          nav[style*="padding: 0 48px"] {
-            padding: 0 20px !important;
-          }
-
-          /* Sections - reduce padding */
-          section[style*="padding: 88px 48px"] {
-            padding: 48px 24px !important;
-          }
-
-          section[style*="padding: 48px 48px 88px"] {
-            padding: 32px 24px 48px !important;
-          }
-
-          /* CTAs - stack buttons vertically */
-          div[style*="display: flex"][style*="gap: 12"] > a {
-            width: 100%;
-            justify-content: center;
-          }
-
-          /* Increase touch target size for mobile */
-          a[style*="padding"][style*="borderRadius"] {
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          /* Logo strip - scroll on mobile */
-          div[style*="Trusted by teams"] {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-          }
-
-          /* Hero animation - smaller on mobile */
-          div[style*="borderRadius: 16"][style*="boxShadow"] {
-            transform: scale(0.9) !important;
-          }
-        }
-
-        @media (max-width: 480px) {
-          /* Extra small screens */
-          h1[style*="fontSize: 56"] {
-            font-size: 28px !important;
-          }
-
-          nav span[style*="fontSize: 17"] {
-            font-size: 15px !important;
-          }
-
-          /* Sticky nav - hide on very small screens */
-          nav[style*="position: fixed"] {
-            display: none !important;
-          }
-        }
-      `}</style>
       </footer>
     </div>
   );

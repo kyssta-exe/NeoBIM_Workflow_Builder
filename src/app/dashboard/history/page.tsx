@@ -155,7 +155,7 @@ function DetailModal({ execution, onClose, onRerun }: DetailModalProps) {
         exit={{ opacity: 0, scale: 0.96 }}
         transition={{ type: "spring", stiffness: 360, damping: 30 }}
         style={{
-          background: "#12121E", border: "1px solid #1E1E2E",
+          background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid #1E1E2E",
           borderRadius: 14, width: "100%", maxWidth: 600,
           maxHeight: "80vh", overflow: "hidden",
           display: "flex", flexDirection: "column",
@@ -169,7 +169,7 @@ function DetailModal({ execution, onClose, onRerun }: DetailModalProps) {
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F0F5" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F0F5", letterSpacing: "-0.01em" }}>
               {execution.workflow.name}
             </div>
             <div style={{ fontSize: 11, color: "#55556A", marginTop: 2, display: "flex", gap: 12 }}>
@@ -196,7 +196,7 @@ function DetailModal({ execution, onClose, onRerun }: DetailModalProps) {
                   background: "rgba(255,255,255,0.02)", borderRadius: 8,
                   border: "1px solid rgba(255,255,255,0.05)", padding: "10px 12px",
                 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#C0C0D0", marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#C0C0D0", marginBottom: 8, letterSpacing: "-0.01em" }}>
                     {nodeLabel}
                   </div>
                   {artifacts.map(a => (
@@ -295,11 +295,11 @@ function ExecutionRow({ execution, onRerun, onViewDetails, compareSelected, onTo
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: "#12121E", border: "1px solid #1E1E2E", borderRadius: 10,
+        background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid #1E1E2E", borderRadius: 10,
         padding: "14px 16px", transition: "border-color 0.15s",
       }}
       onMouseEnter={e => { e.currentTarget.style.borderColor = "#2A2A3E"; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; }}
     >
       {/* Top row */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -326,7 +326,7 @@ function ExecutionRow({ execution, onRerun, onViewDetails, compareSelected, onTo
             <span
               onClick={() => router.push(`/dashboard/canvas?id=${execution.workflowId}`)}
               style={{
-                fontSize: 13, fontWeight: 600, color: "#F0F0F5",
+                fontSize: 13, fontWeight: 600, color: "#F0F0F5", letterSpacing: "-0.01em",
                 cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               }}
               onMouseEnter={e => { e.currentTarget.style.color = "#4F8AFF"; }}
@@ -377,7 +377,7 @@ function ExecutionRow({ execution, onRerun, onViewDetails, compareSelected, onTo
               transition: "all 0.1s",
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2A2A3E"; (e.currentTarget as HTMLElement).style.color = "#8888A0"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)"; (e.currentTarget as HTMLElement).style.color = "#55556A"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLElement).style.color = "#55556A"; }}
           >
             <ExternalLink size={10} /> Open WF
           </button>
@@ -515,7 +515,7 @@ export default function HistoryPage() {
           ].map(s => (
             <div key={s.label} style={{
               flex: 1, padding: "12px 16px", borderRadius: 10,
-              background: "#12121E", border: "1px solid #1E1E2E",
+              background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid #1E1E2E",
             }}>
               <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
               <div style={{ fontSize: 11, color: "#55556A", marginTop: 2 }}>{s.label}</div>
@@ -579,10 +579,10 @@ export default function HistoryPage() {
         ) : error ? (
           <div style={{
             textAlign: "center", padding: 64,
-            background: "#12121E", borderRadius: 12, border: "1px solid rgba(239,68,68,0.2)",
+            background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", borderRadius: 12, border: "1px solid rgba(239,68,68,0.2)",
           }}>
             <AlertCircle size={32} style={{ margin: "0 auto 12px", color: "#EF4444" }} />
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#EF4444", marginBottom: 6 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#EF4444", marginBottom: 6, letterSpacing: "-0.01em" }}>
               {error}
             </div>
             <div style={{ fontSize: 12, color: "#55556A", marginBottom: 16 }}>
@@ -602,10 +602,10 @@ export default function HistoryPage() {
         ) : executions.length === 0 ? (
           <div style={{
             textAlign: "center", padding: 64, color: "#55556A",
-            background: "#12121E", borderRadius: 12, border: "1px solid #1E1E2E",
+            background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", borderRadius: 12, border: "1px solid #1E1E2E",
           }}>
             <Zap size={32} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#8888A0", marginBottom: 6 }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#8888A0", marginBottom: 6, letterSpacing: "-0.01em" }}>
               No executions yet
             </div>
             <div style={{ fontSize: 12 }}>

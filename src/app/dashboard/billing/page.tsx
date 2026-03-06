@@ -16,9 +16,9 @@ interface UsageStats {
 // Security Badge Component
 function SecurityBadge({ icon: Icon, label }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1A1A2A] border border-[rgba(255,255,255,0.06)]">
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#16162A] border border-[rgba(255,255,255,0.05)]">
       <Icon size={14} className="text-[#10B981]" />
-      <span className="text-xs text-[#9898B0] font-medium">{label}</span>
+      <span className="text-xs text-[#7C7C96] font-medium">{label}</span>
     </div>
   );
 }
@@ -117,7 +117,7 @@ export default function BillingPage() {
       cta: currentPlan === "Free" ? "Current Plan" : "Downgrade",
       ctaDisabled: currentPlan === "Free",
       highlighted: false,
-      color: "#9898B0",
+      color: "#7C7C96",
       planType: null,
     },
     {
@@ -258,12 +258,12 @@ export default function BillingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[#12121E] p-6"
+            className="rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[#111120] p-6"
           >
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h3 className="text-lg font-bold text-[#F0F0F5] mb-1">Current Plan: Free</h3>
-                <p className="text-sm text-[#9898B0]">
+                <p className="text-sm text-[#7C7C96]">
                   {loading ? "Loading usage..." : `${usage?.used || 0} of ${usage?.limit || 3} runs used today`}
                 </p>
               </div>
@@ -271,7 +271,7 @@ export default function BillingPage() {
                 <div className="text-3xl font-bold text-[#4F8AFF]">
                   {loading ? "—" : `${usage?.used || 0}/${usage?.limit || 3}`}
                 </div>
-                <div className="text-xs text-[#9898B0] mt-1">
+                <div className="text-xs text-[#7C7C96] mt-1">
                   {loading ? "" : `Resets ${new Date(usage?.resetDate || "").toLocaleDateString()}`}
                 </div>
               </div>
@@ -279,7 +279,7 @@ export default function BillingPage() {
 
             {!loading && usage && (
               <div className="space-y-3">
-                <div className="h-3 bg-[#1A1A2A] rounded-full overflow-hidden relative">
+                <div className="h-3 bg-[#16162A] rounded-full overflow-hidden relative">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min((usage.used / usage.limit) * 100, 100)}%` }}
@@ -321,7 +321,7 @@ export default function BillingPage() {
               </div>
               <button
                 onClick={handleManageSubscription}
-                className="px-6 py-3 rounded-[10px] bg-[#1A1A2A] text-[#F0F0F5] font-semibold text-sm hover:bg-[#2A2A3E] transition-colors border border-[rgba(255,255,255,0.06)]"
+                className="px-6 py-3 rounded-[10px] bg-[#16162A] text-[#F0F0F5] font-semibold text-sm hover:bg-[#2A2A3E] transition-colors border border-[rgba(255,255,255,0.05)]"
               >
                 Manage Billing
               </button>
@@ -333,7 +333,7 @@ export default function BillingPage() {
         <div>
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-[#F0F0F5] mb-2">Choose Your Plan</h2>
-            <p className="text-sm text-[#9898B0]">All plans include 14-day money-back guarantee</p>
+            <p className="text-sm text-[#7C7C96]">All plans include 14-day money-back guarantee</p>
           </div>
 
           <div className="grid grid-cols-3 gap-6">
@@ -346,7 +346,7 @@ export default function BillingPage() {
                 className={`rounded-[16px] border p-7 transition-all hover:-translate-y-1 relative ${
                   plan.highlighted
                     ? "border-[#4F8AFF] bg-gradient-to-b from-[#4F8AFF08] to-[#12121E] shadow-[0_0_30px_rgba(79,138,255,0.15)]"
-                    : "border-[rgba(255,255,255,0.06)] bg-[#12121E]"
+                    : "border-[rgba(255,255,255,0.05)] bg-[#111120]"
                 }`}
                 style={plan.highlighted ? { borderTopWidth: 3 } : {}}
               >
@@ -365,13 +365,13 @@ export default function BillingPage() {
 
                 <div className="mb-5">
                   <h3 className="text-xl font-bold text-[#F0F0F5] mb-1">{plan.name}</h3>
-                  <p className="text-xs text-[#9898B0]">{plan.description}</p>
+                  <p className="text-xs text-[#7C7C96]">{plan.description}</p>
                 </div>
 
                 <div className="mb-5">
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-5xl font-bold text-[#F0F0F5]">{plan.price}</span>
-                    <span className="text-sm text-[#9898B0]">/{plan.period.split(' ')[1] || plan.period}</span>
+                    <span className="text-sm text-[#7C7C96]">/{plan.period.split(' ')[1] || plan.period}</span>
                   </div>
                   {plan.savings && (
                     <div className="text-xs text-[#10B981] font-semibold">{plan.savings}</div>
@@ -392,10 +392,10 @@ export default function BillingPage() {
                   onClick={() => plan.planType && handleUpgrade(plan.planType)}
                   className={`w-full py-3.5 rounded-[10px] font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                     plan.ctaDisabled || upgradingTo !== null
-                      ? "bg-[#1A1A2A] text-[#55556A] cursor-not-allowed"
+                      ? "bg-[#16162A] text-[#55556A] cursor-not-allowed"
                       : plan.highlighted
                       ? "text-white hover:shadow-[0_0_30px_rgba(79,138,255,0.4)]"
-                      : "bg-[#1A1A2A] text-[#F0F0F5] hover:bg-[#2A2A3E] border border-[rgba(255,255,255,0.06)]"
+                      : "bg-[#16162A] text-[#F0F0F5] hover:bg-[#2A2A3E] border border-[rgba(255,255,255,0.05)]"
                   }`}
                   style={plan.highlighted && !plan.ctaDisabled && upgradingTo === null ? { background: plan.gradient } : {}}
                 >
@@ -421,7 +421,7 @@ export default function BillingPage() {
         >
           <div className="text-center mb-6">
             <h3 className="text-lg font-bold text-[#F0F0F5] mb-2">Built for AEC professionals</h3>
-            <p className="text-sm text-[#9898B0]">
+            <p className="text-sm text-[#7C7C96]">
               31 specialized nodes, 7 ready-made templates, IFC/PDF/CSV export
             </p>
           </div>
@@ -432,7 +432,7 @@ export default function BillingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
-          className="rounded-[16px] border border-[rgba(255,255,255,0.06)] bg-[#12121E] p-6"
+          className="rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[#111120] p-6"
         >
           <h3 className="text-lg font-bold text-[#F0F0F5] mb-5">Frequently Asked Questions</h3>
           <div className="space-y-4 text-sm">

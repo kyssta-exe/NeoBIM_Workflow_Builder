@@ -132,7 +132,7 @@ export default function TemplatesPage() {
           minHeight: 180, display: "flex", alignItems: "center",
           padding: "0 32px",
           background: "radial-gradient(ellipse at 30% 50%, rgba(79,138,255,0.07) 0%, transparent 60%), radial-gradient(ellipse at 70% 50%, rgba(139,92,246,0.06) 0%, transparent 60%), #07070D",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
         }}>
           {/* Left text */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -142,10 +142,10 @@ export default function TemplatesPage() {
             }}>
               Start with a proven workflow
             </p>
-            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#F0F0F5", lineHeight: 1.2, marginBottom: 8 }}>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#F0F0F5", lineHeight: 1.2, marginBottom: 8, letterSpacing: "-0.02em" }}>
               From brief to building<br />in minutes
             </h2>
-            <p style={{ fontSize: 14, color: "#9898B0", lineHeight: 1.6, maxWidth: 440 }}>
+            <p style={{ fontSize: 14, color: "#7C7C96", lineHeight: 1.6, maxWidth: 440 }}>
               Pre-built by AEC experts. Clone, customize, and run in seconds — no configuration needed.
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function TemplatesPage() {
                       : "#12121E",
                     border: isActive
                       ? `1px solid rgba(${rgb}, 0.35)`
-                      : "1px solid rgba(255,255,255,0.06)",
+                      : "1px solid rgba(255,255,255,0.05)",
                     color: isActive
                       ? (catColor ?? "#4F8AFF")
                       : "#8888A0",
@@ -223,7 +223,7 @@ export default function TemplatesPage() {
                   display: "flex", alignItems: "center", gap: 6,
                   padding: "5px 12px", borderRadius: 8, cursor: "pointer",
                   fontSize: 11, fontWeight: 500, color: "#8888A0",
-                  background: "#12121E", border: "1px solid rgba(255,255,255,0.06)",
+                  background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", border: "1px solid rgba(255,255,255,0.05)",
                   transition: "border-color 0.1s",
                 }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "#2A2A3E"; }}
@@ -244,8 +244,8 @@ export default function TemplatesPage() {
                     style={{
                       position: "absolute", top: "calc(100% + 6px)", right: 0,
                       width: 160, zIndex: 50,
-                      background: "#12121E", borderRadius: 10,
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "linear-gradient(145deg, rgba(18,18,30,0.95), rgba(14,14,22,0.98))", borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.05)",
                       boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
                       overflow: "hidden", padding: "4px 0",
                     }}
