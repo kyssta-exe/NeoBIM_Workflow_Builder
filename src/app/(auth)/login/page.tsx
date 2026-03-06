@@ -93,10 +93,10 @@ function LoginForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{
-        background: "linear-gradient(180deg, rgba(18,18,30,0.95) 0%, rgba(14,14,22,0.98) 100%)",
-        border: "1px solid rgba(255,255,255,0.05)",
+        background: "#0f1019",
+        border: "1px solid rgba(255,255,255,0.06)",
         borderRadius: 16,
-        padding: "38px 36px",
+        padding: "40px",
         boxShadow: "0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.02) inset",
       }}
     >
@@ -164,11 +164,11 @@ function LoginForm() {
               aria-invalid={!!emailError}
               aria-describedby={emailError ? "email-error" : undefined}
               style={{
-                width: "100%", padding: "10px 14px 10px 36px", height: 42,
+                width: "100%", padding: "10px 14px 10px 36px", height: 44,
                 borderRadius: 10,
                 border: `1px solid ${emailError ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.06)"}`,
-                background: "rgba(7,7,13,0.8)", color: "#F0F0F5",
-                fontSize: 13.5, outline: "none", boxSizing: "border-box",
+                background: "#08080f", color: "#F0F0F5",
+                fontSize: 14, outline: "none", boxSizing: "border-box",
                 transition: "border-color 0.2s, box-shadow 0.2s",
               }}
             />
@@ -217,10 +217,10 @@ function LoginForm() {
               required
               placeholder="••••••••"
               style={{
-                width: "100%", padding: "10px 14px 10px 36px", height: 42,
+                width: "100%", padding: "10px 14px 10px 36px", height: 44,
                 borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)",
-                background: "rgba(7,7,13,0.8)", color: "#F0F0F5",
-                fontSize: 13.5, outline: "none", boxSizing: "border-box",
+                background: "#08080f", color: "#F0F0F5",
+                fontSize: 14, outline: "none", boxSizing: "border-box",
                 transition: "border-color 0.2s, box-shadow 0.2s",
               }}
             />
@@ -250,7 +250,7 @@ function LoginForm() {
           type="submit"
           disabled={loading || !!emailError}
           style={{
-            width: "100%", padding: "11px", height: 42, borderRadius: 10, border: "none",
+            width: "100%", padding: "11px", height: 44, borderRadius: 10, border: "none",
             background: (loading || emailError)
               ? "rgba(79,138,255,0.3)"
               : "linear-gradient(135deg, #4F8AFF 0%, #6366F1 100%)",

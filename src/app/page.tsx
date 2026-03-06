@@ -402,7 +402,7 @@ export default function LandingPage() {
         }}>
           <div style={{
             position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 138, 255, 0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%)",
+            background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79,138,255,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 50%, rgba(139,92,246,0.05) 0%, transparent 50%)",
           }} />
         </div>
 
@@ -425,9 +425,9 @@ export default function LandingPage() {
           </p>
 
           <h1 style={{
-            fontSize: 54, fontWeight: 800, lineHeight: 1.04,
+            fontSize: "clamp(3rem, 5vw, 4.5rem)", fontWeight: 800, lineHeight: 1.05,
             color: "#F0F0F5", marginBottom: 22,
-            letterSpacing: "-0.035em",
+            letterSpacing: "-0.03em",
             textShadow: "0 0 80px rgba(79, 138, 255, 0.12)",
           }}>
             <span style={{
@@ -442,7 +442,7 @@ export default function LandingPage() {
           </h1>
 
           <p style={{
-            fontSize: 17, color: "#7C7C96", lineHeight: 1.7,
+            fontSize: 18, color: "#9898B0", lineHeight: 1.7,
             maxWidth: 520, marginBottom: 24,
             letterSpacing: "-0.005em",
           }}>
@@ -482,11 +482,11 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
             <Link href="/dashboard" style={{
               display: "flex", alignItems: "center", gap: 8,
-              padding: "14px 32px", borderRadius: 10,
+              padding: "14px 32px", borderRadius: 12,
               background: "linear-gradient(135deg, #4F8AFF 0%, #6366F1 100%)",
               color: "white", fontSize: 16, fontWeight: 600,
               textDecoration: "none",
-              boxShadow: "0 0 0 1px rgba(79,138,255,0.3), 0 4px 20px rgba(79,138,255,0.25)",
+              boxShadow: "0 4px 24px rgba(79,138,255,0.3), 0 0 0 1px rgba(79,138,255,0.3)",
               transition: "all 150ms ease",
             }}
               onMouseEnter={e => {
@@ -503,19 +503,19 @@ export default function LandingPage() {
             </Link>
             <Link href="/demo" style={{
               display: "flex", alignItems: "center", gap: 8,
-              padding: "14px 24px", borderRadius: 10,
-              border: "1px solid rgba(16,185,129,0.3)", background: "rgba(16,185,129,0.06)",
-              color: "#10B981", fontSize: 14, fontWeight: 600,
+              padding: "14px 24px", borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.08)", background: "transparent",
+              color: "#F0F0F5", fontSize: 14, fontWeight: 600,
               textDecoration: "none",
               transition: "all 150ms ease",
             }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.12)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.5)";
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)";
               }}
               onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(16,185,129,0.06)";
-                (e.currentTarget as HTMLElement).style.borderColor = "rgba(16,185,129,0.3)";
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
               }}
             >
               <PlayCircle size={15} />

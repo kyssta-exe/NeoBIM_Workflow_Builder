@@ -333,19 +333,22 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
             exit={{ x: 380, opacity: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 36 }}
             style={{
-              position: "absolute", right: 0, top: 0, bottom: 0, width: 360, zIndex: 25,
-              background: "#12121E", borderLeft: "1px solid rgba(255,255,255,0.06)",
+              position: "absolute", right: 0, top: 0, bottom: 0, width: 380, zIndex: 25,
+              background: "rgba(8,8,15,0.95)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              borderLeft: "1px solid rgba(255,255,255,0.06)",
               display: "flex", flexDirection: "column",
               boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
             }}
           >
             {/* Header */}
             <div style={{
-              padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+              height: 48, padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.06)",
               display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
             }}>
               <Sparkles size={14} style={{ color: "#4F8AFF" }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#F0F0F5", flex: 1 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#F0F0F5", flex: 1 }}>
                 AI Assistant
               </span>
               {/* GPT / Keyword toggle */}
@@ -422,10 +425,13 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
                   alignItems: msg.role === "user" ? "flex-end" : "flex-start", gap: 2,
                 }}>
                   <div style={{
-                    maxWidth: "85%", padding: "8px 11px", borderRadius: 10,
-                    background: msg.role === "user" ? "rgba(79,138,255,0.14)" : "rgba(255,255,255,0.04)",
-                    border: msg.role === "user" ? "1px solid rgba(79,138,255,0.25)" : "1px solid rgba(255,255,255,0.06)",
-                    fontSize: 12, color: "#C0C0D0", lineHeight: 1.5,
+                    maxWidth: "85%", padding: "12px 16px",
+                    borderRadius: 16,
+                    ...(msg.role === "user"
+                      ? { borderBottomRightRadius: 6, background: "rgba(79,138,255,0.15)", border: "1px solid rgba(79,138,255,0.1)" }
+                      : { borderBottomLeftRadius: 6, background: "#12121e", border: "1px solid rgba(255,255,255,0.04)" }
+                    ),
+                    fontSize: 13, color: msg.role === "user" ? "#F0F0F5" : "#9898B0", lineHeight: 1.6,
                   }}>
                     {renderMessage(msg.content)}
                   </div>
@@ -455,7 +461,7 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
 
             {/* Input */}
             <div style={{
-              padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0,
+              padding: "12px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0,
               display: "flex", gap: 8, alignItems: "flex-end",
             }}>
               <textarea
@@ -465,14 +471,15 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
                 onKeyDown={onKeyDown}
                 onMouseDown={e => e.stopPropagation()}
                 onClick={e => e.stopPropagation()}
-                placeholder={aiMode === "gpt" ? "Ask anything about your workflow…" : "Modify your workflow…"}
+                placeholder="Ask anything about your workflow..."
                 rows={2}
                 style={{
-                  flex: 1, resize: "none", padding: "7px 9px",
-                  borderRadius: 7, border: "1px solid rgba(255,255,255,0.06)",
-                  background: "#0B0B13", color: "#C0C0D0",
-                  fontSize: 12, fontFamily: "inherit", outline: "none",
+                  flex: 1, resize: "none", padding: "12px 16px",
+                  borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(255,255,255,0.04)", color: "#F0F0F5",
+                  fontSize: 14, fontFamily: "inherit", outline: "none",
                   lineHeight: 1.5, maxHeight: 80, overflowY: "auto",
+                  transition: "all 150ms ease",
                 }}
               />
               <button

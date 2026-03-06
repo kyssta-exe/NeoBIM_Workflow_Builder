@@ -60,7 +60,7 @@ export function Sidebar() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "linear-gradient(180deg, #09091A 0%, #07070D 100%)",
+        background: "#08080f",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         overflow: "hidden",
         flexShrink: 0,
@@ -79,7 +79,7 @@ export function Sidebar() {
         display: "flex", alignItems: "center",
         justifyContent: collapsed ? "center" : "space-between",
         padding: collapsed ? "14px 0" : "14px 18px 14px 20px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
         minHeight: 56, flexShrink: 0, position: "relative",
       }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", overflow: "hidden" }}>
@@ -131,12 +131,13 @@ export function Sidebar() {
           style={{
             display: "flex", alignItems: "center",
             justifyContent: "center", gap: 7,
-            padding: collapsed ? "9px" : "9px 14px",
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #4F8AFF 0%, #6D6AF6 100%)",
-            color: "white", fontWeight: 600, fontSize: 12.5,
+            padding: collapsed ? "9px" : "0",
+            height: 40,
+            borderRadius: 8,
+            background: "linear-gradient(to right, #4F8AFF, #6366F1)",
+            color: "white", fontWeight: 600, fontSize: 14,
             textDecoration: "none",
-            boxShadow: "0 2px 12px rgba(79,138,255,0.3), inset 0 1px 0 rgba(255,255,255,0.12)",
+            boxShadow: "0 2px 12px rgba(79,138,255,0.25)",
             whiteSpace: "nowrap",
           }}
           onMouseEnter={e => {
@@ -178,7 +179,7 @@ export function Sidebar() {
 
       {/* ── User info + sign out ─────────────────────────────────────────── */}
       {showLabels && (
-        <div style={{ padding: "12px 12px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+        <div style={{ padding: "12px 16px 14px", borderTop: "1px solid rgba(255,255,255,0.04)", flexShrink: 0 }}>
           {session?.user ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {/* User row */}
@@ -199,10 +200,10 @@ export function Sidebar() {
                   )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#E0E0EA", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "#F0F0F5", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {session.user.name ?? "User"}
                   </div>
-                  <div style={{ fontSize: 10, color: "#55556A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontSize: 10, color: "#5C5C78", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {session.user.email}
                   </div>
                 </div>
@@ -307,26 +308,28 @@ function NavItem({ href, label, badge, icon, isActive, collapsed, showLabels }: 
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 10,
-        padding: collapsed ? "10px 0" : "8px 12px",
+        gap: 12,
+        height: 36,
+        padding: collapsed ? "10px 0" : "0 12px",
         justifyContent: collapsed ? "center" : "flex-start",
-        borderRadius: 9,
-        borderLeft: collapsed ? "none" : `3px solid ${isActive ? "#4F8AFF" : "transparent"}`,
+        borderRadius: 8,
         background: isActive
-          ? "rgba(79,138,255,0.08)"
-          : (hovered ? "rgba(255,255,255,0.03)" : "transparent"),
+          ? "rgba(255,255,255,0.06)"
+          : (hovered ? "rgba(255,255,255,0.04)" : "transparent"),
         textDecoration: "none",
-        transition: "all 0.12s ease",
+        transition: "all 150ms ease",
         overflow: "hidden",
         position: "relative",
       }}
     >
-      {/* Subtle glow behind active icon */}
+      {/* Active left bar indicator */}
       {isActive && !collapsed && (
         <div style={{
-          position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
-          width: 28, height: 28, borderRadius: "50%",
-          background: "rgba(79,138,255,0.08)", filter: "blur(8px)",
+          position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+          width: 3, height: 20,
+          background: "#4F8AFF",
+          borderTopRightRadius: 9999,
+          borderBottomRightRadius: 9999,
           pointerEvents: "none",
         }} />
       )}
@@ -338,8 +341,8 @@ function NavItem({ href, label, badge, icon, isActive, collapsed, showLabels }: 
           <span style={{
             flex: 1,
             fontSize: 13,
-            fontWeight: isActive ? 600 : 450,
-            color: isActive ? "#F0F0F5" : (hovered ? "#C0C0D0" : "#9898B0"),
+            fontWeight: isActive ? 500 : 400,
+            color: isActive ? "#F0F0F5" : (hovered ? "#9898B0" : "#5C5C78"),
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -351,10 +354,9 @@ function NavItem({ href, label, badge, icon, isActive, collapsed, showLabels }: 
 
           {badge && (
             <span style={{
-              fontSize: 10, padding: "2px 7px", borderRadius: 6, flexShrink: 0,
-              background: isActive ? "rgba(79,138,255,0.12)" : "rgba(139, 92, 246, 0.1)",
-              color: isActive ? "#6B9FFF" : "#A78BFA", fontWeight: 600,
-              border: `1px solid ${isActive ? "rgba(79,138,255,0.2)" : "rgba(139, 92, 246, 0.15)"}`,
+              fontSize: 10, padding: "2px 6px", borderRadius: 6, flexShrink: 0,
+              background: "rgba(139,92,246,0.15)",
+              color: "#A78BFA", fontWeight: 600,
             }}>
               {badge}
             </span>

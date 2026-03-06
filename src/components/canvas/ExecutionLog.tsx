@@ -70,8 +70,8 @@ export function ExecutionLog({ entries, isRunning, onClose }: ExecutionLogProps)
         maxWidth: "calc(100vw - 360px)",
         borderRadius: 12,
         overflow: "hidden",
-        background: "rgba(10, 10, 18, 0.92)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(5, 5, 8, 0.95)",
+        border: "1px solid rgba(255,255,255,0.06)",
         backdropFilter: "blur(20px) saturate(1.3)",
         WebkitBackdropFilter: "blur(20px) saturate(1.3)",
         boxShadow:
@@ -112,9 +112,9 @@ export function ExecutionLog({ entries, isRunning, onClose }: ExecutionLogProps)
         <Terminal size={11} style={{ color: "#5C5C78", flexShrink: 0 }} />
         <span
           style={{
-            fontSize: 11,
-            color: "#E0E0EA",
-            fontWeight: 600,
+            fontSize: 12,
+            color: "#5C5C78",
+            fontWeight: 500,
             flex: 1,
           }}
         >
@@ -202,14 +202,14 @@ export function ExecutionLog({ entries, isRunning, onClose }: ExecutionLogProps)
                   style={{
                     display: "flex",
                     gap: 8,
-                    fontSize: 10,
-                    lineHeight: 1.7,
+                    fontSize: 11,
+                    lineHeight: 1.6,
                     padding: "2px 0",
                   }}
                 >
                   <span
                     style={{
-                      color: "rgba(255,255,255,0.1)",
+                      color: "#2a2a3a",
                       flexShrink: 0,
                       fontWeight: 500,
                     }}
@@ -230,7 +230,9 @@ export function ExecutionLog({ entries, isRunning, onClose }: ExecutionLogProps)
                   <span
                     style={{
                       color:
-                        entry.type === "error" ? "#F87171" : "#C0C0D0",
+                        entry.type === "error" ? "#F87171" :
+                        entry.type === "success" ? "#34D399" :
+                        "#5C5C78",
                       flex: 1,
                       overflow: "hidden",
                       textOverflow: "ellipsis",

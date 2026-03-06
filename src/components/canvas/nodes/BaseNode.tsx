@@ -67,13 +67,13 @@ function NodeHandle({ port, handleType, position, topPct, color }: NodeHandlePro
       title={`${handleType === "source" ? "Output" : "Input"}: ${port.label}`}
       style={{
         top: `${topPct}%`,
-        width:  hovered ? 12 : 8,
-        height: hovered ? 12 : 8,
-        background: handleType === "source" ? color : "rgba(18,18,26,0.95)",
-        border: `2px solid ${color}`,
+        width:  hovered ? 14 : 12,
+        height: hovered ? 14 : 12,
+        background: hovered ? color : "#1a1a2e",
+        border: `2px solid ${hovered ? color : `${color}66`}`,
         borderRadius: "50%",
-        boxShadow: hovered ? `0 0 10px rgba(${rgb}, 0.8)` : "none",
-        transition: "all 0.18s cubic-bezier(0.4, 0, 0.2, 1)",
+        boxShadow: hovered ? `0 0 12px rgba(${rgb}, 0.6)` : "none",
+        transition: "all 150ms ease",
         cursor: "crosshair",
         zIndex: 10,
       }}
@@ -89,10 +89,10 @@ function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
   return (
     <div
       style={{
-        height: 4,
+        height: 3,
         flex: 1,
-        background: "rgba(88, 88, 112, 0.18)",
-        borderRadius: 2,
+        background: "rgba(255,255,255,0.05)",
+        borderRadius: 9999,
         overflow: "hidden",
         position: "relative",
       }}
@@ -105,7 +105,7 @@ function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
           style={{
             position: "absolute",
             left: 0, top: 0, bottom: 0,
-            borderRadius: 2,
+            borderRadius: 9999,
             background: status === "success" ? "#10B981" : "#EF4444",
           }}
         />
@@ -117,7 +117,7 @@ function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
             position: "absolute",
             left: 0, top: 0, bottom: 0,
             width: "50%",
-            borderRadius: 2,
+            borderRadius: 9999,
             background: `linear-gradient(90deg, transparent, rgba(${rgb}, 0.85), transparent)`,
             animation: "shimmer 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite",
           }}
@@ -174,21 +174,24 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
-          width: isInput ? 290 : 230,
-          background: "linear-gradient(145deg, rgba(18,18,30,0.92), rgba(14,14,24,0.95))",
-          border: `1px solid rgba(${borderRgb}, ${borderOpacity})`,
+          width: isInput ? 320 : 220,
+          background: "rgba(15,16,25,0.9)",
+          border: `1px solid ${
+            status === "error" ? "rgba(248,113,113,0.5)" :
+            status === "success" ? "rgba(52,211,153,0.5)" :
+            selected ? `rgba(${rgb}, 0.6)` :
+            isHovered ? "rgba(255,255,255,0.15)" :
+            isInput ? "rgba(255,255,255,0.12)" :
+            "rgba(255,255,255,0.08)"
+          }`,
           borderRadius: 12,
-          boxShadow: `
-            0 4px 20px rgba(0,0,0,0.3),
-            0 1px 3px rgba(0,0,0,0.15),
-            0 0 0 1px rgba(255,255,255,0.03) inset,
-            0 0 20px rgba(${rgb}, ${glowOpacity})
-            ${stateGlow ? `, ${stateGlow}` : ""}
-          `,
-          backdropFilter: "blur(16px) saturate(1.3)",
-          WebkitBackdropFilter: "blur(16px) saturate(1.3)",
-          transform: isHovered && !selected ? "scale(1.012)" : "scale(1)",
-          transition: "all 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
+          boxShadow: isHovered
+            ? `0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)${stateGlow ? `, ${stateGlow}` : ""}`
+            : `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)${stateGlow ? `, ${stateGlow}` : ""}`,
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          transform: isHovered && !selected ? "translateY(-2px) scale(1.01)" : "scale(1)",
+          transition: "all 200ms ease-out",
           overflow: "hidden",
           cursor: "pointer",
           position: "relative",
@@ -199,6 +202,8 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
           position: "absolute",
           left: 0, top: 0, bottom: 0,
           width: 3,
+          borderTopLeftRadius: 12,
+          borderBottomLeftRadius: 12,
           background: color,
           boxShadow: `0 0 8px rgba(${rgb}, 0.5)`,
         }} />
@@ -255,11 +260,16 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
 
           {/* Row 1: icon + name + status + INPUT badge */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 1 }}>
-            <div style={{ color, flexShrink: 0 }}>
-              {getIcon(data.icon, 14)}
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: `${color}1A`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color, flexShrink: 0,
+            }}>
+              {getIcon(data.icon, 18)}
             </div>
             <span style={{
-              fontSize: 12.5, fontWeight: 600, color: "#F0F0F5", letterSpacing: "-0.01em",
+              fontSize: 13, fontWeight: 600, color: "#F0F0F5", letterSpacing: "-0.01em",
               flex: 1, overflow: "hidden", textOverflow: "ellipsis",
               whiteSpace: "nowrap", lineHeight: 1.3,
             }}>
@@ -267,11 +277,11 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
             </span>
             {isInput && (
               <span style={{
-                fontSize: 8, fontWeight: 700, color: color,
-                padding: "2px 6px", borderRadius: 4,
-                background: `${color}18`,
-                border: `1px solid ${color}40`,
-                flexShrink: 0, letterSpacing: 0.5,
+                fontSize: 9, fontWeight: 700, color: color,
+                padding: "2px 8px", borderRadius: 6,
+                background: `${color}20`,
+                flexShrink: 0, letterSpacing: "0.05em",
+                textTransform: "uppercase" as const,
               }}>
                 INPUT
               </span>
@@ -310,7 +320,7 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
           {/* Row 2: type label */}
           {typeLabel && (
             <div style={{
-              fontSize: 11, color: "#7C7C90", marginTop: 6, lineHeight: 1.4,
+              fontSize: 11, color: "#5C5C78", marginTop: 6, lineHeight: 1.4,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
               {typeLabel}

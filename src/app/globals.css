@@ -119,13 +119,13 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 3px;
     transition: background 0.2s;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.15);
   }
 
   ::-webkit-scrollbar-corner {
@@ -284,6 +284,10 @@
   }
 
   /* ── Button press effect ─────────────────────────────────────── */
+  button:active, [role="button"]:active {
+    transform: scale(0.97);
+  }
+
   .press-effect:active {
     transform: scale(0.97);
     transition-duration: 50ms;
@@ -391,6 +395,30 @@
   [data-sonner-toast][data-type="error"]   [data-icon] svg { color: #F87171 !important; }
   [data-sonner-toast][data-type="warning"] [data-icon] svg { color: #FBBF24 !important; }
   [data-sonner-toast][data-type="info"]    [data-icon] svg { color: #4F8AFF !important; }
+
+  /* ── Node execution pulse ────────────────────────────────────── */
+  @keyframes node-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0); }
+    50% { box-shadow: 0 0 20px 4px rgba(var(--pulse-color), 0.15); }
+  }
+
+  /* ── Artifact slide-up entrance ────────────────────────────── */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Run button glow pulse ─────────────────────────────────── */
+  @keyframes run-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(79,138,255,0.2); }
+    50% { box-shadow: 0 0 30px rgba(79,138,255,0.4); }
+  }
+
+  /* ── Execution glow ────────────────────────────────────────── */
+  @keyframes execution-glow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
 
   /* ── Focus rings (keyboard nav accessibility) ──────────────── */
 

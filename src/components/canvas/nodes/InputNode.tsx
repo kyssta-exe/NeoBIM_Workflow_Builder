@@ -41,16 +41,16 @@ export function TextPromptInput({ nodeId, data }: { nodeId: string; data: Workfl
         rows={3}
         style={{
           width: "100%", resize: "none", boxSizing: "border-box",
-          marginTop: 8, padding: "7px 9px",
+          marginTop: 8, padding: "12px",
           background: isEmpty ? "rgba(79,138,255,0.04)" : "rgba(0,0,0,0.3)",
-          borderRadius: 6,
+          borderRadius: 8,
           border: isEmpty
             ? "1px solid rgba(79,138,255,0.3)"
-            : "1px solid rgba(255,255,255,0.07)",
-          color: "#C0C0D0", fontSize: 10, lineHeight: 1.5,
+            : "1px solid rgba(255,255,255,0.08)",
+          color: "#F0F0F5", fontSize: 13, lineHeight: 1.5,
           fontFamily: "inherit", outline: "none",
           animation: isEmpty ? "pulseInputBorder 2s ease-in-out infinite" : "none",
-          transition: "border-color 0.2s, background 0.2s",
+          transition: "all 150ms ease",
         }}
       />
       <div style={{
@@ -238,10 +238,11 @@ export function ParameterInput({ nodeId, data }: { nodeId: string; data: Workflo
 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box",
-    padding: "4px 6px", borderRadius: 5,
-    border: "1px solid rgba(255,255,255,0.07)",
-    background: "rgba(0,0,0,0.3)", color: "#C0C0D0",
-    fontSize: 10, outline: "none", fontFamily: "inherit",
+    padding: "6px 12px", borderRadius: 6,
+    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(0,0,0,0.3)", color: "#F0F0F5",
+    fontSize: 13, outline: "none", fontFamily: "inherit",
+    transition: "all 150ms ease",
   };
 
   const rows: Array<{ key: keyof Params; label: string; type: "number" | "select" }> = [
@@ -259,7 +260,7 @@ export function ParameterInput({ nodeId, data }: { nodeId: string; data: Workflo
     >
       {rows.map(row => (
         <div key={row.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <label style={{ fontSize: 9, color: "#55556A", width: 60, flexShrink: 0 }}>
+          <label style={{ fontSize: 11, color: "#5C5C78", fontWeight: 500, width: 60, flexShrink: 0 }}>
             {row.label}
           </label>
           {row.type === "number" ? (

@@ -187,15 +187,15 @@ function NodeItem({
       onMouseLeave={() => { setIsHovered(false); onTooltipHide(); }}
       style={{
         position: "relative",
-        height: 48,
         display: "flex",
         alignItems: "center",
-        gap: 8,
-        padding: "0 8px",
+        gap: 12,
+        padding: "10px 12px",
         cursor: "grab",
-        borderRadius: 6,
+        borderRadius: 8,
         overflow: "hidden",
         userSelect: "none",
+        transition: "all 150ms ease",
       }}
     >
       {/* Hover bg slides in from left */}
@@ -221,13 +221,12 @@ function NodeItem({
 
       {/* Icon circle */}
       <div style={{
-        width: 28, height: 28, borderRadius: 7,
-        background: `rgba(${rgb}, 0.1)`,
-        border: `1px solid rgba(${rgb}, 0.15)`,
+        width: 32, height: 32, borderRadius: 8,
+        background: `${cfg.color}12`,
         display: "flex", alignItems: "center", justifyContent: "center",
         color: cfg.color, flexShrink: 0, position: "relative",
       }}>
-        {getIcon(node.icon, 13)}
+        {getIcon(node.icon, 14)}
       </div>
 
       {/* Text */}
@@ -236,9 +235,10 @@ function NodeItem({
           display: "flex", alignItems: "center", gap: 5,
         }}>
           <span style={{
-            fontSize: 13, fontWeight: 500, color: "#F0F0F5",
+            fontSize: 13, fontWeight: 500, color: "#e0e0ea",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             lineHeight: 1.2, flex: 1,
+            transition: "color 150ms ease",
           }}>
             {highlightText(node.name)}
           </span>
@@ -251,14 +251,14 @@ function NodeItem({
             }}>LIVE</span>
           ) : (
             <span style={{
-              fontSize: 8, fontWeight: 600, color: "#3A3A50",
-              padding: "1px 4px", borderRadius: 3,
-              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
-              flexShrink: 0,
+              fontSize: 8, fontWeight: 600, color: "#5C5C78",
+              padding: "2px 6px", borderRadius: 4,
+              background: "rgba(255,255,255,0.06)",
+              flexShrink: 0, letterSpacing: "0.05em",
             }}>PREVIEW</span>
           )}
         </div>
-        <div style={{ fontSize: 10, color: "#3A3A50", marginTop: 2 }}>
+        <div style={{ fontSize: 10, color: "#3a3a50", fontFamily: "monospace", marginTop: 2 }}>
           {node.id} · {node.executionTime ?? "—"}
         </div>
       </div>
@@ -326,8 +326,8 @@ function CategorySection({
           background: cfg.color, flexShrink: 0,
         }} />
         <span style={{
-          fontSize: 11, fontWeight: 600, color: cfg.color,
-          textTransform: "uppercase" as const, letterSpacing: "0.5px", flex: 1,
+          fontSize: 10, fontWeight: 700, color: cfg.color,
+          textTransform: "uppercase" as const, letterSpacing: "0.15em", flex: 1,
           textAlign: "left",
         }}>
           {cfg.label}
@@ -350,7 +350,7 @@ function CategorySection({
 
       {/* Separator */}
       <div style={{
-        height: 1, background: `rgba(${rgb}, 0.15)`,
+        height: 1, background: `${cfg.color}15`,
         marginLeft: 12, marginRight: 12,
       }} />
 
@@ -504,7 +504,9 @@ export function NodeLibraryPanel() {
       transition={{ duration: 0.2, ease: "easeOut" }}
       style={{
         height: "100%",
-        background: "#0B0B13",
+        background: "rgba(8,8,15,0.95)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
         flexDirection: "column",
@@ -629,15 +631,15 @@ export function NodeLibraryPanel() {
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search nodes..."
                 style={{
-                  width: "100%", height: 30,
-                  background: "#12121E", border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 7, paddingLeft: 28, paddingRight: search ? 28 : 10,
-                  fontSize: 12, color: "#F0F0F5", outline: "none",
+                  width: "100%", height: 36,
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 8, paddingLeft: 28, paddingRight: search ? 28 : 12,
+                  fontSize: 14, color: "#F0F0F5", outline: "none",
                   boxSizing: "border-box",
-                  transition: "border-color 0.15s ease",
+                  transition: "all 150ms ease",
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = "#4F8AFF"; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+                onFocus={e => { e.currentTarget.style.borderColor = "rgba(79,138,255,0.3)"; }}
+                onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
               />
               {search && (
                 <button
@@ -671,12 +673,12 @@ export function NodeLibraryPanel() {
                   key={f.value}
                   onClick={() => setActiveFilter(f.value)}
                   style={{
-                    padding: "2px 7px", borderRadius: 20, whiteSpace: "nowrap", cursor: "pointer",
-                    background: active ? `rgba(${rgb}, 0.12)` : "transparent",
-                    border: `1px solid ${active ? `rgba(${rgb}, 0.4)` : "rgba(255,255,255,0.06)"}`,
-                    fontSize: 11, fontWeight: active ? 600 : 400,
+                    padding: "4px 12px", borderRadius: 9999, whiteSpace: "nowrap", cursor: "pointer",
+                    background: active ? `rgba(${rgb}, 0.15)` : "transparent",
+                    border: active ? `1px solid rgba(${rgb}, 0.2)` : "1px solid transparent",
+                    fontSize: 12, fontWeight: 500,
                     color: active ? c : "#5C5C78",
-                    transition: "all 0.15s ease",
+                    transition: "all 150ms ease",
                   }}
                 >
                   {f.label}

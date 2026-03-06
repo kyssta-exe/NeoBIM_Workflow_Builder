@@ -65,22 +65,22 @@ function TBBtn({ onClick, icon, title, disabled }: TBBtnProps) {
       title={title}
       aria-label={title}
       style={{
-        width: 30, height: 30, borderRadius: 7,
+        width: 32, height: 32, borderRadius: 8,
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "transparent", border: "none",
         color: "#5C5C78", cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.4 : 1,
-        transition: "background 0.1s ease, color 0.1s ease",
+        transition: "all 150ms ease",
       }}
       onMouseEnter={e => {
         if (!disabled) {
-          e.currentTarget.style.background = "#1A1A26";
+          e.currentTarget.style.background = "rgba(255,255,255,0.06)";
           e.currentTarget.style.color = "#F0F0F5";
         }
       }}
       onMouseLeave={e => {
         e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "#55556A";
+        e.currentTarget.style.color = "#5C5C78";
       }}
     >
       {icon}
@@ -199,13 +199,13 @@ export function CanvasToolbar({
         className="flex"
         style={{
           position: "absolute", top: 0, left: 0, right: 0, zIndex: 1000,
-          height: 52,
+          height: 48,
           alignItems: "center", justifyContent: "space-between",
-          padding: "0 14px",
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
-          background: "linear-gradient(180deg, rgba(10,10,18,0.92) 0%, rgba(8,8,14,0.95) 100%)",
-          backdropFilter: "blur(20px) saturate(1.3)",
-          WebkitBackdropFilter: "blur(20px) saturate(1.3)",
+          padding: "0 16px",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(10,10,18,0.8)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
           boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
         }}
       >
@@ -404,19 +404,17 @@ export function CanvasToolbar({
             onClick={onPromptMode}
             style={{
               display: "flex", alignItems: "center", gap: 5,
-              height: 28, padding: "0 9px", borderRadius: 7,
-              background: "rgba(139,92,246,0.06)",
-              border: "1px solid rgba(139,92,246,0.2)",
-              color: "#8B5CF6", fontSize: 12, fontWeight: 500,
-              cursor: "pointer", transition: "all 0.15s ease",
+              height: 36, padding: "0 16px", borderRadius: 8,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#F0F0F5", fontSize: 14, fontWeight: 500,
+              cursor: "pointer", transition: "all 150ms ease",
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = "rgba(139,92,246,0.12)";
-              e.currentTarget.style.borderColor = "rgba(139,92,246,0.4)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.1)";
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = "rgba(139,92,246,0.06)";
-              e.currentTarget.style.borderColor = "rgba(139,92,246,0.2)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
             }}
           >
             <Sparkles size={11} />
@@ -510,14 +508,15 @@ export function CanvasToolbar({
                   height: 36, paddingLeft: 20, paddingRight: 16,
                   borderRadius: "10px 0 0 10px",
                   background: isWorkflowReady
-                    ? "linear-gradient(135deg, #4F8AFF 0%, #6366F1 100%)"
+                    ? "linear-gradient(to right, #4F8AFF, #6366F1)"
                     : "#2A2A3E",
                   border: "none",
-                  color: "#fff", fontSize: 13, fontWeight: 600,
+                  color: "#fff", fontSize: 14, fontWeight: 600,
                   cursor: isWorkflowReady ? "pointer" : "not-allowed",
-                  transition: "all 0.2s ease",
-                  boxShadow: isWorkflowReady ? "0 2px 12px rgba(79, 138, 255, 0.25)" : "none",
+                  transition: "all 150ms ease",
+                  boxShadow: isWorkflowReady ? "0 0 20px rgba(79,138,255,0.25)" : "none",
                   opacity: isWorkflowReady ? 1 : 0.5,
+                  animation: isWorkflowReady ? "run-glow 2.5s ease-in-out infinite" : "none",
                 }}
                 onMouseEnter={e => {
                   if (isWorkflowReady) {

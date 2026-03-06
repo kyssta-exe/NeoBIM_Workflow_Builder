@@ -45,8 +45,8 @@ export const AnimatedEdge = memo(function AnimatedEdge({
 
   // Visual states
   const active     = selected || isHovered;
-  const strokeW    = isFlowing ? 3 : active ? 3.5 : 2;
-  const strokeOp   = isFlowing ? 1 : active ? 0.9 : 0.45;
+  const strokeW    = isFlowing ? 3 : active ? 2.5 : 2;
+  const strokeOp   = isFlowing ? 1 : active ? 0.8 : 0.4;
   const glowColor  = targetColor;
 
   return (
@@ -163,7 +163,7 @@ export const AnimatedEdge = memo(function AnimatedEdge({
           stroke={sourceColor}
           strokeWidth={1.2}
           strokeOpacity={active ? 0.45 : 0.18}
-          strokeDasharray="6 20"
+          strokeDasharray="6 4"
           strokeLinecap="round"
           className="edge-dash-idle"
           style={{
@@ -199,7 +199,7 @@ export const AnimatedEdge = memo(function AnimatedEdge({
               />
             </circle>
             {/* Main dot */}
-            <circle r="5" fill="white" opacity={1} style={{
+            <circle r="4" fill="white" opacity={1} style={{
               filter: `drop-shadow(0 0 6px ${targetColor})`,
             }}>
               <animateMotion

@@ -82,15 +82,18 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: A
 
   return (
     <motion.div
-      initial={prefersReduced ? false : { opacity: 0, y: 16, scale: 0.96 }}
+      initial={prefersReduced ? false : { opacity: 0, y: 12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.94, transition: { duration: prefersReduced ? 0 : 0.15 } }}
       transition={{ type: "spring", stiffness: 380, damping: 32, duration: prefersReduced ? 0 : undefined }}
       style={{
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         borderLeft: `3px solid ${accentColor}`,
-        background: `rgba(${rgb}, 0.03)`,
+        background: "rgba(15,16,25,0.95)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
         overflow: "hidden",
+        animation: prefersReduced ? "none" : "slideUp 0.4s ease-out",
       }}
     >
       {/* Header */}
@@ -98,7 +101,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: A
         onClick={() => setCollapsed(v => !v)}
         style={{
           display: "flex", alignItems: "center", gap: 7,
-          padding: "9px 10px 9px 11px",
+          padding: "10px 16px",
           cursor: "pointer",
           userSelect: "none",
         }}
@@ -114,11 +117,10 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: A
         {/* Type badge */}
         <span style={{
           display: "flex", alignItems: "center", gap: 3,
-          padding: "1px 6px", borderRadius: 4,
-          background: `rgba(${hexToRgb(typeColor)}, 0.1)`,
-          border: `1px solid rgba(${hexToRgb(typeColor)}, 0.2)`,
-          fontSize: 9, fontWeight: 600, color: typeColor,
-          textTransform: "uppercase" as const, letterSpacing: "0.4px",
+          padding: "2px 8px", borderRadius: 6,
+          background: `${typeColor}15`,
+          fontSize: 9, fontWeight: 700, color: typeColor,
+          textTransform: "uppercase" as const, letterSpacing: "0.05em",
           flexShrink: 0,
         }}>
           {TYPE_ICON[artifact.type]}
@@ -299,12 +301,12 @@ function KpiBody({ data, accentColor }: { data: KpiArtifactData; accentColor: st
           borderRadius: 7, padding: "8px 10px",
         }}>
           <div style={{
-            fontSize: 16, fontWeight: 700, color: "#F0F0F5", lineHeight: 1.1,
+            fontSize: 20, fontWeight: 700, color: "#F0F0F5", lineHeight: 1.1,
           }}>
             {m.value}
-            {m.unit && <span style={{ fontSize: 10, fontWeight: 400, color: "#5C5C78", marginLeft: 3 }}>{m.unit}</span>}
+            {m.unit && <span style={{ fontSize: 12, fontWeight: 400, color: "#5C5C78", marginLeft: 4 }}>{m.unit}</span>}
           </div>
-          <div style={{ fontSize: 9, color: "#5C5C78", marginTop: 3, textTransform: "uppercase" as const, letterSpacing: "0.4px" }}>
+          <div style={{ fontSize: 10, color: "#3a3a50", marginTop: 4, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
             {m.label}
           </div>
         </div>

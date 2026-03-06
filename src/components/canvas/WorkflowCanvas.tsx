@@ -509,8 +509,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             <Background
               variant={BackgroundVariant.Dots}
               gap={20}
-              size={0.8}
-              color="rgba(255,255,255,0.045)"
+              size={1}
+              color="rgba(255,255,255,0.03)"
             />
 
             {/* Styled controls — bottom-right, above minimap */}
@@ -541,10 +541,22 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             />
           </ReactFlow>
 
+          {/* Atmospheric blue glow */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 1,
+              background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(79,138,255,0.03) 0%, transparent 70%)',
+            }}
+          />
+
           {/* Vignette overlay */}
           <div
-            className="canvas-vignette absolute inset-0 pointer-events-none"
-            style={{ zIndex: 1 }}
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 1,
+              background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+            }}
           />
 
           {/* Context menu */}
