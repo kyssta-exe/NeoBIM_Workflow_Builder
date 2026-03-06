@@ -454,6 +454,45 @@
   }
 }
 
+/* ── Slide up entrance (for cards/panels) ──────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out both;
+}
+
+/* ── Flowing dash animation for edges ─────────────────────────── */
+@keyframes flow-dash {
+  to { stroke-dashoffset: -20; }
+}
+
+.flow-dash {
+  animation: flow-dash 1s linear infinite;
+}
+
+/* ── Border glow animation ────────────────────────────────────── */
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(79, 138, 255, 0.15); }
+  50% { border-color: rgba(79, 138, 255, 0.5); }
+}
+
+.border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+/* ── Subtle breathing glow for important elements ──────────────── */
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MOBILE RESPONSIVE STYLES
    ═══════════════════════════════════════════════════════════════════ */

@@ -334,12 +334,12 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
             transition={{ type: "spring", stiffness: 380, damping: 36 }}
             style={{
               position: "absolute", right: 0, top: 0, bottom: 0, width: 380, zIndex: 25,
-              background: "rgba(8,8,15,0.95)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
+              background: "rgba(6,6,12,0.95)",
+              backdropFilter: "blur(32px) saturate(1.3)",
+              WebkitBackdropFilter: "blur(32px) saturate(1.3)",
               borderLeft: "1px solid rgba(255,255,255,0.06)",
               display: "flex", flexDirection: "column",
-              boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
+              boxShadow: "-8px 0 32px rgba(0,0,0,0.5)",
             }}
           >
             {/* Header */}

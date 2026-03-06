@@ -60,7 +60,7 @@ export function Sidebar() {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "#08080f",
+        background: "#06060c",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         overflow: "hidden",
         flexShrink: 0,
@@ -133,20 +133,21 @@ export function Sidebar() {
             justifyContent: "center", gap: 7,
             padding: collapsed ? "9px" : "0",
             height: 40,
-            borderRadius: 8,
+            borderRadius: 10,
             background: "linear-gradient(to right, #4F8AFF, #6366F1)",
             color: "white", fontWeight: 600, fontSize: 14,
             textDecoration: "none",
-            boxShadow: "0 2px 12px rgba(79,138,255,0.25)",
+            boxShadow: "0 2px 16px rgba(79,138,255,0.25)",
             whiteSpace: "nowrap",
+            transition: "all 200ms ease",
           }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(79,138,255,0.45), inset 0 1px 0 rgba(255,255,255,0.15)";
-            (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+            (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(79,138,255,0.4)";
+            (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)";
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(79,138,255,0.3), inset 0 1px 0 rgba(255,255,255,0.12)";
-            (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+            (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 16px rgba(79,138,255,0.25)";
+            (e.currentTarget as HTMLElement).style.filter = "brightness(1)";
           }}
         >
           <Plus size={14} strokeWidth={2.5} style={{ flexShrink: 0 }} />
@@ -309,7 +310,7 @@ function NavItem({ href, label, badge, icon, isActive, collapsed, showLabels }: 
         display: "flex",
         alignItems: "center",
         gap: 12,
-        height: 36,
+        height: 38,
         padding: collapsed ? "10px 0" : "0 12px",
         justifyContent: collapsed ? "center" : "flex-start",
         borderRadius: 8,
@@ -341,12 +342,12 @@ function NavItem({ href, label, badge, icon, isActive, collapsed, showLabels }: 
           <span style={{
             flex: 1,
             fontSize: 13,
-            fontWeight: isActive ? 500 : 400,
+            fontWeight: isActive ? 600 : 400,
             color: isActive ? "#F0F0F5" : (hovered ? "#9898B0" : "#5C5C78"),
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            transition: "color 0.12s",
+            transition: "color 0.15s ease",
             letterSpacing: "-0.01em",
           }}>
             {label}

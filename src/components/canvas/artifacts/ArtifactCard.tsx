@@ -89,11 +89,12 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: A
       style={{
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         borderLeft: `3px solid ${accentColor}`,
-        background: "rgba(15,16,25,0.95)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
+        background: "rgba(12,12,24,0.95)",
+        backdropFilter: "blur(32px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(32px) saturate(1.3)",
         overflow: "hidden",
-        animation: prefersReduced ? "none" : "slideUp 0.4s ease-out",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
+        animation: prefersReduced ? "none" : "slide-up 0.4s ease-out",
       }}
     >
       {/* Header */}

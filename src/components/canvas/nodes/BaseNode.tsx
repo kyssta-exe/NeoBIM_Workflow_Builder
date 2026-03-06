@@ -175,7 +175,7 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
         onMouseLeave={() => setIsHovered(false)}
         style={{
           width: isInput ? 320 : 220,
-          background: "rgba(15,16,25,0.9)",
+          background: "rgba(12,12,24,0.90)",
           border: `1px solid ${
             status === "error" ? "rgba(248,113,113,0.5)" :
             status === "success" ? "rgba(52,211,153,0.5)" :
@@ -186,11 +186,11 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
           }`,
           borderRadius: 12,
           boxShadow: isHovered
-            ? `0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)${stateGlow ? `, ${stateGlow}` : ""}`
-            : `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)${stateGlow ? `, ${stateGlow}` : ""}`,
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          transform: isHovered && !selected ? "translateY(-2px) scale(1.01)" : "scale(1)",
+            ? `0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)${stateGlow ? `, ${stateGlow}` : ""}`
+            : `0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)${stateGlow ? `, ${stateGlow}` : ""}`,
+          backdropFilter: "blur(32px) saturate(1.3)",
+          WebkitBackdropFilter: "blur(32px) saturate(1.3)",
+          transform: isHovered && !selected ? "translateY(-2px)" : "translateY(0)",
           transition: "all 200ms ease-out",
           overflow: "hidden",
           cursor: "pointer",
@@ -204,8 +204,8 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
           width: 3,
           borderTopLeftRadius: 12,
           borderBottomLeftRadius: 12,
-          background: color,
-          boxShadow: `0 0 8px rgba(${rgb}, 0.5)`,
+          background: `linear-gradient(180deg, ${color}, ${color}AA)`,
+          boxShadow: `0 0 12px rgba(${rgb}, 0.4)`,
         }} />
 
         {/* Running border pulse */}
@@ -269,7 +269,7 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
               {getIcon(data.icon, 18)}
             </div>
             <span style={{
-              fontSize: 13, fontWeight: 600, color: "#F0F0F5", letterSpacing: "-0.01em",
+              fontSize: 13, fontWeight: 600, color: "#e8e8f0", letterSpacing: "-0.01em",
               flex: 1, overflow: "hidden", textOverflow: "ellipsis",
               whiteSpace: "nowrap", lineHeight: 1.3,
             }}>
@@ -279,8 +279,9 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
               <span style={{
                 fontSize: 9, fontWeight: 700, color: color,
                 padding: "2px 8px", borderRadius: 6,
-                background: `${color}20`,
-                flexShrink: 0, letterSpacing: "0.05em",
+                background: `${color}18`,
+                border: `1px solid ${color}30`,
+                flexShrink: 0, letterSpacing: "0.08em",
                 textTransform: "uppercase" as const,
               }}>
                 INPUT
@@ -320,7 +321,7 @@ export const BaseNode = memo(function BaseNode({ id, data, selected }: BaseNodeP
           {/* Row 2: type label */}
           {typeLabel && (
             <div style={{
-              fontSize: 11, color: "#5C5C78", marginTop: 6, lineHeight: 1.4,
+              fontSize: 11, color: "#4a4a68", marginTop: 6, lineHeight: 1.4,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
               {typeLabel}

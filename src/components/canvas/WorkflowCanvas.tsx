@@ -476,6 +476,23 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
         {/* React Flow */}
         <div className="absolute inset-0 pt-13">
+          {/* Atmospheric blue center glow — rendered before ReactFlow for depth */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 0,
+              background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(79,138,255,0.04) 0%, transparent 70%)',
+            }}
+          />
+          {/* Edge vignette — darkens corners for cinematic depth */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              zIndex: 0,
+              background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%)',
+            }}
+          />
+
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -503,14 +520,14 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
               strokeDasharray: "6 4",
               opacity: 0.7,
             }}
-            style={{ background: "#09090F" }}
+            style={{ background: "#07070D" }}
           >
-            {/* Dot grid — subtle, refined */}
+            {/* Dot grid — refined spacing and brightness */}
             <Background
               variant={BackgroundVariant.Dots}
-              gap={20}
+              gap={24}
               size={1}
-              color="rgba(255,255,255,0.03)"
+              color="rgba(255,255,255,0.035)"
             />
 
             {/* Styled controls — bottom-right, above minimap */}
@@ -541,21 +558,21 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             />
           </ReactFlow>
 
-          {/* Atmospheric blue glow */}
+          {/* Atmospheric blue glow — enhanced */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               zIndex: 1,
-              background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(79,138,255,0.03) 0%, transparent 70%)',
+              background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(79,138,255,0.05) 0%, transparent 70%)',
             }}
           />
 
-          {/* Vignette overlay */}
+          {/* Vignette overlay — deeper */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               zIndex: 1,
-              background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+              background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%)',
             }}
           />
 
@@ -616,13 +633,13 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
                 width: 320,
                 maxHeight: "calc(100vh - 100px)",
                 display: "flex", flexDirection: "column",
-                background: "rgba(10, 10, 18, 0.92)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                background: "rgba(8, 8, 16, 0.92)",
+                border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 14,
                 overflow: "hidden",
-                backdropFilter: "blur(20px) saturate(1.3)",
-                WebkitBackdropFilter: "blur(20px) saturate(1.3)",
-                boxShadow: "0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset",
+                backdropFilter: "blur(32px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(32px) saturate(1.3)",
+                boxShadow: "0 16px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
               }}
             >
               {/* Panel header */}

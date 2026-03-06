@@ -196,7 +196,10 @@ function NodeItem({
         overflow: "hidden",
         userSelect: "none",
         transition: "all 150ms ease",
+        transform: "scale(1)",
       }}
+      onMouseDown={e => { (e.currentTarget as HTMLElement).style.transform = "scale(0.98)"; }}
+      onMouseUp={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
     >
       {/* Hover bg slides in from left */}
       <motion.div
@@ -251,10 +254,10 @@ function NodeItem({
             }}>LIVE</span>
           ) : (
             <span style={{
-              fontSize: 8, fontWeight: 600, color: "#5C5C78",
+              fontSize: 8, fontWeight: 600, color: "#4a4a68",
               padding: "2px 6px", borderRadius: 4,
               background: "rgba(255,255,255,0.06)",
-              flexShrink: 0, letterSpacing: "0.05em",
+              flexShrink: 0, letterSpacing: "0.08em",
             }}>PREVIEW</span>
           )}
         </div>
@@ -504,9 +507,9 @@ export function NodeLibraryPanel() {
       transition={{ duration: 0.2, ease: "easeOut" }}
       style={{
         height: "100%",
-        background: "rgba(8,8,15,0.95)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
+        background: "rgba(6,6,12,0.95)",
+        backdropFilter: "blur(32px) saturate(1.3)",
+        WebkitBackdropFilter: "blur(32px) saturate(1.3)",
         borderRight: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
         flexDirection: "column",
@@ -632,14 +635,14 @@ export function NodeLibraryPanel() {
                 placeholder="Search nodes..."
                 style={{
                   width: "100%", height: 36,
-                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
                   borderRadius: 8, paddingLeft: 28, paddingRight: search ? 28 : 12,
-                  fontSize: 14, color: "#F0F0F5", outline: "none",
+                  fontSize: 13, color: "#e8e8f0", outline: "none",
                   boxSizing: "border-box",
                   transition: "all 150ms ease",
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = "rgba(79,138,255,0.3)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}
+                onFocus={e => { e.currentTarget.style.borderColor = "rgba(79,138,255,0.30)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
               />
               {search && (
                 <button

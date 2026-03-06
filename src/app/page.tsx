@@ -396,13 +396,13 @@ export default function LandingPage() {
         padding: "60px 48px",
         gap: 48, position: "relative",
       }}>
-        {/* Atmospheric gradient mesh background */}
+        {/* Atmospheric gradient mesh background — enhanced */}
         <div style={{
           position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden",
         }}>
           <div style={{
             position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(79,138,255,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 50%, rgba(139,92,246,0.05) 0%, transparent 50%)",
+            background: "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79,138,255,0.1) 0%, transparent 50%), radial-gradient(ellipse 60% 40% at 70% 20%, rgba(139,92,246,0.06) 0%, transparent 50%)",
           }} />
         </div>
 
@@ -425,10 +425,10 @@ export default function LandingPage() {
           </p>
 
           <h1 style={{
-            fontSize: "clamp(3rem, 5vw, 4.5rem)", fontWeight: 800, lineHeight: 1.05,
+            fontSize: "clamp(3rem, 5vw, 4.5rem)", fontWeight: 800, lineHeight: 1.08,
             color: "#F0F0F5", marginBottom: 22,
             letterSpacing: "-0.03em",
-            textShadow: "0 0 80px rgba(79, 138, 255, 0.12)",
+            textShadow: "0 0 80px rgba(79, 138, 255, 0.15)",
           }}>
             <span style={{
               background: "linear-gradient(135deg, #4F8AFF 0%, #8B5CF6 100%)",
@@ -482,20 +482,22 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
             <Link href="/dashboard" style={{
               display: "flex", alignItems: "center", gap: 8,
-              padding: "14px 32px", borderRadius: 12,
+              padding: "16px 32px", borderRadius: 14,
               background: "linear-gradient(135deg, #4F8AFF 0%, #6366F1 100%)",
               color: "white", fontSize: 16, fontWeight: 600,
               textDecoration: "none",
-              boxShadow: "0 4px 24px rgba(79,138,255,0.3), 0 0 0 1px rgba(79,138,255,0.3)",
-              transition: "all 150ms ease",
+              boxShadow: "0 0 30px rgba(79,138,255,0.3), 0 4px 24px rgba(79,138,255,0.25)",
+              transition: "all 200ms ease",
             }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)";
-                (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 1px rgba(79,138,255,0.5), 0 8px 30px rgba(79,138,255,0.35)";
+                (e.currentTarget as HTMLElement).style.boxShadow = "0 0 40px rgba(79,138,255,0.5), 0 8px 30px rgba(79,138,255,0.35)";
+                (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
               }}
               onMouseLeave={e => {
                 (e.currentTarget as HTMLElement).style.filter = "brightness(1)";
-                (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 1px rgba(79,138,255,0.3), 0 4px 20px rgba(79,138,255,0.25)";
+                (e.currentTarget as HTMLElement).style.boxShadow = "0 0 30px rgba(79,138,255,0.3), 0 4px 24px rgba(79,138,255,0.25)";
+                (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
               }}
             >
               Start Free Trial

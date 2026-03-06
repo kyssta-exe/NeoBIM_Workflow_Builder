@@ -203,10 +203,10 @@ export function CanvasToolbar({
           alignItems: "center", justifyContent: "space-between",
           padding: "0 16px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          background: "rgba(10,10,18,0.8)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+          background: "rgba(8,8,15,0.90)",
+          backdropFilter: "blur(32px) saturate(1.3)",
+          WebkitBackdropFilter: "blur(32px) saturate(1.3)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.1)",
         }}
       >
         {/* ── Left group ──────────────────────────────────────────────────── */}
@@ -431,27 +431,27 @@ export function CanvasToolbar({
             title="Save (⌘S)"
             style={{
               display: "flex", alignItems: "center", gap: 5,
-              height: 28, padding: "0 9px", borderRadius: 7,
+              height: 36, padding: "0 16px", borderRadius: 8,
               background: "transparent",
               border: savedFlash
                 ? "1px solid rgba(16,185,129,0.4)"
-                : isDirty ? "1px solid #2A2A3E" : "1px solid transparent",
-              color: savedFlash ? "#10B981" : isDirty ? "#F0F0F5" : "#3A3A4E",
-              fontSize: 12, fontWeight: 500,
+                : isDirty ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+              color: savedFlash ? "#10B981" : isDirty ? "#9898B0" : "#3A3A4E",
+              fontSize: 13, fontWeight: 500,
               cursor: isDirty || savedFlash ? "pointer" : "default",
-              transition: "all 0.2s ease",
+              transition: "all 150ms ease",
               opacity: !isDirty && !savedFlash && !isSaving ? 0.5 : 1,
             }}
             onMouseEnter={e => {
               if (isDirty && !savedFlash) {
-                e.currentTarget.style.borderColor = "#4F8AFF";
-                e.currentTarget.style.color = "#4F8AFF";
+                e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                e.currentTarget.style.color = "#F0F0F5";
               }
             }}
             onMouseLeave={e => {
+              e.currentTarget.style.background = "transparent";
               if (!savedFlash) {
-                e.currentTarget.style.borderColor = isDirty ? "#2A2A3E" : "transparent";
-                e.currentTarget.style.color = isDirty ? "#F0F0F5" : "#3A3A4E";
+                e.currentTarget.style.color = isDirty ? "#9898B0" : "#3A3A4E";
               }
             }}
           >
@@ -513,18 +513,20 @@ export function CanvasToolbar({
                   border: "none",
                   color: "#fff", fontSize: 14, fontWeight: 600,
                   cursor: isWorkflowReady ? "pointer" : "not-allowed",
-                  transition: "all 150ms ease",
-                  boxShadow: isWorkflowReady ? "0 0 20px rgba(79,138,255,0.25)" : "none",
+                  transition: "all 200ms ease",
+                  boxShadow: isWorkflowReady ? "0 0 20px rgba(79,138,255,0.3)" : "none",
                   opacity: isWorkflowReady ? 1 : 0.5,
-                  animation: isWorkflowReady ? "run-glow 2.5s ease-in-out infinite" : "none",
+                  animation: isWorkflowReady ? "glow-pulse 3s ease-in-out infinite" : "none",
                 }}
                 onMouseEnter={e => {
                   if (isWorkflowReady) {
-                    e.currentTarget.style.filter = "brightness(1.15)";
+                    e.currentTarget.style.filter = "brightness(1.1)";
+                    e.currentTarget.style.boxShadow = "0 0 35px rgba(79,138,255,0.5)";
                   }
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.filter = "brightness(1)";
+                  e.currentTarget.style.boxShadow = isWorkflowReady ? "0 0 20px rgba(79,138,255,0.3)" : "none";
                 }}
               >
                 <Play size={16} fill="white" />
