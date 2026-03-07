@@ -7,6 +7,13 @@ import type { Workflow, WorkflowTemplate, CreationMode } from "@/types/workflow"
 import { generateId } from "@/lib/utils";
 import { api } from "@/lib/api";
 
+interface HistoryEntry {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+}
+
+const MAX_HISTORY = 50;
+
 interface WorkflowState {
   // Current workflow
   currentWorkflow: Workflow | null;
@@ -14,6 +21,15 @@ interface WorkflowState {
   edges: WorkflowEdge[];
   isDirty: boolean;
   isSaving: boolean;
+
+  // Undo/Redo history
+  _history: HistoryEntry[];
+  _historyIndex: number;
+  _pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 
   // Creation mode
   creationMode: CreationMode;
@@ -58,6 +74,49 @@ export const useWorkflowStore = create<WorkflowState>()(
     isDirty: false,
     isSaving: false,
     creationMode: "manual",
+
+    // Undo/Redo
+    _history: [],
+    _historyIndex: -1,
+
+    _pushHistory: () => {
+      const { nodes, edges, _history, _historyIndex } = get();
+      const truncated = _history.slice(0, _historyIndex + 1);
+      const entry: HistoryEntry = {
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        edges: JSON.parse(JSON.stringify(edges)),
+      };
+      const next = [...truncated, entry];
+      if (next.length > MAX_HISTORY) next.shift();
+      set({ _history: next, _historyIndex: next.length - 1 });
+    },
+
+    undo: () => {
+      const { _history, _historyIndex } = get();
+      if (_historyIndex <= 0) return;
+      const prev = _history[_historyIndex - 1];
+      set({
+        nodes: prev.nodes,
+        edges: prev.edges,
+        _historyIndex: _historyIndex - 1,
+        isDirty: true,
+      });
+    },
+
+    redo: () => {
+      const { _history, _historyIndex } = get();
+      if (_historyIndex >= _history.length - 1) return;
+      const next = _history[_historyIndex + 1];
+      set({
+        nodes: next.nodes,
+        edges: next.edges,
+        _historyIndex: _historyIndex + 1,
+        isDirty: true,
+      });
+    },
+
+    canUndo: () => get()._historyIndex > 0,
+    canRedo: () => get()._historyIndex < get()._history.length - 1,
 
     setCurrentWorkflow: (workflow) => {
       if (workflow) {
@@ -121,28 +180,34 @@ export const useWorkflowStore = create<WorkflowState>()(
 
     setCreationMode: (mode) => set({ creationMode: mode }),
 
-    addNode: (node) =>
+    addNode: (node) => {
+      get()._pushHistory();
       set((state) => ({
         nodes: [...state.nodes, node],
         isDirty: true,
-      })),
+      }));
+    },
 
-    removeNode: (nodeId) =>
+    removeNode: (nodeId) => {
+      get()._pushHistory();
       set((state) => ({
         nodes: state.nodes.filter((n) => n.id !== nodeId),
         edges: state.edges.filter(
           (e) => e.source !== nodeId && e.target !== nodeId
         ),
         isDirty: true,
-      })),
+      }));
+    },
 
-    updateNode: (nodeId, updates) =>
+    updateNode: (nodeId, updates) => {
+      get()._pushHistory();
       set((state) => ({
         nodes: state.nodes.map((n) =>
           n.id === nodeId ? { ...n, ...updates } : n
         ),
         isDirty: true,
-      })),
+      }));
+    },
 
     updateNodeStatus: (nodeId, status) =>
       set((state) => ({
@@ -153,21 +218,31 @@ export const useWorkflowStore = create<WorkflowState>()(
         ),
       })),
 
-    setNodes: (nodes) => set({ nodes, isDirty: true }),
+    setNodes: (nodes) => {
+      get()._pushHistory();
+      set({ nodes, isDirty: true });
+    },
 
-    addEdge: (edge) =>
+    addEdge: (edge) => {
+      get()._pushHistory();
       set((state) => ({
         edges: [...state.edges, edge],
         isDirty: true,
-      })),
+      }));
+    },
 
-    removeEdge: (edgeId) =>
+    removeEdge: (edgeId) => {
+      get()._pushHistory();
       set((state) => ({
         edges: state.edges.filter((e) => e.id !== edgeId),
         isDirty: true,
-      })),
+      }));
+    },
 
-    setEdges: (edges) => set({ edges, isDirty: true }),
+    setEdges: (edges) => {
+      get()._pushHistory();
+      set({ edges, isDirty: true });
+    },
 
     setEdgeFlowing: (sourceNodeId, flowing) =>
       set((state) => ({

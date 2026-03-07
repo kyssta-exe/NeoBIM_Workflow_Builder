@@ -7,6 +7,22 @@ import Link from "next/link";
 import { Mail, Lock, User, Chrome, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
+function extractErrorMessage(err: unknown): string {
+  if (!err) return "Something went wrong. Please try again.";
+  if (typeof err === "string") return err;
+  if (typeof err === "object") {
+    const obj = err as Record<string, unknown>;
+    if (typeof obj.message === "string") return obj.message;
+    if (typeof obj.error === "string") return obj.error;
+    if (typeof obj.error === "object" && obj.error !== null) {
+      const nested = obj.error as Record<string, unknown>;
+      if (typeof nested.message === "string") return nested.message;
+    }
+    if (typeof obj.title === "string") return obj.title;
+  }
+  return "Something went wrong. Please try again.";
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -30,7 +46,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Registration failed");
+        setError(extractErrorMessage(data.error ?? data));
         return;
       }
 
@@ -46,6 +62,8 @@ export default function RegisterPage() {
         router.push("/dashboard");
         router.refresh();
       }
+    } catch (err) {
+      setError(extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -53,7 +71,12 @@ export default function RegisterPage() {
 
   async function handleGoogle() {
     setLoading(true);
-    await signIn("google", { callbackUrl: "/dashboard" });
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch (err) {
+      setError(extractErrorMessage(err));
+      setLoading(false);
+    }
   }
 
   const inputStyle = {
@@ -216,7 +239,7 @@ export default function RegisterPage() {
               display: "flex", alignItems: "center", gap: 8,
             }}
           >
-            {error}
+            {String(error)}
           </motion.div>
         )}
 
