@@ -111,17 +111,15 @@ function DemoBanner({ hasRun }: { hasRun: boolean }) {
       >
         <div
           style={{
-            width: 24,
-            height: 24,
-            borderRadius: 6,
-            background: "linear-gradient(135deg, #4F8AFF, #6366F1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            overflow: "hidden",
+            flexShrink: 0,
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="" style={{ width: 18, height: 18 }} />
+          <img src="/buildflow_logo.png" alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <span
           style={{ fontSize: 13, fontWeight: 700, color: "#F0F0F5" }}
