@@ -275,6 +275,9 @@ export default function LandingPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#07070D", color: "#F0F0F5", overflowX: "hidden", paddingBottom: 36 }}>
 
+      {/* ── Global noise texture overlay ─────────────────────────── */}
+      <div className="noise-texture" />
+
       {/* ── Navbar ─────────────────────────────────────────────────── */}
       <header>
         <nav style={{
@@ -351,12 +354,58 @@ export default function LandingPage() {
         >
           {/* Background atmospheric layers */}
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+            {/* Aurora / northern lights sweep */}
+            <div className="aurora-bg" />
+
+            {/* Animated mesh grid */}
+            <div className="animated-grid" />
+
             {/* Central radial glow */}
             <div style={{
               position: "absolute", inset: 0,
               background: "radial-gradient(ellipse 80% 60% at 50% 30%, rgba(79,138,255,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 30% 70%, rgba(139,92,246,0.05) 0%, transparent 50%), radial-gradient(ellipse 50% 50% at 80% 50%, rgba(59,130,246,0.04) 0%, transparent 50%)",
             }} />
-            {/* Grid pattern */}
+
+            {/* Floating gradient orbs */}
+            <div className="orb-drift-1" style={{
+              position: "absolute", top: "10%", left: "15%",
+              width: 400, height: 400, borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(79,138,255,0.07) 0%, transparent 70%)",
+              filter: "blur(60px)",
+            }} />
+            <div className="orb-drift-2" style={{
+              position: "absolute", top: "30%", right: "10%",
+              width: 350, height: 350, borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)",
+              filter: "blur(50px)",
+            }} />
+            <div className="orb-drift-3" style={{
+              position: "absolute", bottom: "15%", left: "40%",
+              width: 300, height: 300, borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)",
+              filter: "blur(50px)",
+            }} />
+
+            {/* Floating particles */}
+            {[
+              { left: "12%", bottom: "20%", size: 3, color: "#4F8AFF", duration: "6s", delay: "0s", anim: "particle-float-1" },
+              { left: "28%", bottom: "30%", size: 2, color: "#8B5CF6", duration: "8s", delay: "2s", anim: "particle-float-2" },
+              { left: "65%", bottom: "15%", size: 3, color: "#4F8AFF", duration: "7s", delay: "1s", anim: "particle-float-3" },
+              { left: "80%", bottom: "25%", size: 2, color: "#10B981", duration: "9s", delay: "3s", anim: "particle-float-1" },
+              { left: "45%", bottom: "10%", size: 2, color: "#8B5CF6", duration: "7.5s", delay: "4s", anim: "particle-float-2" },
+              { left: "92%", bottom: "35%", size: 2, color: "#4F8AFF", duration: "8.5s", delay: "1.5s", anim: "particle-float-3" },
+              { left: "5%", bottom: "40%", size: 3, color: "#10B981", duration: "6.5s", delay: "2.5s", anim: "particle-float-1" },
+              { left: "55%", bottom: "5%", size: 2, color: "#F59E0B", duration: "9.5s", delay: "0.5s", anim: "particle-float-2" },
+            ].map((p, i) => (
+              <div key={i} style={{
+                position: "absolute", left: p.left, bottom: p.bottom,
+                width: p.size, height: p.size, borderRadius: "50%",
+                background: p.color, boxShadow: `0 0 6px ${p.color}`,
+                animation: `${p.anim} ${p.duration} ease-in-out ${p.delay} infinite`,
+              }} />
+            ))}
+
+            {/* Dot grid pattern */}
             <div style={{
               position: "absolute", inset: 0, opacity: 0.3,
               backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)",
@@ -524,6 +573,7 @@ export default function LandingPage() {
           {/* Atmospheric glow */}
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <div style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: "80%", height: "60%", background: "radial-gradient(ellipse, rgba(79,138,255,0.06) 0%, transparent 70%)" }} />
+            <div className="orb-drift-2" style={{ position: "absolute", top: "20%", right: "5%", width: 250, height: 250, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,138,255,0.05) 0%, transparent 70%)", filter: "blur(40px)" }} />
           </div>
 
           <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
@@ -616,6 +666,8 @@ export default function LandingPage() {
         <section id="features" style={{ padding: "100px 48px", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <div style={{ position: "absolute", bottom: "0%", left: "20%", width: "60%", height: "50%", background: "radial-gradient(ellipse, rgba(139,92,246,0.05) 0%, transparent 70%)" }} />
+            <div className="orb-drift-1" style={{ position: "absolute", bottom: "10%", left: "5%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)", filter: "blur(45px)" }} />
+            <div className="orb-drift-3" style={{ position: "absolute", top: "15%", right: "10%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 70%)", filter: "blur(35px)" }} />
           </div>
 
           <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
@@ -693,6 +745,7 @@ export default function LandingPage() {
         }}>
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)", width: "70%", height: "40%", background: "radial-gradient(ellipse, rgba(79,138,255,0.07) 0%, transparent 70%)" }} />
+            <div className="orb-drift-3" style={{ position: "absolute", top: "5%", left: "10%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)", filter: "blur(35px)" }} />
           </div>
 
           <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
@@ -782,6 +835,7 @@ export default function LandingPage() {
         <section id="community" style={{ padding: "100px 48px", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: "50%", height: "40%", background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
+            <div className="orb-drift-1" style={{ position: "absolute", bottom: "5%", right: "8%", width: 230, height: 230, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)", filter: "blur(35px)" }} />
           </div>
 
           <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
@@ -869,6 +923,8 @@ export default function LandingPage() {
         }}>
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
             <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: "80%", height: "60%", background: "radial-gradient(ellipse, rgba(79,138,255,0.05) 0%, transparent 70%)" }} />
+            <div className="orb-drift-2" style={{ position: "absolute", top: "10%", left: "5%", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,138,255,0.04) 0%, transparent 70%)", filter: "blur(40px)" }} />
+            <div className="orb-drift-3" style={{ position: "absolute", bottom: "15%", right: "8%", width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)", filter: "blur(35px)" }} />
           </div>
 
           <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
@@ -989,8 +1045,11 @@ export default function LandingPage() {
         }}>
           {/* Background glow */}
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+            <div className="aurora-bg" style={{ opacity: 0.6 }} />
             <div style={{ position: "absolute", bottom: "-20%", left: "50%", transform: "translateX(-50%)", width: "100%", height: "80%", background: "radial-gradient(ellipse 70% 60%, rgba(79,138,255,0.1) 0%, transparent 60%)" }} />
             <div style={{ position: "absolute", bottom: "-10%", left: "30%", width: "40%", height: "60%", background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
+            <div className="orb-drift-1" style={{ position: "absolute", top: "10%", left: "20%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,138,255,0.06) 0%, transparent 70%)", filter: "blur(50px)" }} />
+            <div className="orb-drift-2" style={{ position: "absolute", bottom: "10%", right: "15%", width: 250, height: 250, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)", filter: "blur(40px)" }} />
           </div>
 
           <motion.div
