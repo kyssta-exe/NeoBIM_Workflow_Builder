@@ -6,6 +6,7 @@ import type { WorkflowNode, WorkflowEdge, NodeStatus } from "@/types/nodes";
 import type { Workflow, WorkflowTemplate, CreationMode } from "@/types/workflow";
 import { generateId } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { awardXP } from "@/lib/award-xp";
 
 /** Returns true if the workflow name is empty, whitespace, or the default "Untitled Workflow" */
 export function isUntitledWorkflow(name: string | null | undefined): boolean {
@@ -326,6 +327,8 @@ export const useWorkflowStore = create<WorkflowState>()(
               ? { ...s.currentWorkflow, id: workflow.id, name: name ?? s.currentWorkflow.name }
               : null,
           }));
+          // Award XP for first workflow created (fire-and-forget)
+          awardXP("workflow-created");
           return workflow.id;
         }
       } catch (err) {

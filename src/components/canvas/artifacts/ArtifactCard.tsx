@@ -12,6 +12,7 @@ const MassingViewer = dynamic(() => import("./MassingViewer"), {
 });
 
 import { formatBytes } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
 import type {
   ExecutionArtifact,
   ArtifactType,
@@ -75,6 +76,7 @@ interface ArtifactCardProps {
 export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: ArtifactCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const prefersReduced = useReducedMotion();
+  const { t } = useLocale();
 
   const accentColor = nodeCategory ? CATEGORY_COLOR[nodeCategory] : "#4F8AFF";
   const typeColor   = TYPE_COLOR[artifact.type] ?? "#4F8AFF";
@@ -112,7 +114,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: A
           fontSize: 11, fontWeight: 600, color: "#E0E0EA",
           flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
-          {nodeLabel ?? "Node Output"}
+          {nodeLabel ?? t('artifact.nodeOutput')}
         </span>
 
         {/* Type badge */}
@@ -141,7 +143,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss }: A
         {onDismiss && (
           <button
             onClick={e => { e.stopPropagation(); onDismiss(); }}
-            aria-label="Dismiss"
+            aria-label={t('artifact.dismiss')}
             style={{
               width: 16, height: 16, borderRadius: 3, flexShrink: 0,
               background: "transparent", border: "none",
@@ -213,6 +215,7 @@ class ArtifactErrorBoundary extends React.Component<
 // ─── Body renderers ───────────────────────────────────────────────────────────
 
 function TextBody({ data }: { data: TextArtifactData }) {
+  const { t } = useLocale();
   const [expanded, setExpanded] = useState(false);
   const text = data?.content ?? "";
   const isLong = text.length > 220;
@@ -234,7 +237,7 @@ function TextBody({ data }: { data: TextArtifactData }) {
             fontSize: 10, color: "#4F8AFF", cursor: "pointer", padding: 0,
           }}
         >
-          {expanded ? "Show less" : "Show more"}
+          {expanded ? t('artifact.showLess') : t('artifact.showMore')}
         </button>
       )}
     </div>
@@ -257,6 +260,7 @@ function JsonBody({ data }: { data: JsonArtifactData }) {
 }
 
 function ImageBody({ data }: { data: ImageArtifactData }) {
+  const { t } = useLocale();
   return (
     <div>
       <div style={{ position: "relative", height: 160, background: "#07070D" }}>
@@ -273,7 +277,7 @@ function ImageBody({ data }: { data: ImageArtifactData }) {
           />
         ) : (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-            <span style={{ fontSize: 11, color: "#5C5C78" }}>No preview</span>
+            <span style={{ fontSize: 11, color: "#5C5C78" }}>{t('artifact.noPreview')}</span>
           </div>
         )}
       </div>
@@ -317,6 +321,7 @@ function KpiBody({ data, accentColor }: { data: KpiArtifactData; accentColor: st
 }
 
 function TableBody({ data }: { data: TableArtifactData }) {
+  const { t } = useLocale();
   const headers = data?.headers ?? [];
   const rows = data?.rows ?? [];
   const isWide = headers.length > 6;
@@ -374,11 +379,11 @@ function TableBody({ data }: { data: TableArtifactData }) {
           fontSize: 10,
         }}>
           <span style={{ color: "#5C5C78" }}>
-            {rows.length} line items{summary?.note ? ` · ${summary.note}` : ""}
+            {rows.length} {t('artifact.lineItems')}{summary?.note ? ` · ${summary.note}` : ""}
           </span>
           {summary?.grandTotal != null && (
             <span style={{ color: "#10B981", fontWeight: 700 }}>
-              Grand Total: ${summary.grandTotal.toLocaleString()}
+              {t('artifact.grandTotal')}: ${summary.grandTotal.toLocaleString()}
             </span>
           )}
         </div>
@@ -397,6 +402,7 @@ interface SvgArtifactData {
 }
 
 function SvgBody({ data }: { data: SvgArtifactData }) {
+  const { t } = useLocale();
   const svgHtml = data?.svg ?? "";
   const sanitizedSvg = useMemo(
     () => (typeof window !== "undefined" ? DOMPurify.sanitize(svgHtml, { USE_PROFILES: { svg: true, svgFilters: true } }) : ""),
@@ -417,8 +423,8 @@ function SvgBody({ data }: { data: SvgArtifactData }) {
       />
       {data?.roomList && data.roomList.length > 0 && (
         <div style={{ padding: "6px 14px 10px", fontSize: 10, color: "#5C5C78" }}>
-          {data.roomList.length} rooms · {data.totalArea ?? "?"} m² total
-          {data.floors ? ` · ${data.floors} floors` : ""}
+          {data.roomList.length} {t('artifact.rooms')} · {data.totalArea ?? "?"} m² {t('artifact.total')}
+          {data.floors ? ` · ${data.floors} ${t('artifact.floors')}` : ""}
         </div>
       )}
     </div>
@@ -436,8 +442,9 @@ interface Massing3dData {
 }
 
 function Massing3dBody({ data }: { data: Massing3dData }) {
+  const { t } = useLocale();
   if (!data?.floors || !data?.height) {
-    return <div style={{ padding: "8px 14px", fontSize: 11, color: "#5C5C78" }}>No massing data</div>;
+    return <div style={{ padding: "8px 14px", fontSize: 11, color: "#5C5C78" }}>{t('artifact.noMassing')}</div>;
   }
   return (
     <div style={{ padding: "0 8px 10px 10px" }}>
@@ -475,6 +482,7 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
 }
 
 function FileBody({ data }: { data: FileArtifactData }) {
+  const { t } = useLocale();
   return (
     <div style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -513,7 +521,7 @@ function FileBody({ data }: { data: FileArtifactData }) {
         }}
       >
         <Download size={10} />
-        Download
+        {t('artifact.download')}
       </a>
     </div>
   );

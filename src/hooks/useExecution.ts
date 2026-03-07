@@ -7,6 +7,7 @@ import { useExecutionStore } from "@/stores/execution-store";
 import { useUIStore } from "@/stores/ui-store";
 import { executeNode as mockExecuteNode } from "@/services/mock-executor";
 import { generateId } from "@/lib/utils";
+import { awardXP } from "@/lib/award-xp";
 import type { Execution, ExecutionArtifact } from "@/types/execution";
 import type { WorkflowNode } from "@/types/nodes";
 import type { LogEntry } from "@/components/canvas/ExecutionLog";
@@ -374,7 +375,6 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
         if (artifact.metadata?.warnings && Array.isArray(artifact.metadata.warnings)) {
           for (const warning of artifact.metadata.warnings) {
             toast.warning(warning, { duration: 4000 });
-            // log("warning", warning); // Skipped - not a standard log type
           }
         }
 
@@ -499,6 +499,19 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
         description: `${orderedNodes.length} nodes executed`,
         duration: 4000,
       });
+
+      // Award XP for workflow run (fire-and-forget)
+      awardXP("workflow-run");
+      awardXP("workflow-run-repeat");
+
+      // Check for special node achievements
+      const catalogueIds = new Set(orderedNodes.map(n => (n.data as { catalogueId: string }).catalogueId));
+      if (catalogueIds.has("GN-003")) {
+        awardXP("render-generated");
+      }
+      if (catalogueIds.has("TR-008") && catalogueIds.has("EX-002")) {
+        awardXP("boq-generated");
+      }
     }
   }, [
     nodes,
