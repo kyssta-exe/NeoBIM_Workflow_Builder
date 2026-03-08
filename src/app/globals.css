@@ -1238,54 +1238,6 @@
   animation: betaPulse 2.5s ease-in-out infinite;
 }
 
-/* ── Gamified Dashboard Animations ──────────────────────────────── */
-
-@keyframes mission-active-pulse {
-  0%, 100% { border-color: rgba(79,138,255,0.15); box-shadow: 0 0 0 rgba(79,138,255,0); }
-  50%      { border-color: rgba(79,138,255,0.35); box-shadow: 0 0 16px rgba(79,138,255,0.1); }
-}
-
-@keyframes mission-progress-shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes event-dot-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.6); opacity: 0.4; }
-}
-
-@keyframes loot-card-hover {
-  0%, 100% { transform: translateY(0); box-shadow: none; }
-  50%      { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(245,158,11,0.12); }
-}
-
-@keyframes xp-ring-fill {
-  from { stroke-dashoffset: 251.2; }
-}
-
-@keyframes countdown-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.6; }
-}
-
-.mission-card-active {
-  animation: mission-active-pulse 3s ease-in-out infinite;
-}
-
-.progress-shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(79,138,255,0.15) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: mission-progress-shimmer 2s linear infinite;
-}
-
-.event-dot {
-  animation: event-dot-pulse 1.5s ease-in-out infinite;
-}
-
-.loot-card:hover {
-  animation: loot-card-hover 0.4s ease-out forwards;
-}
 
 /* ═══════════════════════════════════════════════════════════════════
    SIDEBAR — Premium Blueprint Aesthetic
