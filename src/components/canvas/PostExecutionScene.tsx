@@ -339,6 +339,10 @@ function getFloorTiming(f: number): { start: number; duration: number } {
   return { start: 8000 + (f - 2) * 1500, duration: 1200 };
 }
 
+// ─── Module-level refs for Three.js (survive React re-renders) ───────────────
+let globalCamera: THREE.PerspectiveCamera | null = null;
+let globalControls: OrbitControls | null = null;
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export default function PostExecutionScene({
@@ -430,6 +434,7 @@ export default function PostExecutionScene({
     camera.position.copy(topDownPos);
     camera.lookAt(new THREE.Vector3(centerX, totalHeight / 2, centerZ));
     cameraRef.current = camera;
+    globalCamera = camera;
     sceneDataRef.current = { totalHeight, centerX, centerZ };
 
     // ── Controls (enabled from start — full orbit/zoom/pan) ─
@@ -437,6 +442,8 @@ export default function PostExecutionScene({
     controls.enableRotate = true;
     controls.enableZoom = true;
     controls.enablePan = true;
+    controls.minPolarAngle = 0;
+    controls.maxPolarAngle = Math.PI;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.target.set(centerX, totalHeight / 2, centerZ);
@@ -446,6 +453,7 @@ export default function PostExecutionScene({
     controls.autoRotateSpeed = 0.5;
     controls.enabled = true;
     controlsRef.current = controls;
+    globalControls = controls;
 
     // ── Lighting (starts dim) ─────────────────────────────
     const ambient = new THREE.AmbientLight("#f0f0ff", 0.2);
@@ -825,33 +833,29 @@ export default function PostExecutionScene({
   if (kpis?.height) kpiPills.push({ label: `${kpis.height}m`, color: "#8B5CF6" });
   if (kpis?.footprint) kpiPills.push({ label: `${kpis.footprint} m\u00B2 footprint`, color: "#F59E0B" });
 
-  // ── Zoom control handlers ─────────────────────────────
+  // ── Zoom control handlers (use module-level refs) ─────
   const handleZoomIn = useCallback(() => {
-    const camera = cameraRef.current;
-    const controls = controlsRef.current;
-    if (!camera || !controls) return;
-    const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-    camera.position.addScaledVector(dir, -5);
-    controls.update();
+    if (!globalCamera || !globalControls) return;
+    const dir = new THREE.Vector3();
+    dir.subVectors(globalCamera.position, globalControls.target).multiplyScalar(-0.2);
+    globalCamera.position.add(dir);
+    globalControls.update();
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    const camera = cameraRef.current;
-    const controls = controlsRef.current;
-    if (!camera || !controls) return;
-    const dir = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
-    camera.position.addScaledVector(dir, 5);
-    controls.update();
+    if (!globalCamera || !globalControls) return;
+    const dir = new THREE.Vector3();
+    dir.subVectors(globalCamera.position, globalControls.target).multiplyScalar(0.2);
+    globalCamera.position.add(dir);
+    globalControls.update();
   }, []);
 
   const handleFitView = useCallback(() => {
-    const camera = cameraRef.current;
-    const controls = controlsRef.current;
-    if (!camera || !controls) return;
+    if (!globalCamera || !globalControls) return;
     const { totalHeight: th, centerX: cx, centerZ: cz } = sceneDataRef.current;
-    camera.position.set(cx + 40, 30, cz + 40);
-    controls.target.set(cx, th / 2, cz);
-    controls.update();
+    globalCamera.position.set(cx + 40, 30, cz + 40);
+    globalControls.target.set(cx, th / 2, cz);
+    globalControls.update();
   }, []);
 
   const zoomBtnStyle: React.CSSProperties = {
