@@ -701,13 +701,26 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           className="absolute inset-0"
           style={{
             transition: "transform 1s cubic-bezier(0.32, 0.72, 0, 1), opacity 1s ease, filter 1s ease",
-            transform: showPostExecution ? "scale(0.45)" : "none",
-            transformOrigin: "15% 50%",
-            opacity: showPostExecution ? 0.4 : 1,
-            filter: showPostExecution ? "blur(1px) brightness(0.6)" : "none",
+            transform: showPostExecution ? "scale(0.42)" : "none",
+            transformOrigin: "12% 50%",
+            opacity: showPostExecution ? 0.45 : 1,
+            filter: showPostExecution ? "blur(1px) brightness(0.55)" : "none",
             pointerEvents: showPostExecution ? "none" : "auto",
           }}
         >
+          {/* Architectural grid — major lines every 100px, minor every 20px */}
+          <div
+            style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+              backgroundImage: `
+                linear-gradient(rgba(184,115,51,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(184,115,51,0.06) 1px, transparent 1px),
+                linear-gradient(rgba(184,115,51,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(184,115,51,0.03) 1px, transparent 1px)
+              `,
+              backgroundSize: '100px 100px, 100px 100px, 20px 20px, 20px 20px',
+            }}
+          />
           {/* Copper dot grid */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -923,8 +936,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
                 top: 0,
                 right: 0,
                 bottom: 0,
-                width: "70%",
-                zIndex: 15,
+                width: "75%",
+                zIndex: 40,
               }}
             >
               <PostExecutionScene
