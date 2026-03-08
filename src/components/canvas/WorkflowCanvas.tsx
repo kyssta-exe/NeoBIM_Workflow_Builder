@@ -22,7 +22,6 @@ import { Layers3, Sparkles, BookOpen, X } from "lucide-react";
 import {
   shareExecutionToTwitter,
 } from "@/lib/share";
-import { ExecutionCompleteModal } from "./modals/ExecutionCompleteModal";
 
 import dynamic from "next/dynamic";
 import { BaseNode } from "./nodes/BaseNode";
@@ -273,7 +272,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
   } = useWorkflowStore();
 
   const { artifacts, executionProgress, clearArtifacts } = useExecutionStore();
-  const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary, isDemoMode, setShowExecutionCompleteModal } = useUIStore();
+  const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary, isDemoMode } = useUIStore();
 
   // Execution timing for celebration modal
   const executionStartRef = useRef<number | null>(null);
@@ -610,13 +609,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
     }
     executionStartRef.current = Date.now();
     await runWorkflow();
-    // Show celebration modal on completion
-    const elapsed = executionStartRef.current ? Date.now() - executionStartRef.current : 0;
     executionStartRef.current = null;
-    if (elapsed > 0) {
-      setShowExecutionCompleteModal(true);
-    }
-  }, [runWorkflow, nodes, tLocale, setShowExecutionCompleteModal]);
+  }, [runWorkflow, nodes, tLocale]);
   const handleSave = useCallback(async () => {
     if (isDemoMode) {
       toast.info(tLocale('toast.demoSaveHint'), { duration: 3000 });
@@ -1008,16 +1002,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
         {/* Artifact results panel removed — results now display inside nodes */}
 
-        {/* Execution complete celebration modal */}
-        <ExecutionCompleteModal
-          workflowName={workflowName}
-          nodeCount={storeNodes.length}
-          artifactCount={artifacts.size}
-          durationText={durationText}
-          onViewResults={() => {
-            /* PostExecutionScene handles results display */
-          }}
-        />
+        {/* Execution complete modal removed — bottom status bar already shows completion */}
       </div>
 
       {/* Save workflow name modal */}
