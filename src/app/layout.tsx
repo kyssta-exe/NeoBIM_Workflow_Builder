@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, JetBrains_Mono, Syne } from "next/font/google";
+import { DM_Sans, JetBrains_Mono, Syne, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -26,6 +26,13 @@ const syne = Syne({
   variable: "--font-syne",
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 // 🔍 SEO OPTIMIZATION - Maximum Discoverability
@@ -243,7 +250,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${dmSans.variable} ${jetbrains.variable} ${syne.variable} font-body antialiased`} style={{ background: "#06080C", color: "#F0F4FF" }}>
+      <body className={`${dmSans.variable} ${jetbrains.variable} ${syne.variable} ${spaceGrotesk.variable} font-body antialiased`} style={{ background: "#06080C", color: "#F0F4FF" }}>
         <SessionProvider>
           <MobileGate>{children}</MobileGate>
         </SessionProvider>

@@ -1913,6 +1913,55 @@
   animation: dp-breathe 3s ease-in-out infinite;
 }
 
+/* Canvas minimap hover */
+.canvas-minimap:hover {
+  opacity: 0.8 !important;
+}
+
+/* ── Architectural node card keyframes ────────────────────────── */
+@keyframes node-breathe {
+  0%, 100% {
+    box-shadow: 0 4px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  50% {
+    box-shadow: 0 6px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px rgba(var(--cat-rgb, 79, 138, 255), 0.06);
+  }
+}
+
+@keyframes accent-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.node-ring-pulse {
+  animation: node-ring-expand 1.8s ease-out infinite;
+}
+
+@keyframes node-ring-expand {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+.node-running {
+  border-color: rgba(var(--cat-rgb, 79, 138, 255), 0.6) !important;
+}
+
+/* ── Architectural font utility ──────────────────────────────── */
+.arch-font {
+  font-family: var(--font-space-grotesk, 'DM Sans', sans-serif);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MOBILE RESPONSIVE STYLES
    ═══════════════════════════════════════════════════════════════════ */
