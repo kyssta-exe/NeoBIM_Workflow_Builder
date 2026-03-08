@@ -1239,6 +1239,48 @@
 }
 
 
+/* ── Dashboard — Ambient & Interactive ──────────────────────────── */
+
+@keyframes dashboard-orb-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -20px) scale(1.05); }
+  66%      { transform: translate(-15px, 15px) scale(0.97); }
+}
+@keyframes dashboard-orb-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-25px, 20px) scale(1.03); }
+  66%      { transform: translate(20px, -10px) scale(0.95); }
+}
+@keyframes dashboard-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+
+.dashboard-orb-1 {
+  animation: dashboard-orb-drift-1 22s ease-in-out infinite;
+}
+.dashboard-orb-2 {
+  animation: dashboard-orb-drift-2 18s ease-in-out infinite;
+}
+.dashboard-pulse-dot {
+  animation: dashboard-pulse-dot 2s ease-in-out infinite;
+}
+
+.dashboard-link-hover:hover {
+  color: #FFBF00 !important;
+}
+
+.dashboard-tip-card:hover {
+  border-color: rgba(184,115,51,0.25) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 20px rgba(184,115,51,0.06);
+}
+
+.dashboard-template-btn:hover {
+  box-shadow: 0 4px 20px rgba(184,115,51,0.35) !important;
+  filter: brightness(1.1);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    SIDEBAR — Premium Blueprint Aesthetic
    ═══════════════════════════════════════════════════════════════════ */
