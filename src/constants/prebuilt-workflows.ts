@@ -35,7 +35,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 380, y: 200 },
           data: {
             catalogueId: "TR-003",
-            label: "Building Description Generator",
+            label: "Design Brief Analyzer",
             category: "transform",
             status: "idle",
             inputs: [{ id: "json-in", label: "Requirements", type: "json" }],
@@ -69,7 +69,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 940, y: 200 },
           data: {
             catalogueId: "GN-003",
-            label: "Image Generator",
+            label: "Concept Render Generator",
             category: "generate",
             status: "idle",
             inputs: [
@@ -122,7 +122,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 380, y: 200 },
           data: {
             catalogueId: "TR-001",
-            label: "Document Parser",
+            label: "Brief Parser",
             category: "transform",
             status: "idle",
             inputs: [{ id: "pdf-in", label: "PDF", type: "pdf" }],
@@ -203,7 +203,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 380, y: 200 },
           data: {
             catalogueId: "TR-005",
-            label: "Style Prompt Composer",
+            label: "Visualization Style Composer",
             category: "transform",
             status: "idle",
             inputs: [
@@ -223,7 +223,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 660, y: 200 },
           data: {
             catalogueId: "GN-003",
-            label: "Image Generator",
+            label: "Concept Render Generator",
             category: "generate",
             status: "idle",
             inputs: [
@@ -480,7 +480,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 380, y: 200 },
           data: {
             catalogueId: "TR-001",
-            label: "Document Parser",
+            label: "Brief Parser",
             category: "transform",
             status: "idle",
             inputs: [{ id: "pdf-in", label: "PDF", type: "pdf" }],
@@ -525,7 +525,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 1220, y: 100 },
           data: {
             catalogueId: "GN-003",
-            label: "Image Generator",
+            label: "Concept Render Generator",
             category: "generate",
             status: "idle",
             inputs: [
@@ -598,7 +598,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 380, y: 200 },
           data: {
             catalogueId: "TR-003",
-            label: "Building Description Generator",
+            label: "Design Brief Analyzer",
             category: "transform",
             status: "idle",
             inputs: [{ id: "json-in", label: "Requirements", type: "json" }],
@@ -667,7 +667,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 400, y: 250 },
           data: {
             catalogueId: "TR-003",
-            label: "Building Description Generator",
+            label: "Design Brief Analyzer",
             category: "transform",
             status: "idle",
             inputs: [{ id: "json-in", label: "Requirements", type: "json" }],
@@ -701,7 +701,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 740, y: 380 },
           data: {
             catalogueId: "GN-003",
-            label: "Image Generator",
+            label: "Concept Render Generator",
             category: "generate",
             status: "idle",
             inputs: [
@@ -771,7 +771,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 660, y: 200 },
           data: {
             catalogueId: "TR-003",
-            label: "Building Description Generator",
+            label: "Design Brief Analyzer",
             category: "transform",
             status: "idle",
             inputs: [{ id: "json-in", label: "Requirements", type: "json" }],
@@ -788,7 +788,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
           position: { x: 940, y: 200 },
           data: {
             catalogueId: "GN-003",
-            label: "Image Generator",
+            label: "Concept Render Generator",
             category: "generate",
             status: "idle",
             inputs: [

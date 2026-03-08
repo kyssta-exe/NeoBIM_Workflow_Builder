@@ -212,6 +212,15 @@ export function WorkflowCard({
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
             <AuthorAvatar name={authorName} size={20} />
             <span style={{ fontSize: 11, color: "#6B6B85" }}>{authorName}</span>
+            {authorName === "BuildFlow Team" && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: "#10B981",
+                padding: "1px 5px", borderRadius: 3,
+                background: "rgba(16,185,129,0.1)",
+                border: "1px solid rgba(16,185,129,0.25)",
+                marginLeft: 4,
+              }}>Verified</span>
+            )}
             {publishedAt && (
               <span style={{ fontSize: 10, color: "#3A3A50", marginLeft: "auto" }}>{publishedAt}</span>
             )}

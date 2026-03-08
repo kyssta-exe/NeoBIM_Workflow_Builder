@@ -72,12 +72,37 @@ export interface BuildingDescription {
 
 function parseUserRequirements(prompt: string): { floors?: number; location?: string } {
   const requirements: { floors?: number; location?: string } = {};
-  const floorMatch = prompt.match(/(\d+)[-\s]?(story|stories|floor|floors)/i);
+  const floorMatch = prompt.match(/(\d+)[-\s]?(story|stories|floor|floors|storey|storeys)/i);
   if (floorMatch) requirements.floors = parseInt(floorMatch[1]);
-  const cities = ["Berlin", "Mumbai", "London", "New York", "Paris", "Tokyo", "Dubai", "Singapore"];
-  for (const city of cities) {
-    if (prompt.toLowerCase().includes(city.toLowerCase())) {
-      requirements.location = city;
+
+  // Detect location from prompt — cities, countries, regions
+  const locations = [
+    "Mumbai", "Delhi", "Bangalore", "Chennai", "Hyderabad", "Pune", "Kolkata", "Ahmedabad",
+    "Berlin", "Munich", "Hamburg", "Frankfurt",
+    "London", "Manchester", "Birmingham", "Edinburgh",
+    "New York", "Los Angeles", "Chicago", "San Francisco", "Miami", "Seattle", "Boston",
+    "Paris", "Lyon", "Marseille",
+    "Tokyo", "Osaka", "Kyoto",
+    "Dubai", "Abu Dhabi", "Riyadh", "Doha",
+    "Singapore", "Hong Kong", "Shanghai", "Beijing",
+    "Sydney", "Melbourne", "Brisbane",
+    "Toronto", "Vancouver", "Montreal",
+    "São Paulo", "Rio de Janeiro", "Mexico City",
+    "Stockholm", "Copenhagen", "Oslo", "Helsinki",
+    "Amsterdam", "Rotterdam", "Brussels",
+    "Zurich", "Geneva", "Vienna",
+    "Seoul", "Taipei", "Bangkok", "Jakarta",
+    "Lagos", "Nairobi", "Cape Town", "Cairo",
+    // Countries
+    "India", "Germany", "UK", "United Kingdom", "USA", "United States", "France", "Japan",
+    "UAE", "Australia", "Canada", "Brazil", "Sweden", "Norway", "Denmark", "Finland",
+    "Netherlands", "Switzerland", "Austria", "South Korea", "Thailand", "Indonesia",
+    "Nigeria", "Kenya", "South Africa", "Egypt", "China", "Singapore",
+  ];
+  const lower = prompt.toLowerCase();
+  for (const loc of locations) {
+    if (lower.includes(loc.toLowerCase())) {
+      requirements.location = loc;
       break;
     }
   }
@@ -122,6 +147,18 @@ export async function generateBuildingDescription(
 - DO NOT change, ignore, or interpret away explicit user specifications
 - Expand with professional detail, but NEVER contradict user's input
 - Extract and respect ALL specific numbers, locations, and program requirements from user prompt
+
+LOCATION AWARENESS:
+When the user mentions a specific city, country, or region, you MUST consider:
+- **Local building codes**: FSI/FAR limits, setback requirements, height restrictions typical for that city
+- **Climate response**: Design for local climate (monsoon regions → drainage + ventilation; hot-arid → thermal mass + shading; cold → insulation + passive solar; tropical → cross-ventilation + sun protection)
+- **Construction methods**: Use locally appropriate structural systems (RCC frame in India; steel frame in US/UK; timber frame in Scandinavia; hybrid in Japan)
+- **Local materials**: Reference materials common and cost-effective in that region
+- **Parking requirements**: Apply typical local parking ratios for the building type
+- **Architectural vernacular**: Reference local architectural character while being contemporary
+- **Structural systems**: Choose realistic systems for the building height and type (e.g., shear wall core for high-rise, post-tensioned slabs for large spans)
+
+If no location is specified, default to a temperate climate with international best practices.
 
 Given a project brief, create:
 1. An 8-section narrative (500-700 words) in markdown format

@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     let artifact: ExecutionArtifact;
 
     if (catalogueId === "TR-003") {
-      // Building Description Generator — GPT-4o-mini
+      // Design Brief Analyzer — GPT-4o-mini
       const prompt = inputData?.prompt ?? inputData?.content ?? "Modern mixed-use building";
       const description = await generateBuildingDescription(prompt, apiKey);
 
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       };
 
     } else if (catalogueId === "TR-001") {
-      // Document Parser — PDF text extraction + GPT structuring
+      // Brief Parser — PDF text extraction + GPT structuring
       const rawText = inputData?.content ?? inputData?.prompt ?? inputData?.rawText ?? "";
       const pdfBase64 = inputData?.fileData ?? inputData?.buffer ?? null;
 
@@ -300,7 +300,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       };
 
     } else if (catalogueId === "TR-005") {
-      // Style Prompt Composer — GPT-4o-mini enhanced DALL-E 3 prompt
+      // Visualization Style Composer — GPT-4o-mini enhanced DALL-E 3 prompt
       const upstreamDescription = (inputData?._raw ?? inputData) as Partial<BuildingDescription>;
       const viewType = ((inputData?.viewType as string) ?? "exterior") as "exterior" | "floor_plan" | "site_plan" | "interior";
 
@@ -348,7 +348,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       });
 
     } else if (catalogueId === "GN-003") {
-      // Concept Image Generator — DALL-E 3
+      // Concept Render Generator — DALL-E 3
       const description = inputData?._raw ?? null;
       const prompt = inputData?.prompt ?? inputData?.content ?? "Modern mixed-use building, Nordic minimal style";
       const viewType = ((inputData?.viewType as string) ?? "exterior") as "exterior" | "floor_plan" | "site_plan" | "interior";
