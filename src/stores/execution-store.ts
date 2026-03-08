@@ -14,6 +14,10 @@ interface ExecutionState {
   isExecuting: boolean;
   executionProgress: number; // 0-100
 
+  // Rate limit state — set true on 429, cleared on new execution
+  isRateLimited: boolean;
+  setRateLimited: (value: boolean) => void;
+
   // Artifacts by tile instance ID
   artifacts: Map<string, ExecutionArtifact>;
 
@@ -54,16 +58,20 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
   currentExecution: null,
   isExecuting: false,
   executionProgress: 0,
+  isRateLimited: false,
   artifacts: new Map(),
   regenerationCounts: new Map(),
   regeneratingNodeId: null,
   history: [],
+
+  setRateLimited: (value) => set({ isRateLimited: value }),
 
   startExecution: (execution) =>
     set({
       currentExecution: execution,
       isExecuting: true,
       executionProgress: 0,
+      isRateLimited: false, // reset on new execution
       artifacts: new Map(),
       regenerationCounts: new Map(),
     }),

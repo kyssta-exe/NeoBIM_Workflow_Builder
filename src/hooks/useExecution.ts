@@ -291,6 +291,8 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
     completeExecution,
     setProgress,
     isExecuting,
+    isRateLimited,
+    setRateLimited,
     incrementRegenCount,
     getRegenRemaining,
     setRegeneratingNode,
@@ -484,6 +486,7 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
           hasError = true;
           updateNodeStatus(node.id, "error");
           log("error", "Rate limit exceeded", errMsg);
+          setRateLimited(true); // persist in store for UI to react immediately
           setRateLimitHit({
             title: errTitle,
             message: errMsg,
@@ -605,6 +608,7 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
     addTileResult,
     completeExecution,
     setProgress,
+    setRateLimited,
     log,
   ]);
 
@@ -648,15 +652,17 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
 
   const clearRateLimitError = useCallback(() => {
     setRateLimitHit(null);
-  }, []);
+    setRateLimited(false);
+  }, [setRateLimited]);
 
   return {
     runWorkflow,
     regenerateNode,
     resetExecution,
     isExecuting,
+    isRateLimited,
     regeneratingNodeId,
     rateLimitHit,
-    clearRateLimitError
+    clearRateLimitError,
   };
 }
