@@ -18,15 +18,18 @@ function LoginForm() {
 
   // Map NextAuth error codes to user-friendly messages
   const authErrorParam = searchParams.get("error");
+  const expiredParam = searchParams.get("expired");
   const authErrorMessages: Record<string, string> = {
     OAuthAccountNotLinked: "This email is already registered with a password. Please sign in with your email and password instead.",
     OAuthCallback: "Something went wrong with Google sign-in. Please try again.",
     OAuthSignin: "Could not start Google sign-in. Please try again.",
     Default: "An authentication error occurred. Please try again.",
   };
-  const initialError = authErrorParam
-    ? authErrorMessages[authErrorParam] ?? authErrorMessages.Default
-    : "";
+  const initialError = expiredParam === "true"
+    ? "Your session has expired. Please log in again."
+    : authErrorParam
+      ? authErrorMessages[authErrorParam] ?? authErrorMessages.Default
+      : "";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
