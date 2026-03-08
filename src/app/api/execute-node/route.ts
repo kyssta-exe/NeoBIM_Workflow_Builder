@@ -165,6 +165,23 @@ export async function POST(req: NextRequest) {
       const rawText = inputData?.content ?? inputData?.prompt ?? inputData?.rawText ?? "";
       const pdfBase64 = inputData?.fileData ?? inputData?.buffer ?? null;
 
+      // Validate PDF file size (base64 → ~20MB raw ≈ 26.7MB base64)
+      const MAX_PDF_BASE64_LEN = 27 * 1024 * 1024;
+      if (pdfBase64 && typeof pdfBase64 === "string") {
+        if (pdfBase64.length === 0) {
+          return NextResponse.json(
+            formatErrorResponse({ title: "Empty file", message: "The uploaded file is empty. Please select a valid PDF file.", code: "EMPTY_FILE" }),
+            { status: 400 }
+          );
+        }
+        if (pdfBase64.length > MAX_PDF_BASE64_LEN) {
+          return NextResponse.json(
+            formatErrorResponse({ title: "File too large", message: "File too large. Maximum size is 20MB.", code: "FILE_TOO_LARGE" }),
+            { status: 413 }
+          );
+        }
+      }
+
       let extractedText = typeof rawText === "string" ? rawText : "";
 
       // If we have actual PDF data (base64), extract text from it
@@ -238,6 +255,30 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
       const imageBase64 = inputData?.fileData ?? inputData?.imageBase64 ?? inputData?.base64 ?? null;
       const imageUrl = inputData?.url ?? null;
       const mimeType = inputData?.mimeType ?? "image/jpeg";
+
+      // Validate image file: type and size (base64 → ~10MB raw ≈ 13.4MB base64)
+      const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      if (typeof mimeType === "string" && !ALLOWED_IMAGE_TYPES.includes(mimeType.toLowerCase())) {
+        return NextResponse.json(
+          formatErrorResponse({ title: "Invalid file type", message: "Invalid file type. Please upload a .png, .jpg, or .webp image.", code: "INVALID_FILE_TYPE" }),
+          { status: 400 }
+        );
+      }
+      const MAX_IMAGE_BASE64_LEN = 14 * 1024 * 1024;
+      if (typeof imageBase64 === "string") {
+        if (imageBase64.length === 0) {
+          return NextResponse.json(
+            formatErrorResponse({ title: "Empty file", message: "The uploaded file is empty. Please select a valid image.", code: "EMPTY_FILE" }),
+            { status: 400 }
+          );
+        }
+        if (imageBase64.length > MAX_IMAGE_BASE64_LEN) {
+          return NextResponse.json(
+            formatErrorResponse({ title: "File too large", message: "File too large. Maximum size is 10MB.", code: "FILE_TOO_LARGE" }),
+            { status: 413 }
+          );
+        }
+      }
 
       let base64Data: string | null = typeof imageBase64 === "string" ? imageBase64 : null;
 

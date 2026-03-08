@@ -8,6 +8,18 @@ import { Mail, Lock, User, Chrome, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocale } from "@/hooks/useLocale";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+
+function validateRegisterForm(name: string, email: string, password: string): string | null {
+  if (!name.trim()) return "Name is required";
+  if (!email.trim()) return "Email is required";
+  if (!EMAIL_REGEX.test(email.trim().toLowerCase())) return "Please enter a valid email address";
+  if (!password) return "Password is required";
+  if (password.length < 8) return "Password must be at least 8 characters";
+  if (!PASSWORD_REGEX.test(password)) return "Password must include uppercase, lowercase, and a number";
+  return null;
+}
 
 function extractErrorMessage(err: unknown): string {
   if (!err) return "Something went wrong. Please try again.";
@@ -38,6 +50,14 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    // Client-side validation before round-trip
+    const validationError = validateRegisterForm(name, email, password);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
 
     try {

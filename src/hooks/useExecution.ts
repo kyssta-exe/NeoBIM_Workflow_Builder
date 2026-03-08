@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useWorkflowStore } from "@/stores/workflow-store";
 import { useExecutionStore } from "@/stores/execution-store";
@@ -184,8 +184,15 @@ interface RateLimitInfo {
   actionUrl?: string;
 }
 
-// Topological sort using Kahn's algorithm — respects edge dependencies
-function topologicalSort(nodes: WorkflowNode[], edges: { source: string; target: string }[]): WorkflowNode[] {
+interface TopologicalSortResult {
+  sorted: WorkflowNode[];
+  hasCycle: boolean;
+  cycleNodeLabels: string[];
+  disconnectedNodes: WorkflowNode[];
+}
+
+// Topological sort using Kahn's algorithm — detects cycles and disconnected nodes
+function topologicalSort(nodes: WorkflowNode[], edges: { source: string; target: string }[]): TopologicalSortResult {
   const graph = new Map<string, string[]>();
   const inDegree = new Map<string, number>();
 
@@ -221,14 +228,25 @@ function topologicalSort(nodes: WorkflowNode[], edges: { source: string; target:
     }
   }
 
-  // Append any disconnected nodes not reached by edges (sorted by x-position)
-  if (sorted.length < nodes.length) {
-    const sortedIds = new Set(sorted.map(n => n.id));
-    const remaining = nodes.filter(n => !sortedIds.has(n.id)).sort((a, b) => a.position.x - b.position.x);
-    sorted.push(...remaining);
-  }
+  const sortedIds = new Set(sorted.map(n => n.id));
+  const unreached = nodes.filter(n => !sortedIds.has(n.id));
 
-  return sorted;
+  // Determine which unreached nodes are in cycles vs truly disconnected
+  // Nodes in a cycle have remaining inDegree > 0 after Kahn's
+  // Truly disconnected (no edges at all) have inDegree 0 — but these are always processed
+  // So all unreached after Kahn's = cycle participants
+  const cycleNodes = unreached.filter(n => (inDegree.get(n.id) ?? 0) > 0);
+  const disconnectedNodes = unreached.filter(n => (inDegree.get(n.id) ?? 0) === 0);
+
+  // Append genuinely disconnected nodes (sorted by x-position) to execution order
+  sorted.push(...disconnectedNodes.sort((a, b) => a.position.x - b.position.x));
+
+  return {
+    sorted,
+    hasCycle: cycleNodes.length > 0,
+    cycleNodeLabels: cycleNodes.map(n => n.data.label),
+    disconnectedNodes,
+  };
 }
 
 // Find upstream artifact for a node by looking at incoming edges
@@ -283,15 +301,76 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
   const isDemoMode = useUIStore(s => s.isDemoMode);
   const [rateLimitHit, setRateLimitHit] = useState<RateLimitInfo | null>(null);
 
+  // Warn user before navigating away during execution
+  useEffect(() => {
+    if (!isExecuting) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Workflow is still running. Are you sure you want to leave?";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isExecuting]);
+
   const log = useCallback((type: LogEntry["type"], message: string, detail?: string) => {
     onLog?.({ timestamp: new Date(), type, message, detail });
   }, [onLog]);
 
   const runWorkflow = useCallback(async () => {
     if (isExecuting) return;
+
+    // Guard: empty canvas
     if (nodes.length === 0) {
-      toast.error("Add some nodes to the canvas first");
+      toast.error("Add at least one node to run a workflow");
       return;
+    }
+
+    // Guard: cycle detection (run before expensive validation)
+    const sortCheck = topologicalSort(nodes as WorkflowNode[], workflowEdges);
+    if (sortCheck.hasCycle) {
+      toast.error("Circular connection detected. Please remove the loop and try again.", {
+        description: `Cycle involves: ${sortCheck.cycleNodeLabels.join(", ")}`,
+        duration: 6000,
+      });
+      return;
+    }
+
+    // Guard: warn about disconnected nodes
+    if (sortCheck.disconnectedNodes.length > 0) {
+      for (const dn of sortCheck.disconnectedNodes) {
+        console.warn(`[useExecution] Skipping disconnected node: ${dn.data.label}`);
+      }
+      toast.warning(
+        `${sortCheck.disconnectedNodes.length} node${sortCheck.disconnectedNodes.length > 1 ? "s are" : " is"} not connected and will be skipped.`,
+        { duration: 4000 }
+      );
+    }
+
+    // Guard: validate input nodes before starting
+    for (const node of nodes as WorkflowNode[]) {
+      const catalogueId = node.data.catalogueId;
+      // Text Prompt (IN-001): must have non-empty text
+      if (catalogueId === "IN-001") {
+        const val = (node.data.inputValue as string | undefined) ?? "";
+        if (!val.trim()) {
+          toast.error("Please enter text in the Text Prompt node before running");
+          return;
+        }
+        if (val.length > 4000) {
+          toast.error("Text is too long (maximum 4,000 characters). Try shortening your description.", {
+            description: `Current length: ${val.length} characters`,
+          });
+          return;
+        }
+      }
+      // File upload nodes: must have a file selected
+      if (["IN-002", "IN-003", "IN-005", "IN-006"].includes(catalogueId)) {
+        const nd = node.data as Record<string, unknown>;
+        if (!nd.fileData && !nd.inputValue) {
+          toast.error(`Please upload a file to the "${node.data.label}" node before running`);
+          return;
+        }
+      }
     }
 
     const executionId = generateId();
@@ -333,8 +412,8 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
       }
     }
 
-    // Topological sort — respects edge dependencies instead of x-position only
-    const orderedNodes = topologicalSort(nodes as WorkflowNode[], workflowEdges);
+    // Reuse already-computed topological sort (cycle check already passed above)
+    const orderedNodes = sortCheck.sorted;
 
     let hasError = false;
     // Map of nodeId → artifact for edge-based data routing

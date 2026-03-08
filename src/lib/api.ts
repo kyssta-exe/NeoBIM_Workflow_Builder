@@ -33,14 +33,40 @@ export type ExecutionSummary = {
   _count?: { artifacts: number };
 };
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...init?.headers },
+    });
+  } catch (err) {
+    // Network error (offline, DNS failure, etc.)
+    if (err instanceof TypeError) {
+      throw new ApiError(0, "Network error. Please check your internet connection.");
+    }
+    throw err;
+  }
+
+  // Session expired — redirect to login
+  if (res.status === 401 && typeof window !== "undefined") {
+    window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
+    throw new ApiError(401, "Session expired. Please log in again.");
+  }
+
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string }).error ?? `Request failed: ${res.status}`);
+    throw new ApiError(
+      res.status,
+      (data as { error?: string }).error ?? `Request failed: ${res.status}`
+    );
   }
   return res.json() as Promise<T>;
 }
