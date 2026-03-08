@@ -19,6 +19,10 @@ import "@xyflow/react/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Layers3, Sparkles, BookOpen } from "lucide-react";
+import {
+  shareExecutionToTwitter,
+} from "@/lib/share";
+import { ExecutionCompleteModal } from "./modals/ExecutionCompleteModal";
 
 import dynamic from "next/dynamic";
 import { BaseNode } from "./nodes/BaseNode";
@@ -258,7 +262,10 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
   } = useWorkflowStore();
 
   const { artifacts, executionProgress, clearArtifacts } = useExecutionStore();
-  const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary, isDemoMode } = useUIStore();
+  const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary, isDemoMode, setShowExecutionCompleteModal } = useUIStore();
+
+  // Execution timing for celebration modal
+  const executionStartRef = useRef<number | null>(null);
 
   // Spacebar opens command palette (only when not typing in an input)
   React.useEffect(() => {
@@ -545,8 +552,15 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
       toast.error(tLocale('toast.noNodesError'), { duration: 3000 });
       return;
     }
+    executionStartRef.current = Date.now();
     await runWorkflow();
-  }, [runWorkflow, nodes, tLocale]);
+    // Show celebration modal on completion
+    const elapsed = executionStartRef.current ? Date.now() - executionStartRef.current : 0;
+    executionStartRef.current = null;
+    if (elapsed > 0) {
+      setShowExecutionCompleteModal(true);
+    }
+  }, [runWorkflow, nodes, tLocale, setShowExecutionCompleteModal]);
   const handleSave = useCallback(async () => {
     if (isDemoMode) {
       toast.info(tLocale('toast.demoSaveHint'), { duration: 3000 });
@@ -573,9 +587,18 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
       toast.error(tLocale('toast.saveFailed'));
     }
   }, [saveWorkflow, closeSaveModal, tLocale]);
-  const handleShare = useCallback(() => { toast.info(tLocale('toast.shareComingSoon'), { duration: 2000 }); }, [tLocale]);
-
   const workflowName = currentWorkflow?.name ?? tLocale('canvas.untitledWorkflow');
+
+  const handleShare = useCallback(() => {
+    shareExecutionToTwitter(workflowName, storeNodes.length);
+  }, [workflowName, storeNodes.length]);
+
+  // Compute duration text for celebration modal
+  const durationText = (() => {
+    if (!executionStartRef.current) return "a few seconds";
+    const ms = Date.now() - executionStartRef.current;
+    return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+  })();
 
   return (
     <div className="relative flex h-full w-full">
@@ -848,6 +871,17 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
         />
 
         {/* Artifact results panel removed — replaced by PostExecutionScene */}
+
+        {/* Execution complete celebration modal */}
+        <ExecutionCompleteModal
+          workflowName={workflowName}
+          nodeCount={storeNodes.length}
+          artifactCount={artifacts.size}
+          durationText={durationText}
+          onViewResults={() => {
+            /* PostExecutionScene handles results display */
+          }}
+        />
       </div>
 
       {/* Save workflow name modal */}
