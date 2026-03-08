@@ -172,3 +172,74 @@ describe('Validation - CRITICAL PATH', () => {
     });
   });
 });
+
+describe('Validation — Edge Cases', () => {
+  describe('TR-003 text prompt edge cases', () => {
+    it('should reject empty string', () => {
+      const result = validateTR003Input({ prompt: '' });
+      expect(result.valid).toBe(false);
+    });
+
+    it('should reject whitespace-only input', () => {
+      const result = validateTR003Input({ prompt: '   \t\n  ' });
+      expect(result.valid).toBe(false);
+    });
+
+    it('should reject 10,000 character input', () => {
+      const result = validateTR003Input({ prompt: 'A'.repeat(10000) });
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('too long');
+    });
+
+    it('should accept Japanese unicode input (valid)', () => {
+      // 10+ chars, under 500
+      const result = validateTR003Input({ prompt: '東京に7階建ての複合施設を設計する' });
+      expect(result.valid).toBe(true);
+    });
+
+    it('should accept Arabic unicode input (valid)', () => {
+      const result = validateTR003Input({ prompt: 'تصميم مبنى تجاري من 10 طوابق في دبي' });
+      expect(result.valid).toBe(true);
+    });
+
+    it('should accept emoji-containing input (valid)', () => {
+      const result = validateTR003Input({ prompt: 'Design a 🏗️ building with 🌱 green roof' });
+      expect(result.valid).toBe(true);
+    });
+
+    it('should accept HTML/script tags as plain text (not executed)', () => {
+      // HTML injected as text — treated as raw string, not dangerous
+      const result = validateTR003Input({ prompt: '<script>alert("xss")</script> modern office design' });
+      expect(result.valid).toBe(true); // 10+ chars, accepted as text
+    });
+
+    it('should reject null input gracefully', () => {
+      const result = validateTR003Input(null);
+      // null means prompt is undefined → treated as empty → too short
+      expect(result.valid).toBe(false);
+    });
+
+    it('should reject undefined input gracefully', () => {
+      const result = validateTR003Input(undefined);
+      expect(result.valid).toBe(false);
+    });
+  });
+
+  describe('GN-003 edge cases', () => {
+    it('should reject null input', () => {
+      const result = validateGN003Input(null);
+      expect(result.valid).toBe(false);
+    });
+
+    it('should accept 10,000 char upstream building description object', () => {
+      // When _raw is present, length checks are skipped (upstream text)
+      const result = validateGN003Input({ _raw: { projectName: 'Test', buildingType: 'Office' }, prompt: 'A'.repeat(10000) });
+      expect(result.valid).toBe(true);
+    });
+
+    it('should reject simple prompt exceeding 4000 chars', () => {
+      const result = validateGN003Input({ prompt: 'A'.repeat(4001) });
+      expect(result.valid).toBe(false);
+    });
+  });
+});

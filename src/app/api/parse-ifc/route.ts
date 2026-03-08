@@ -25,13 +25,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (!file.name.toLowerCase().endsWith(".ifc")) {
-      return NextResponse.json({ error: "File must be an IFC file" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid file type. Please upload an .ifc file." }, { status: 400 });
+    }
+
+    // Reject empty files
+    if (file.size === 0) {
+      return NextResponse.json({ error: "The uploaded file is empty. Please select a valid .ifc file." }, { status: 400 });
     }
 
     // Reject files over 50MB
     const MAX_IFC_SIZE = 50 * 1024 * 1024; // 50MB
     if (file.size > MAX_IFC_SIZE) {
-      return NextResponse.json({ error: "IFC file too large. Maximum size is 50MB." }, { status: 413 });
+      return NextResponse.json({ error: "File too large. Maximum size is 50MB." }, { status: 413 });
     }
 
     // Validate IFC file header

@@ -445,10 +445,14 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
   }, [storeNodes, addNode, tLocale]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
+    if (isExecuting) {
+      toast.error("Cannot modify workflow while executing", { duration: 3000 });
+      return;
+    }
     const node = storeNodes.find(n => n.id === nodeId);
     removeNode(nodeId);
     toast.success(`${tLocale('toast.deleted')}: ${node?.data.label ?? tLocale('toast.node')}`, { duration: 2000 });
-  }, [storeNodes, removeNode, tLocale]);
+  }, [storeNodes, removeNode, tLocale, isExecuting]);
 
   const handleFitToNode = useCallback((nodeId: string) => {
     fitView({ nodes: [{ id: nodeId }], padding: 0.5, duration: 400 });
@@ -488,6 +492,11 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
   const handleNodesChange = useCallback(
     (changes: Parameters<typeof onNodesChange>[0]) => {
+      // Block deletions during execution
+      if (isExecuting && changes.some(c => c.type === "remove")) {
+        toast.error("Cannot modify workflow while executing", { duration: 3000 });
+        return;
+      }
       onNodesChange(changes);
       markDirty();
       // Sync keyboard/backspace deletions to Zustand store
@@ -495,7 +504,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
         if (change.type === "remove") removeNode(change.id);
       });
     },
-    [onNodesChange, markDirty, removeNode]
+    [onNodesChange, markDirty, removeNode, isExecuting]
   );
 
   const handleEdgesChange = useCallback(
