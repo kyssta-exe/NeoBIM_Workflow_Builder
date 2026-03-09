@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Download, ChevronDown, X, FileText, Image as ImageIcon, Database, BarChart2, Table2, File, LayoutGrid, Box, RefreshCw, Loader2 } from "lucide-react";
+import { Download, ChevronDown, X, FileText, Image as ImageIcon, Database, BarChart2, Table2, File, LayoutGrid, Box, RefreshCw, Loader2, Video } from "lucide-react";
 import DOMPurify from "dompurify";
 import dynamic from "next/dynamic";
 
@@ -16,6 +16,11 @@ const Building3DViewer = dynamic(() => import("./Building3DViewer"), {
   loading: () => <div style={{ height: 320, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading 3D viewer…</span></div>,
 });
 
+const VideoBody = dynamic(() => import("./VideoBody").then(m => ({ default: m.VideoBody })), {
+  ssr: false,
+  loading: () => <div style={{ height: 180, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading video player…</span></div>,
+});
+
 import { formatBytes } from "@/lib/utils";
 import { useLocale } from "@/hooks/useLocale";
 import type {
@@ -27,6 +32,7 @@ import type {
   TableArtifactData,
   FileArtifactData,
   JsonArtifactData,
+  VideoArtifactData,
 } from "@/types/execution";
 import type { NodeCategory } from "@/types/nodes";
 import { CATEGORY_COLORS, hexToRgb } from "@/lib/ui-constants";
@@ -44,6 +50,7 @@ const TYPE_COLOR: Record<ArtifactType, string> = {
   file:  "#B87333",
   "3d":  "#FFBF00",
   svg:   "#00F5FF",
+  video: "#00F5FF",
 };
 
 const TYPE_ICON: Record<ArtifactType, React.ReactNode> = {
@@ -55,6 +62,7 @@ const TYPE_ICON: Record<ArtifactType, React.ReactNode> = {
   file:  <File size={9} />,
   "3d":  <Box size={9} />,
   svg:   <LayoutGrid size={9} />,
+  video: <Video size={9} />,
 };
 
 
@@ -91,6 +99,10 @@ function getQualityBadge(artifact: ExecutionArtifact): QualityBadge | null {
 
   if (artifact.type === "3d" || artifact.type === "svg") {
     return { label: "AI Generated · Concept", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" };
+  }
+
+  if (artifact.type === "video") {
+    return { label: "AI Generated · Kling 3.0", color: "#00F5FF", bg: "rgba(0,245,255,0.12)" };
   }
 
   return null;
@@ -259,6 +271,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
               {artifact.type === "file"  && <FileBody  data={artifact.data as FileArtifactData}  />}
               {artifact.type === "svg"   && <SvgBody   data={artifact.data as SvgArtifactData}   />}
               {artifact.type === "3d"    && <Massing3dBody data={artifact.data as Massing3dData} />}
+              {artifact.type === "video" && <VideoBody data={artifact.data as VideoArtifactData} nodeId={artifact.tileInstanceId} />}
             </ArtifactErrorBoundary>
           </motion.div>
         )}
@@ -276,6 +289,13 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
           <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
             <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
               AI-generated concept visualization. Not architecturally accurate.
+            </p>
+          </div>
+        )}
+        {!collapsed && artifact.type === "video" && (
+          <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+            <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
+              AI-generated cinematic walkthrough. For presentation purposes only.
             </p>
           </div>
         )}
