@@ -524,3 +524,8 @@ export const CATEGORY_CONFIG = {
 
 /** Nodes that use real API calls (not mock/sample data) */
 export const LIVE_NODES = new Set(['TR-003', 'TR-007', 'TR-008', 'GN-003', 'GN-007', 'GN-008', 'EX-002']);
+
+// Mark isLive on catalogue items at module init
+for (const node of NODE_CATALOGUE) {
+  node.isLive = LIVE_NODES.has(node.id);
+}
