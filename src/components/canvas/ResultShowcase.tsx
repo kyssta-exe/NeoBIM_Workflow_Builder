@@ -127,6 +127,7 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
     const footprint = (modelDataObj.footprint as number) ?? 500;
     const gfa = (modelDataObj.gfa as number) ?? floors * footprint;
     const buildingType = (modelDataObj.buildingType as string) ?? "Mixed-Use";
+    const styleData = modelDataObj.style as Record<string, unknown> | undefined;
 
     return (
       <motion.div
@@ -167,6 +168,17 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
             footprint={footprint}
             gfa={gfa}
             buildingType={buildingType}
+            style={styleData ? {
+              glassHeavy: !!styleData.glassHeavy,
+              hasRiver: !!styleData.hasRiver,
+              hasLake: !!styleData.hasLake,
+              isModern: !!styleData.isModern,
+              isTower: !!styleData.isTower,
+              exteriorMaterial: (styleData.exteriorMaterial as string ?? "mixed") as "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed",
+              environment: (styleData.environment as string ?? "suburban") as "urban" | "suburban" | "waterfront" | "park" | "desert",
+              usage: (styleData.usage as string ?? "mixed") as "residential" | "office" | "mixed" | "commercial" | "hotel",
+              promptText: (styleData.promptText as string) ?? "",
+            } : undefined}
           />
         </div>
       </motion.div>

@@ -6,7 +6,7 @@ export interface RoomDef {
   z: number;       // front edge
   width: number;   // x-extent
   depth: number;   // z-extent
-  floor: number;   // 0 = ground, 1 = upper
+  floor: number;   // 0 = ground, 1 = upper, etc.
   type: RoomType;
   hasCeiling?: boolean; // default true; false for terraces
 }
@@ -22,7 +22,12 @@ export type RoomType =
   | "stairs"
   | "terrace"
   | "retail"
-  | "closet";
+  | "closet"
+  | "lobby"
+  | "conference"
+  | "openOffice"
+  | "gym"
+  | "lounge";
 
 export interface WallSegment {
   start: THREE.Vector2;
@@ -50,12 +55,26 @@ export interface DoorMesh {
   roomName: string;
 }
 
+/** Style hints extracted from user prompt for adaptive building generation */
+export interface BuildingStyle {
+  glassHeavy: boolean;    // "glass building", "curtain wall", "glazed"
+  hasRiver: boolean;      // "near river", "waterfront", "riverside"
+  hasLake: boolean;       // "near lake", "lakeside"
+  isModern: boolean;      // "modern", "contemporary", "minimalist"
+  isTower: boolean;       // "tower", "skyscraper", "high-rise"
+  exteriorMaterial: "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed";
+  environment: "urban" | "suburban" | "waterfront" | "park" | "desert";
+  usage: "residential" | "office" | "mixed" | "commercial" | "hotel";
+  promptText: string;     // raw prompt text for display
+}
+
 export interface BuildingConfig {
   floors: number;
   floorHeight: number;
   rooms: RoomDef[];
   wallThickness: number;
   exteriorWallThickness: number;
+  style: BuildingStyle;
 }
 
 export interface ArchitecturalViewerProps {
@@ -64,6 +83,7 @@ export interface ArchitecturalViewerProps {
   footprint: number;
   gfa: number;
   buildingType?: string;
+  style?: BuildingStyle;
   rooms?: Array<{
     name: string;
     area: number;

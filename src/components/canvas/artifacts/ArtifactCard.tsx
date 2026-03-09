@@ -630,6 +630,7 @@ interface Massing3dData {
   gfa: number;
   buildingType?: string;
   metrics?: Array<{ label: string; value: string | number; unit?: string }>;
+  style?: import("./architectural-viewer/types").BuildingStyle;
 }
 
 function Massing3dBody({ data }: { data: Massing3dData }) {
@@ -745,6 +746,7 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
           footprint={data.footprint ?? 500}
           gfa={data.gfa ?? data.floors * (data.footprint ?? 500)}
           buildingType={data.buildingType}
+          style={data.style}
         />
       )}
 

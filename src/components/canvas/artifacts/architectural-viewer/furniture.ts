@@ -18,13 +18,20 @@ export function addFurniture(
     const baseY = room.floor * floorHeight + 0.12;
 
     switch (room.type) {
-      case "living": addLivingRoom(rx, baseY, rz, room.width, room.depth, mats, parent); break;
+      case "living":
+      case "lounge":
+        addLivingRoom(rx, baseY, rz, room.width, room.depth, mats, parent); break;
       case "kitchen": addKitchen(rx, baseY, rz, room.width, room.depth, mats, parent); break;
       case "dining": addDining(rx, baseY, rz, room.width, room.depth, mats, parent); break;
       case "bedroom": addBedroom(rx, baseY, rz, room.width, room.depth, mats, parent); break;
       case "bathroom": addBathroom(rx, baseY, rz, room.width, room.depth, mats, parent); break;
-      case "office": addOffice(rx, baseY, rz, room.width, room.depth, mats, parent); break;
-      case "hallway": addHallway(rx, baseY, rz, mats, parent); break;
+      case "office":
+      case "openOffice":
+        addOffice(rx, baseY, rz, room.width, room.depth, mats, parent); break;
+      case "conference": addDining(rx, baseY, rz, room.width, room.depth, mats, parent); break;
+      case "hallway":
+      case "lobby":
+        addHallway(rx, baseY, rz, mats, parent); break;
     }
 
     // Recessed ceiling lights for interior rooms

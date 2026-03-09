@@ -334,6 +334,7 @@ export async function executeNode(
       // Check json field (from TR-002), then text content, then defaults
       const jsonData = inputData?.json as Record<string, unknown> | undefined;
       const upstreamText = String(inputData?.content ?? inputData?.prompt ?? "");
+      const promptLower = upstreamText.toLowerCase();
 
       const floors = (() => {
         if (jsonData?.floors) return Number(jsonData.floors);
@@ -349,14 +350,56 @@ export async function executeNode(
       const footprint = 567;
       const totalGFA = jsonData?.total_gfa_m2 ? Number(jsonData.total_gfa_m2) : undefined;
       const gfa = totalGFA ?? Math.round(floors * footprint * 0.98);
+
+      // ── Parse prompt for building style hints ─────────────────
+      const glassHeavy = /glass|glazed|curtain\s*wall|transparent|crystal/i.test(promptLower);
+      const hasRiver = /river|riverside|waterfront|canal|creek/i.test(promptLower);
+      const hasLake = /lake|lakeside|pond/i.test(promptLower);
+      const isModern = /modern|contemporary|minimal|sleek|futuristic/i.test(promptLower);
+      const isTower = /tower|skyscraper|high[\s-]?rise|tall/i.test(promptLower) || floors >= 8;
+
+      const exteriorMaterial: "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed" =
+        glassHeavy ? "glass" :
+        /concrete|brutalist/i.test(promptLower) ? "concrete" :
+        /brick|masonry/i.test(promptLower) ? "brick" :
+        /wood|timber/i.test(promptLower) ? "wood" :
+        /steel|metal/i.test(promptLower) ? "steel" : "mixed";
+
+      const environment: "urban" | "suburban" | "waterfront" | "park" | "desert" =
+        (hasRiver || hasLake) ? "waterfront" :
+        /urban|city|downtown/i.test(promptLower) ? "urban" :
+        /park|garden|green/i.test(promptLower) ? "park" :
+        /desert|arid/i.test(promptLower) ? "desert" : "suburban";
+
+      const usage: "residential" | "office" | "mixed" | "commercial" | "hotel" =
+        /office|corporate|workspace/i.test(promptLower) ? "office" :
+        /hotel|hospitality/i.test(promptLower) ? "hotel" :
+        /residential|apartment|housing|home/i.test(promptLower) ? "residential" :
+        /commercial|retail|shop/i.test(promptLower) ? "commercial" : "mixed";
+
+      const buildingType = jsonData?.building_type as string ??
+        (isTower ? `${usage.charAt(0).toUpperCase() + usage.slice(1)} Tower` :
+         `${usage.charAt(0).toUpperCase() + usage.slice(1)} Building`);
+
+      const style = {
+        glassHeavy,
+        hasRiver,
+        hasLake,
+        isModern: isModern || glassHeavy,
+        isTower,
+        exteriorMaterial,
+        environment,
+        usage,
+        promptText: upstreamText,
+      };
+
       return mockArtifact(executionId, tileInstanceId, "3d", {
-        // 3D massing viewer data
         floors,
         height: parseFloat(height),
         footprint,
         gfa,
-        buildingType: jsonData?.building_type as string ?? "Mixed-Use",
-        // KPI metrics (also displayed below the 3D viewer)
+        buildingType,
+        style,
         metrics: [
           { label: "GFA", value: gfa.toLocaleString(), unit: "m²" },
           { label: "Height", value: height, unit: "m" },
@@ -365,7 +408,6 @@ export async function executeNode(
           { label: "Footprint", value: String(footprint), unit: "m²" },
           { label: "Plot Ratio", value: (gfa / 1050).toFixed(2), unit: "FAR" },
         ],
-        // Pass through upstream text data so downstream nodes (GN-003) can read it
         content: inputData?.content ?? inputData?.prompt
           ?? (jsonData ? `${floors}-storey ${jsonData.building_type ?? "mixed-use"} building, ${gfa.toLocaleString()} m² GFA` : "Modern mixed-use building"),
         prompt: inputData?.prompt ?? inputData?.content

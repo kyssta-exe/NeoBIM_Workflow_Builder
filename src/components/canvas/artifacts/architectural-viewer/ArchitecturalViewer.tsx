@@ -4,9 +4,9 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
-import type { ArchitecturalViewerProps, DoorMesh, RoomDef } from "./types";
+import type { ArchitecturalViewerProps, DoorMesh, RoomDef, BuildingStyle } from "./types";
 import { createMaterials, disposeMaterials } from "./materials";
-import { buildBuilding, getDefaultConfig, getDefaultRooms } from "./building";
+import { buildBuilding, getDefaultConfig, generateRoomsForBuilding } from "./building";
 import { addFurniture } from "./furniture";
 
 // ─── Control Mode ─────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ type TimeOfDay = "day" | "sunset" | "night";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ArchitecturalViewer({ floors, height, footprint, buildingType, rooms }: ArchitecturalViewerProps) {
+export default function ArchitecturalViewer({ floors, height, footprint, buildingType, rooms, style: styleProp }: ArchitecturalViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const animFrameRef = useRef<number>(0);
@@ -44,6 +44,9 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     explodedOffset: number;
     sectionPlane: THREE.Plane;
     sectionEnabled: boolean;
+    camDist: number;
+    camHeight: number;
+    bldgHeight: number;
   } | null>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>("orbit");
@@ -102,30 +105,37 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // ─── Building dimensions (needed for camera/scene setup) ──
+    const effectiveFloors = Math.min(floors, 12);
+    const floorH = 3.6; // must match getDefaultConfig().floorHeight
+    const bldgHeight = effectiveFloors * floorH;
+    const camDist = Math.max(25, bldgHeight * 1.2);
+    const camHeight = Math.max(15, bldgHeight * 0.6);
+
     // ─── Scene ─────────────────────────────────────────────────
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x87CEEB, 40, 120);
+    scene.fog = new THREE.Fog(0x87CEEB, Math.max(40, camDist), Math.max(150, camDist * 4));
 
     // Sky dome
-    const skyGeo = new THREE.SphereGeometry(100, 32, 16);
+    const skyGeo = new THREE.SphereGeometry(Math.max(150, camDist * 4), 32, 16);
     const skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
     const skyMesh = new THREE.Mesh(skyGeo, skyMat);
     updateSkyColors(skyMat, "day");
     scene.add(skyMesh);
 
-    // ─── Camera ────────────────────────────────────────────────
-    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
-    camera.position.set(20, 15, 25);
-    camera.lookAt(0, 3, 0);
+    // ─── Camera ─────────────────────────────────────────────────
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 500);
+    camera.position.set(camDist, camHeight, camDist);
+    camera.lookAt(0, bldgHeight * 0.4, 0);
 
     // ─── Controls ──────────────────────────────────────────────
     const orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.08;
-    orbitControls.target.set(0, 3, 0);
+    orbitControls.target.set(0, bldgHeight * 0.4, 0);
     orbitControls.maxPolarAngle = Math.PI / 2.05;
     orbitControls.minDistance = 5;
-    orbitControls.maxDistance = 50;
+    orbitControls.maxDistance = Math.max(80, camDist * 2);
     orbitControls.autoRotate = true;
     orbitControls.autoRotateSpeed = 0.4;
 
@@ -150,8 +160,8 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.setScalar(2048);
     sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = 100;
-    const shadowSize = 25;
+    sunLight.shadow.camera.far = Math.max(100, bldgHeight * 3);
+    const shadowSize = Math.max(25, bldgHeight * 1.2);
     sunLight.shadow.camera.left = -shadowSize;
     sunLight.shadow.camera.right = shadowSize;
     sunLight.shadow.camera.top = shadowSize;
@@ -168,6 +178,19 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     // ─── Materials ─────────────────────────────────────────────
     const mats = createMaterials();
 
+    // ─── Building style (from prompt analysis) ────────────────
+    const buildingStyle: BuildingStyle = styleProp ?? {
+      glassHeavy: false,
+      hasRiver: false,
+      hasLake: false,
+      isModern: true,
+      isTower: floors >= 8,
+      exteriorMaterial: "mixed",
+      environment: "suburban",
+      usage: "mixed",
+      promptText: "",
+    };
+
     // ─── Building config ───────────────────────────────────────
     let buildingRooms: RoomDef[];
     if (rooms && rooms.length > 0 && rooms.some(r => r.x !== undefined)) {
@@ -181,10 +204,10 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
         type: (r.type as RoomDef["type"]) ?? "living",
       }));
     } else {
-      buildingRooms = getDefaultRooms();
+      buildingRooms = generateRoomsForBuilding(floors, buildingStyle, footprint);
     }
 
-    const config = { ...getDefaultConfig(), rooms: buildingRooms, floors: Math.min(floors, 2) };
+    const config = { ...getDefaultConfig(buildingStyle), rooms: buildingRooms, floors: effectiveFloors };
 
     // ─── Build ─────────────────────────────────────────────────
     const { doors, roomLabels, buildingGroup } = buildBuilding(config, mats, scene);
@@ -318,14 +341,15 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       moveForward: false, moveBackward: false, moveLeft: false, moveRight: false,
       raycaster, minimapRenderer, minimapCamera,
       explodedOffset: 0, sectionPlane, sectionEnabled: false,
+      camDist, camHeight, bldgHeight,
     };
 
     // ─── Cinematic intro ───────────────────────────────────────
     let introTime = 0;
-    const introDuration = 3.5; // seconds
-    const introStartPos = new THREE.Vector3(35, 20, 35);
-    const introEndPos = new THREE.Vector3(20, 15, 25);
-    const introTarget = new THREE.Vector3(0, 3, 0);
+    const introDuration = 3.5;
+    const introStartPos = new THREE.Vector3(camDist * 1.5, camHeight * 1.3, camDist * 1.5);
+    const introEndPos = new THREE.Vector3(camDist, camHeight, camDist);
+    const introTarget = new THREE.Vector3(0, bldgHeight * 0.4, 0);
     camera.position.copy(introStartPos);
 
     // ─── Animate ───────────────────────────────────────────────
@@ -519,8 +543,8 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     } else {
       setViewMode("orbit");
       sr.fpControls.unlock();
-      sr.camera.position.set(20, 15, 25);
-      sr.orbitControls.target.set(0, 3, 0);
+      sr.camera.position.set(sr.camDist, sr.camHeight, sr.camDist);
+      sr.orbitControls.target.set(0, sr.bldgHeight * 0.4, 0);
       sr.orbitControls.autoRotate = true;
     }
   }, [viewMode]);

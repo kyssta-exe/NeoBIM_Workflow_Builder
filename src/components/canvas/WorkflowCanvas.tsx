@@ -257,6 +257,7 @@ function FullscreenArtifactViewer() {
   const footprint = (d?.footprint as number) ?? 500;
   const gfa = (d?.gfa as number) ?? floors * footprint;
   const buildingType = (d?.buildingType as string) ?? "Mixed-Use";
+  const style = d?.style as Record<string, unknown> | undefined;
 
   return (
     <motion.div
@@ -297,6 +298,17 @@ function FullscreenArtifactViewer() {
           footprint={footprint}
           gfa={gfa}
           buildingType={buildingType}
+          style={style ? {
+            glassHeavy: !!style.glassHeavy,
+            hasRiver: !!style.hasRiver,
+            hasLake: !!style.hasLake,
+            isModern: !!style.isModern,
+            isTower: !!style.isTower,
+            exteriorMaterial: (style.exteriorMaterial as string ?? "mixed") as "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed",
+            environment: (style.environment as string ?? "suburban") as "urban" | "suburban" | "waterfront" | "park" | "desert",
+            usage: (style.usage as string ?? "mixed") as "residential" | "office" | "mixed" | "commercial" | "hotel",
+            promptText: (style.promptText as string) ?? "",
+          } : undefined}
         />
       </div>
     </motion.div>
