@@ -22,7 +22,7 @@ export function KpiStrip({ metrics, maxItems = 6, compact = false }: KpiStripPro
   if (metrics.length === 0) return null;
 
   const shown = metrics.slice(0, maxItems);
-  const cols = Math.min(shown.length, compact ? 3 : 3);
+  const cols = Math.min(shown.length, compact ? 2 : 3);
 
   return (
     <div

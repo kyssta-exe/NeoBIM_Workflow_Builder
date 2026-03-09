@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Box, Film, FileDown,
@@ -384,14 +384,6 @@ export function OverviewTab({ data, onExpandVideo, onNavigateTab }: OverviewTabP
 // ─── Execution Summary Panel (shown when no KPIs) ───────────────────────────
 
 function ExecutionSummaryPanel({ data }: { data: ShowcaseData }) {
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsed(e => (e < 100 ? e + 1 : e));
-    }, 20);
-    return () => clearInterval(timer);
-  }, []);
-
   const stats = [
     {
       icon: <Layers size={16} />,

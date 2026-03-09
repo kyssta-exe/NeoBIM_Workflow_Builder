@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { motion } from "framer-motion";
-import { FileDown, Film, File, Download, Package } from "lucide-react";
+import { FileDown, Film, File, Download, Package, Image as ImageIcon } from "lucide-react";
 import { useExecutionStore } from "@/stores/execution-store";
 import { useWorkflowStore } from "@/stores/workflow-store";
 import { formatBytes } from "@/lib/utils";
@@ -57,6 +57,17 @@ export function ExportTab({ data }: ExportTabProps) {
       action: data.videoData.downloadUrl,
     });
   }
+
+  // Image downloads (concept renders)
+  data.allImageUrls.forEach((url, i) => {
+    downloadCards.push({
+      icon: <ImageIcon size={20} />,
+      title: `Concept Render ${data.allImageUrls.length > 1 ? i + 1 : ""}`.trim(),
+      subtitle: "High-resolution architectural render",
+      color: COLORS.EMERALD,
+      action: url,
+    });
+  });
 
   // File artifacts
   data.fileDownloads.forEach(file => {
