@@ -33,6 +33,11 @@ interface UIState {
   showExecutionCompleteModal: boolean;
   setShowExecutionCompleteModal: (show: boolean) => void;
 
+  // Pending node add — sidebar click-to-add, consumed by WorkflowCanvas
+  pendingNodeAdd: string | null;
+  requestAddNode: (catalogueId: string) => void;
+  clearPendingNodeAdd: () => void;
+
   // Fullscreen artifact viewer (node id whose 3D artifact to show)
   artifactViewerNodeId: string | null;
   setArtifactViewerNodeId: (id: string | null) => void;
@@ -76,6 +81,10 @@ export const useUIStore = create<UIState>()((set) => ({
 
   showExecutionCompleteModal: false,
   setShowExecutionCompleteModal: (show) => set({ showExecutionCompleteModal: show }),
+
+  pendingNodeAdd: null,
+  requestAddNode: (catalogueId) => set({ pendingNodeAdd: catalogueId }),
+  clearPendingNodeAdd: () => set({ pendingNodeAdd: null }),
 
   artifactViewerNodeId: null,
   setArtifactViewerNodeId: (id) => set({ artifactViewerNodeId: id }),
