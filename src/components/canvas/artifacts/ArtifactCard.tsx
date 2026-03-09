@@ -634,7 +634,7 @@ interface Massing3dData {
 
 function Massing3dBody({ data }: { data: Massing3dData }) {
   const { t } = useLocale();
-  const [viewMode, setViewMode] = useState<"massing" | "floorplan" | "walkthrough">("massing");
+  const [viewMode, setViewMode] = useState<"massing" | "floorplan" | "walkthrough">("walkthrough");
 
   if (!data?.floors || !data?.height) {
     return <div style={{ padding: "8px 14px", fontSize: 11, color: "#5C5C78" }}>{t('artifact.noMassing')}</div>;
