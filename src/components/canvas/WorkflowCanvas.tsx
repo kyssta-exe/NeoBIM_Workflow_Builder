@@ -44,12 +44,6 @@ const ContextMenu = dynamic(
   { ssr: false }
 );
 
-// Three.js scene — must be client-only
-const PostExecutionScene = dynamic(
-  () => import("./PostExecutionScene"),
-  { ssr: false }
-);
-
 // Architectural 3D walkthrough viewer — client-only
 const ArchitecturalViewer = dynamic(
   () => import("./artifacts/architectural-viewer/ArchitecturalViewer"),
@@ -393,7 +387,6 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [showShowcase, setShowShowcase] = useState(false);
-  const [showPostExecution, setShowPostExecution] = useState(false);
   const prevExecutingRef = useRef(false);
 
   const addLogEntry = useCallback((entry: LogEntry) => {
@@ -417,101 +410,11 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
       // Show grand reveal showcase after a short delay
       const timer = setTimeout(() => setShowShowcase(true), 500);
-      // Show post-execution scene
-      const timer2 = setTimeout(() => setShowPostExecution(true), 700);
-      return () => { clearTimeout(timer); clearTimeout(timer2); };
+      return () => { clearTimeout(timer); };
     }
     prevExecutingRef.current = isExecuting;
   }, [isExecuting, artifacts, storeNodes, setEdgeFlowing]);
   const { t: tLocale } = useLocale();
-
-  // Extract data from artifacts for 3D scene
-  const postExecData = React.useMemo(() => {
-    if (!showPostExecution) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let rooms: any[] = [];
-    const kpis: { floors?: number; gfa?: number; height?: number; footprint?: number } = {};
-    let description = "";
-
-    for (const artifact of artifacts.values()) {
-      if (artifact.type === "3d" || artifact.type === "svg") {
-        const d = artifact.data as Record<string, unknown>;
-        rooms = (d?.roomList as typeof rooms) ?? [];
-        // 3d artifact carries floors/gfa/height/footprint as top-level props
-        if (d?.floors) kpis.floors = Number(d.floors);
-        if (d?.gfa) kpis.gfa = Number(d.gfa);
-        if (d?.height) kpis.height = Number(d.height);
-        if (d?.footprint) kpis.footprint = Number(d.footprint);
-        // Also check metrics array inside 3d artifact
-        const metrics3d = (d?.metrics as Array<{ label: string; value: string | number }>) ?? [];
-        for (const m of metrics3d) {
-          const lab = m.label.toLowerCase();
-          if (lab.includes("floor") && !kpis.floors) kpis.floors = Number(m.value);
-          if ((lab.includes("gfa") || lab.includes("gross")) && !kpis.gfa) kpis.gfa = Number(m.value);
-          if (lab.includes("height") && !kpis.height) kpis.height = Number(m.value);
-          if (lab.includes("footprint") && !kpis.footprint) kpis.footprint = Number(m.value);
-        }
-      }
-      if (artifact.type === "kpi") {
-        const d = artifact.data as Record<string, unknown>;
-        const metrics = (d?.metrics as Array<{ label: string; value: string | number }>) ?? [];
-        for (const m of metrics) {
-          const lab = m.label.toLowerCase();
-          if (lab.includes("floor")) kpis.floors = Number(m.value);
-          if (lab.includes("gfa") || lab.includes("gross")) kpis.gfa = Number(m.value);
-          if (lab.includes("height")) kpis.height = Number(m.value);
-          if (lab.includes("footprint")) kpis.footprint = Number(m.value);
-        }
-      }
-      if (artifact.type === "text") {
-        const d = artifact.data as Record<string, unknown>;
-        description = (d?.content as string) ?? "";
-        // TR-003 stores floors in _raw.floors
-        const raw = d?._raw as Record<string, unknown> | undefined;
-        if (raw?.floors && !kpis.floors) kpis.floors = Number(raw.floors);
-        if (raw?.totalGFA && !kpis.gfa) kpis.gfa = Number(raw.totalGFA);
-        if (raw?.totalArea && !kpis.gfa) kpis.gfa = Number(raw.totalArea);
-        if (raw?.height && !kpis.height) kpis.height = Number(raw.height);
-        if (raw?.footprint && !kpis.footprint) kpis.footprint = Number(raw.footprint);
-        // Also try parsing floor count from prose text
-        if (!kpis.floors && typeof d?.content === "string") {
-          const floorMatch = (d.content as string).match(/(\d+)[\s-]*(?:stor(?:e?y|ies)|floor)/i);
-          if (floorMatch) kpis.floors = parseInt(floorMatch[1], 10);
-        }
-      }
-    }
-
-    return {
-      rooms,
-      kpis,
-      description,
-      buildingName: currentWorkflow?.name ?? "Building Design",
-    };
-  }, [showPostExecution, artifacts, currentWorkflow?.name]);
-
-  // Fit nodes to left 35% when 3D viewer opens
-  React.useEffect(() => {
-    if (showPostExecution) {
-      setTimeout(() => fitView({ padding: 0.4, duration: 800 }), 200);
-    }
-  }, [showPostExecution, fitView]);
-
-  const handleClosePostExecution = useCallback(() => {
-    setShowPostExecution(false);
-    setTimeout(() => fitView({ padding: 0.3, duration: 800 }), 1100);
-  }, [fitView]);
-
-  const handleGeneratePDF = useCallback(async () => {
-    const { generatePDFReport } = await import("@/services/pdf-report");
-    const labels = new Map<string, string>();
-    storeNodes.forEach(n => labels.set(n.id, n.data.label));
-    await generatePDFReport({
-      workflowName: currentWorkflow?.name ?? "Workflow Results",
-      artifacts,
-      nodeLabels: labels,
-    });
-  }, [storeNodes, currentWorkflow?.name, artifacts]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes as unknown as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges as Edge[]);
@@ -816,15 +719,9 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           )}
         </AnimatePresence>
 
-        {/* React Flow — slides left when post-execution scene is active */}
+        {/* React Flow canvas */}
         <div
           className="absolute inset-0"
-          style={{
-            transition: "opacity 0.8s ease, filter 0.8s ease",
-            opacity: showPostExecution ? 0.6 : 1,
-            filter: showPostExecution ? "brightness(0.7)" : "none",
-            pointerEvents: showPostExecution ? "none" : "auto",
-          }}
         >
           {/* Architectural grid — major lines every 100px, minor every 20px */}
           <div
@@ -1044,40 +941,6 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
         </div>
 
         {/* Post-execution 3D scene — overlays right 70% of canvas */}
-        <AnimatePresence>
-          {showPostExecution && !isExecuting && postExecData && (
-            <motion.div
-              key="post-exec-scene"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 40, transition: { duration: 0.5 } }}
-              transition={{ duration: 0.8, delay: 1.0 }}
-              onWheel={(e) => e.stopPropagation()}
-              style={{
-                position: "absolute",
-                right: 16,
-                top: 16,
-                width: "60%",
-                height: "calc(100% - 32px)",
-                borderRadius: 16,
-                overflow: "hidden",
-                border: "1px solid rgba(184,115,51,0.2)",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-                zIndex: 40,
-              }}
-            >
-              <PostExecutionScene
-                rooms={postExecData.rooms}
-                kpis={postExecData.kpis}
-                buildingDescription={postExecData.description}
-                buildingName={postExecData.buildingName}
-                onClose={handleClosePostExecution}
-                onGeneratePDF={handleGeneratePDF}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* AI Chat Panel — floats on right edge */}
         <AIChatPanel
           messages={chatMessages}
