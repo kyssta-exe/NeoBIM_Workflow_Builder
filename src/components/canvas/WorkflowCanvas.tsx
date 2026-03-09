@@ -304,11 +304,16 @@ function FullscreenArtifactViewer() {
             hasLake: !!style.hasLake,
             isModern: !!style.isModern,
             isTower: !!style.isTower,
-            exteriorMaterial: (style.exteriorMaterial as string ?? "mixed") as "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed",
-            environment: (style.environment as string ?? "suburban") as "urban" | "suburban" | "waterfront" | "park" | "desert",
-            usage: (style.usage as string ?? "mixed") as "residential" | "office" | "mixed" | "commercial" | "hotel",
+            exteriorMaterial: (style.exteriorMaterial as string) ?? "mixed",
+            environment: (style.environment as string) ?? "suburban",
+            usage: (style.usage as string) ?? "mixed",
             promptText: (style.promptText as string) ?? "",
-          } : undefined}
+            typology: (style.typology as string) ?? "generic",
+            facadePattern: (style.facadePattern as string) ?? "none",
+            floorHeightOverride: style.floorHeightOverride ? Number(style.floorHeightOverride) : undefined,
+            maxFloorCap: Number(style.maxFloorCap ?? 30),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any : undefined}
         />
       </div>
     </motion.div>

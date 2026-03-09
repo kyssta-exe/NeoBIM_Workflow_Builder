@@ -304,6 +304,8 @@ export interface MaterialLibrary {
   water: THREE.MeshPhysicalMaterial;
   emissiveWarm: THREE.MeshStandardMaterial;
   emissiveCool: THREE.MeshStandardMaterial;
+  stoneWall: THREE.MeshStandardMaterial;
+  terracottaWall: THREE.MeshStandardMaterial;
 }
 
 function createBumpMap(scale = 0.03): THREE.CanvasTexture {
@@ -449,6 +451,13 @@ export function createMaterials(): MaterialLibrary {
     emissiveCool: new THREE.MeshStandardMaterial({
       color: 0xCCDDFF, emissive: 0x6688CC, emissiveIntensity: 0.5,
       roughness: 0.5, metalness: 0.0,
+    }),
+    stoneWall: new THREE.MeshStandardMaterial({
+      color: 0xC8BCA8, roughness: 0.85, metalness: 0.02,
+      bumpMap: concreteBump, bumpScale: 0.4,
+    }),
+    terracottaWall: new THREE.MeshStandardMaterial({
+      color: 0xB86B4A, roughness: 0.75, metalness: 0.02,
     }),
   };
 }

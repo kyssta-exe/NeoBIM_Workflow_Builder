@@ -124,11 +124,14 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     rendererRef.current = renderer;
 
     // ─── Building dimensions (needed for camera/scene setup) ──
-    const effectiveFloors = Math.min(floors, 12);
-    const floorH = 3.6;
+    const effectiveFloors = Math.max(1, Math.min(floors, 30));
+    const floorH = styleProp?.floorHeightOverride ?? 3.6;
     const bldgHeight = effectiveFloors * floorH;
-    const camDist = Math.max(25, bldgHeight * 1.2);
-    const camHeight = Math.max(15, bldgHeight * 0.6);
+    // Camera distance accounts for both building width and height
+    const approxWidth = Math.sqrt(footprint * 1.5);
+    const maxDimension = Math.max(bldgHeight, approxWidth);
+    const camDist = Math.max(30, maxDimension * 1.8, bldgHeight * 1.5);
+    const camHeight = Math.max(12, bldgHeight * 0.55, 8 + bldgHeight * 0.3);
     const fogNear = Math.max(40, camDist);
     const fogFar = Math.max(150, camDist * 4);
 
@@ -137,14 +140,14 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     scene.fog = new THREE.Fog(0x87CEEB, fogNear, fogFar);
 
     // Sky dome
-    const skyGeo = new THREE.SphereGeometry(Math.max(150, camDist * 4), 32, 16);
+    const skyGeo = new THREE.SphereGeometry(Math.max(200, camDist * 5), 32, 16);
     const skyMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
     const skyMesh = new THREE.Mesh(skyGeo, skyMat);
     updateSkyColors(skyMat, "day");
     scene.add(skyMesh);
 
     // ─── Camera ─────────────────────────────────────────────────
-    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 500);
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, Math.max(500, camDist * 3));
     camera.position.set(camDist, camHeight, camDist);
     camera.lookAt(0, bldgHeight * 0.4, 0);
 
@@ -158,7 +161,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     orbitControls.target.set(0, bldgHeight * 0.4, 0);
     orbitControls.maxPolarAngle = Math.PI / 2.05;
     orbitControls.minDistance = 5;
-    orbitControls.maxDistance = Math.max(80, camDist * 2);
+    orbitControls.maxDistance = Math.max(100, camDist * 2.5);
     orbitControls.autoRotate = true;
     orbitControls.autoRotateSpeed = 0.3;
     orbitControls.enablePan = true;
@@ -172,7 +175,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     });
 
     // ─── Lighting ──────────────────────────────────────────────
-    const ambientLight = new THREE.AmbientLight(0x8899AA, 0.5);
+    const ambientLight = new THREE.AmbientLight(0x8899AA, effectiveFloors > 10 ? 0.6 : 0.5);
     scene.add(ambientLight);
 
     const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x556633, 0.4);
@@ -183,8 +186,8 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.setScalar(2048);
     sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = Math.max(100, bldgHeight * 3);
-    const shadowSize = Math.max(25, bldgHeight * 1.2);
+    sunLight.shadow.camera.far = Math.max(150, bldgHeight * 4);
+    const shadowSize = Math.max(30, maxDimension * 1.5);
     sunLight.shadow.camera.left = -shadowSize;
     sunLight.shadow.camera.right = shadowSize;
     sunLight.shadow.camera.top = shadowSize;
@@ -194,7 +197,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     scene.add(sunLight);
 
     const fillLight = new THREE.DirectionalLight(0xAABBDD, 0.3);
-    fillLight.position.set(-20, 25, -10);
+    fillLight.position.set(-20, Math.max(25, bldgHeight * 0.7), -10);
     scene.add(fillLight);
 
     // ─── Materials ─────────────────────────────────────────────
@@ -206,11 +209,14 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       hasRiver: false,
       hasLake: false,
       isModern: true,
-      isTower: floors >= 8,
+      isTower: floors >= 10,
       exteriorMaterial: "mixed",
       environment: "suburban",
       usage: "mixed",
       promptText: "",
+      typology: "generic",
+      facadePattern: "none",
+      maxFloorCap: 30,
     };
 
     // ─── Building config ───────────────────────────────────────
@@ -273,12 +279,14 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     const bw = maxX - minX;
     const bd = maxZ - minZ;
     const mmS = Math.max(bw, bd) * 0.8;
-    const minimapCamera = new THREE.OrthographicCamera(-mmS, mmS, mmS, -mmS, 0.1, 200);
+    const minimapCamera = new THREE.OrthographicCamera(-mmS, mmS, mmS, -mmS, 0.1, Math.max(200, bldgHeight + 50));
     minimapCamera.position.set(0, Math.max(50, bldgHeight + 20), 0);
     minimapCamera.lookAt(0, 0, 0);
 
     // ─── Section plane ─────────────────────────────────────────
-    const sectionPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), config.floorHeight + 1.5);
+    // Section plane cuts at mid-building for better visibility on tall buildings
+    const sectionCutHeight = Math.max(config.floorHeight + 1.5, bldgHeight * 0.4);
+    const sectionPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), sectionCutHeight);
 
     // ─── Movement state ────────────────────────────────────────
     const velocity = new THREE.Vector3();
@@ -436,8 +444,9 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       // ─── Room labels visibility ──────────────────────────
       roomLabels.visible = showLabelsRef.current && !fpControls.isLocked;
 
-      // ─── Exploded view animation ─────────────────────────
-      const targetExplode = isExplodedRef.current ? 4.0 : 0;
+      // ─── Exploded view animation (gap scales with floor count) ──
+      const explodeGap = Math.max(0.8, 4.0 - (effectiveFloors - 2) * 0.15);
+      const targetExplode = isExplodedRef.current ? explodeGap : 0;
       const explodeDiff = targetExplode - sr.explodedOffset;
       if (Math.abs(explodeDiff) > 0.01) {
         sr.explodedOffset += explodeDiff * Math.min(1, 4 * delta);

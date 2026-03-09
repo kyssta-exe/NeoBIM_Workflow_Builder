@@ -31,7 +31,17 @@ export function addFurniture(
       case "conference": addDining(rx, baseY, rz, room.width, room.depth, mats, parent); break;
       case "hallway":
       case "lobby":
+      case "reception":
         addHallway(rx, baseY, rz, mats, parent); break;
+      case "gallery":
+      case "classroom":
+      case "ward":
+      case "restaurant":
+      case "spa":
+        addOffice(rx, baseY, rz, room.width, room.depth, mats, parent); break;
+      case "storage":
+      case "mechanical":
+        break; // no furniture for utility rooms
     }
 
     // Recessed ceiling lights for interior rooms

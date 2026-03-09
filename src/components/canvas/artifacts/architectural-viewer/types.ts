@@ -27,7 +27,15 @@ export type RoomType =
   | "conference"
   | "openOffice"
   | "gym"
-  | "lounge";
+  | "lounge"
+  | "gallery"
+  | "classroom"
+  | "ward"
+  | "mechanical"
+  | "storage"
+  | "reception"
+  | "restaurant"
+  | "spa";
 
 export interface WallSegment {
   start: THREE.Vector2;
@@ -62,10 +70,14 @@ export interface BuildingStyle {
   hasLake: boolean;       // "near lake", "lakeside"
   isModern: boolean;      // "modern", "contemporary", "minimalist"
   isTower: boolean;       // "tower", "skyscraper", "high-rise"
-  exteriorMaterial: "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed";
-  environment: "urban" | "suburban" | "waterfront" | "park" | "desert";
-  usage: "residential" | "office" | "mixed" | "commercial" | "hotel";
+  exteriorMaterial: "glass" | "concrete" | "brick" | "wood" | "steel" | "stone" | "terracotta" | "mixed";
+  environment: "urban" | "suburban" | "waterfront" | "park" | "desert" | "coastal" | "mountain" | "campus";
+  usage: "residential" | "office" | "mixed" | "commercial" | "hotel" | "educational" | "healthcare" | "cultural" | "industrial" | "civic";
   promptText: string;     // raw prompt text for display
+  typology: "tower" | "slab" | "courtyard" | "villa" | "warehouse" | "podium-tower" | "generic";
+  facadePattern: "curtain-wall" | "punched-window" | "ribbon-window" | "brise-soleil" | "none";
+  floorHeightOverride?: number;  // per-floor height in meters (default 3.6)
+  maxFloorCap: number;           // rendering cap (default 30)
 }
 
 export interface BuildingConfig {

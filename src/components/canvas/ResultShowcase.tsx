@@ -174,11 +174,16 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
               hasLake: !!styleData.hasLake,
               isModern: !!styleData.isModern,
               isTower: !!styleData.isTower,
-              exteriorMaterial: (styleData.exteriorMaterial as string ?? "mixed") as "glass" | "concrete" | "brick" | "wood" | "steel" | "mixed",
-              environment: (styleData.environment as string ?? "suburban") as "urban" | "suburban" | "waterfront" | "park" | "desert",
-              usage: (styleData.usage as string ?? "mixed") as "residential" | "office" | "mixed" | "commercial" | "hotel",
+              exteriorMaterial: (styleData.exteriorMaterial as string) ?? "mixed",
+              environment: (styleData.environment as string) ?? "suburban",
+              usage: (styleData.usage as string) ?? "mixed",
               promptText: (styleData.promptText as string) ?? "",
-            } : undefined}
+              typology: (styleData.typology as string) ?? "generic",
+              facadePattern: (styleData.facadePattern as string) ?? "none",
+              floorHeightOverride: styleData.floorHeightOverride ? Number(styleData.floorHeightOverride) : undefined,
+              maxFloorCap: Number(styleData.maxFloorCap ?? 30),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any : undefined}
           />
         </div>
       </motion.div>
