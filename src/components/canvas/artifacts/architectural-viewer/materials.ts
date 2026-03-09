@@ -404,14 +404,11 @@ export function createMaterials(): MaterialLibrary {
     }),
     glass: new THREE.MeshPhysicalMaterial({
       color: 0x88BBDD, roughness: 0.05, metalness: 0.1,
-      transparent: true, opacity: 0.25, transmission: 0.85,
-      thickness: 0.02, ior: 1.52, envMapIntensity: 1.5,
-      side: DS,
+      transparent: true, opacity: 0.3, side: DS,
     }),
     darkGlass: new THREE.MeshPhysicalMaterial({
       color: 0x334455, roughness: 0.05, metalness: 0.2,
-      transparent: true, opacity: 0.4, transmission: 0.6,
-      thickness: 0.02, side: DS,
+      transparent: true, opacity: 0.4, side: DS,
     }),
     metal: new THREE.MeshStandardMaterial({
       color: 0x888888, roughness: 0.2, metalness: 0.95, side: DS,
@@ -445,7 +442,7 @@ export function createMaterials(): MaterialLibrary {
     }),
     water: new THREE.MeshPhysicalMaterial({
       color: 0x1A6B8A, roughness: 0.05, metalness: 0.1,
-      transparent: true, opacity: 0.7, transmission: 0.3, side: DS,
+      transparent: true, opacity: 0.7, side: DS,
     }),
     emissiveWarm: new THREE.MeshStandardMaterial({
       color: 0xFFE4B5, emissive: 0xFFD080, emissiveIntensity: 2.0,

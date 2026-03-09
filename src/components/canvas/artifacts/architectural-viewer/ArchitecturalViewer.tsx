@@ -126,7 +126,6 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     let fpControls: PointerLockControls;
     let mats: ReturnType<typeof createMaterials>;
     let minimapRenderer: THREE.WebGLRenderer;
-    let envTex: THREE.Texture;
     let sectionPlane: THREE.Plane;
     let doors: DoorMesh[] = [];
     let roomLabels: THREE.Group = new THREE.Group();
@@ -157,6 +156,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
     renderer.localClippingEnabled = true;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -298,21 +298,6 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       console.warn("[ArchitecturalViewer] Furniture generation failed, continuing without:", furnitureErr);
     }
 
-    // ─── Environment map ───────────────────────────────────────
-    const pmremGen = new THREE.PMREMGenerator(renderer);
-    const envScene = new THREE.Scene();
-    envScene.background = new THREE.Color(0x87CEEB);
-    envScene.add(new THREE.AmbientLight(0xFFFFFF, 0.8));
-    const envDir = new THREE.DirectionalLight(0xFFFFFF, 1);
-    envDir.position.set(1, 2, 1);
-    envScene.add(envDir);
-    envTex = pmremGen.fromScene(envScene, 0.04).texture;
-    scene.environment = envTex;
-    pmremGen.dispose();
-    // Reset render target — PMREMGenerator leaves an FBO bound which makes
-    // all subsequent MeshStandardMaterial draws write to the wrong target.
-    renderer.setRenderTarget(null);
-
     // ─── Minimap ───────────────────────────────────────────────
     const minimapSize = 160;
     minimapRenderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
@@ -410,6 +395,18 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       }
     };
     renderer.domElement.addEventListener("mousemove", onMouseMove);
+
+    // ─── Diagnostic: count meshes so we can verify the scene is populated ──
+    let meshCount = 0;
+    scene.traverse(o => { if (o instanceof THREE.Mesh) meshCount++; });
+    console.log("[ArchViewer] Scene ready:", {
+      meshCount,
+      buildingChildren: buildingGroup.children.length,
+      labels: roomLabels.children.length,
+      canvas: `${w}x${h}`,
+      floors: effectiveFloors,
+      shadows: renderer.shadowMap.enabled,
+    });
 
     // ─── Store refs ────────────────────────────────────────────
     clock = new THREE.Clock();
@@ -577,7 +574,6 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
         });
         renderer!?.dispose();
         minimapRenderer!?.dispose();
-        envTex!?.dispose();
         if (mats!) disposeMaterials(mats!);
         scene?.clear();
       } catch { /* cleanup errors are non-critical */ }
