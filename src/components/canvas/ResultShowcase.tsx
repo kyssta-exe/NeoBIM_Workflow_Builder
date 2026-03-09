@@ -4,11 +4,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronUp, Download, FileDown,
-  Box, Maximize2, CheckCircle2, Zap,
+  Box, Maximize2, CheckCircle2, Zap, Play,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useExecutionStore } from "@/stores/execution-store";
 import { useWorkflowStore } from "@/stores/workflow-store";
+import { useUIStore } from "@/stores/ui-store";
 import type { ExecutionArtifact } from "@/types/execution";
 const ArchitecturalViewer = dynamic(
   () => import("./artifacts/architectural-viewer/ArchitecturalViewer"),
@@ -65,11 +66,19 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
   // Extract data from artifacts
   const textArtifact = findArtifactByType(artifacts, "text");
   const imageArtifact = findArtifactByType(artifacts, "image");
+  const videoArtifact = findArtifactByType(artifacts, "video");
   const kpiArtifacts = findAllArtifactsByType(artifacts, "kpi");
   const svgArtifact = findArtifactByType(artifacts, "svg");
   const threeDArtifact = findArtifactByType(artifacts, "3d");
   const fileArtifacts = findAllArtifactsByType(artifacts, "file");
   const tableArtifacts = findAllArtifactsByType(artifacts, "table");
+
+  // Video data
+  const videoData = videoArtifact ? (videoArtifact.data as Record<string, unknown>) : null;
+  const videoUrl = videoData?.videoUrl as string | undefined;
+  const videoDownloadUrl = (videoData?.downloadUrl as string) ?? videoUrl;
+  const videoNodeId = videoArtifact?.tileInstanceId;
+  const setVideoPlayerNodeId = useUIStore(s => s.setVideoPlayerNodeId);
 
   // Get description text
   const description = textArtifact
@@ -271,6 +280,68 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
         >
           {projectTitle}
         </motion.h1>
+
+        {/* Hero video */}
+        {videoUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.18, duration: 0.4 }}
+            style={{
+              borderRadius: 4, overflow: "hidden",
+              marginBottom: 24,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              position: "relative",
+            }}
+          >
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              src={videoUrl}
+              style={{
+                width: "100%", height: 320, objectFit: "cover",
+                display: "block",
+              }}
+            />
+            {/* Gradient overlay */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              height: 80,
+              background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+              display: "flex", alignItems: "flex-end",
+              padding: "0 16px 12px",
+              justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Play size={12} style={{ color: "#00F5FF" }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#F0F0F5" }}>
+                  Cinematic Walkthrough
+                </span>
+                <span style={{ fontSize: 10, color: "#5C5C78" }}>
+                  {(videoData?.durationSeconds as number) ?? 15}s · {(videoData?.shotCount as number) ?? ((videoData?.metadata as Record<string, unknown>)?.shotCount as number) ?? 3} shots
+                </span>
+              </div>
+              {videoNodeId && (
+                <button
+                  onClick={() => setVideoPlayerNodeId(videoNodeId)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 4,
+                    padding: "4px 10px", borderRadius: 6,
+                    background: "rgba(0,245,255,0.15)",
+                    border: "1px solid rgba(0,245,255,0.3)",
+                    color: "#00F5FF", fontSize: 10, fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Maximize2 size={10} />
+                  Expand
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Hero image */}
         {heroUrl && (
@@ -503,6 +574,25 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
           >
             <FileDown size={14} /> PDF Report
           </button>
+          {videoDownloadUrl && (
+            <a
+              href={videoDownloadUrl}
+              download={(videoData?.name as string) ?? "walkthrough.mp4"}
+              style={{
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "10px 20px", borderRadius: 8,
+                background: "rgba(0,245,255,0.06)",
+                border: "1px solid rgba(0,245,255,0.15)",
+                color: "#00F5FF", fontSize: 13, fontWeight: 500,
+                cursor: "pointer", transition: "all 0.15s ease",
+                textDecoration: "none",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,245,255,0.12)"; e.currentTarget.style.borderColor = "rgba(0,245,255,0.3)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,245,255,0.06)"; e.currentTarget.style.borderColor = "rgba(0,245,255,0.15)"; }}
+            >
+              <Download size={14} /> Video
+            </a>
+          )}
           {downloadFiles.map((f, i) => (
             <button
               key={i}

@@ -50,6 +50,12 @@ const ArchitecturalViewer = dynamic(
   { ssr: false }
 );
 
+// Fullscreen video player — client-only
+const FullscreenVideoPlayer = dynamic(
+  () => import("./artifacts/FullscreenVideoPlayer").then(m => ({ default: m.FullscreenVideoPlayer })),
+  { ssr: false }
+);
+
 import { useWorkflowStore, isUntitledWorkflow } from "@/stores/workflow-store";
 import { SaveWorkflowModal } from "./modals/SaveWorkflowModal";
 import { useExecutionStore } from "@/stores/execution-store";
@@ -885,6 +891,9 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
           {/* Fullscreen 3D Architectural Viewer (opened from node "View 3D Model" button) */}
           <FullscreenArtifactViewer />
+
+          {/* Fullscreen Video Player (opened from node video thumbnail or expand button) */}
+          <FullscreenVideoPlayer />
 
           {/* ── Architectural title block — bottom right ── */}
           <div style={{

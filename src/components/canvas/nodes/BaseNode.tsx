@@ -4,7 +4,7 @@ import React, { memo, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
-import { CheckCircle2, AlertCircle, Download, Maximize2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Download, Maximize2, Play } from "lucide-react";
 import type { WorkflowNodeData, NodeCategory, NodeStatus } from "@/types/nodes";
 import { InputNodeContent } from "./InputNode";
 import { ViewTypeSelect } from "./GenerateNodeContent";
@@ -501,6 +501,67 @@ function InlineResult({ artifact, nodeId }: { artifact: ExecutionArtifact; nodeI
             <div key={i}>{row.slice(0, 4).join(" | ")}</div>
           ))}
           {rows.length > 2 && <div style={{ color: "#4F8AFF", marginTop: 2 }}>+{rows.length - 2} rows</div>}
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (artifact.type === "video") {
+    const videoUrl = d?.videoUrl as string;
+    const durationSec = (d?.durationSeconds as number) ?? 15;
+    return (
+      <div style={{
+        padding: "8px 0 2px",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        marginTop: 8,
+      }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{ position: "relative", borderRadius: 8, overflow: "hidden", cursor: "pointer" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            useUIStore.getState().setVideoPlayerNodeId(nodeId);
+          }}
+        >
+          {/* Video thumbnail — frozen on first frame */}
+          <video
+            src={videoUrl ? `${videoUrl}#t=0.1` : undefined}
+            preload="metadata"
+            muted
+            style={{ width: "100%", height: 90, objectFit: "cover", borderRadius: 8, display: "block" }}
+          />
+          {/* Play button overlay */}
+          <div style={{
+            position: "absolute", top: "50%", left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 32, height: 32, borderRadius: "50%",
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Play size={14} style={{ color: "#00F5FF", marginLeft: 2 }} />
+          </div>
+          {/* Duration badge */}
+          <div style={{
+            position: "absolute", bottom: 6, right: 6,
+            padding: "1px 5px", borderRadius: 3,
+            background: "rgba(0,0,0,0.7)",
+            fontSize: 9, fontWeight: 600, color: "#fff",
+            fontFamily: "'Space Mono', monospace",
+          }}>
+            {durationSec}s
+          </div>
+          {/* Maximize icon */}
+          <div style={{
+            position: "absolute", top: 6, right: 6,
+            width: 22, height: 22, borderRadius: 5,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Maximize2 size={10} style={{ color: "rgba(255,255,255,0.6)" }} />
+          </div>
         </motion.div>
       </div>
     );

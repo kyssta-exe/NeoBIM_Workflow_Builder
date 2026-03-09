@@ -1,6 +1,6 @@
 export type ExecutionStatus = "pending" | "running" | "success" | "partial" | "failed";
 
-export type ArtifactType = "text" | "json" | "image" | "3d" | "file" | "table" | "kpi" | "svg";
+export type ArtifactType = "text" | "json" | "image" | "3d" | "file" | "table" | "kpi" | "svg" | "video";
 
 export interface ExecutionArtifact {
   id: string;
@@ -75,5 +75,16 @@ export interface FileArtifactData {
   type: string;
   size: number;
   downloadUrl: string;
+  label?: string;
+}
+
+export interface VideoArtifactData {
+  videoUrl: string;
+  downloadUrl: string;
+  name: string;
+  durationSeconds: number;
+  shotCount?: number;
+  pipeline?: string;
+  costUsd?: number;
   label?: string;
 }
