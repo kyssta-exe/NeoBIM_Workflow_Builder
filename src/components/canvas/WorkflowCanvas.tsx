@@ -939,29 +939,31 @@ function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerP
             }}
           >
 
-            {/* Minimap — bottom-left, compact, low opacity */}
-            <MiniMap
-              position="bottom-left"
-              nodeStrokeWidth={0}
-              nodeColor={(n) => {
-                const d = n.data as WorkflowNodeData;
-                const cfg = CATEGORY_CONFIG[d?.category as NodeCategory];
-                return cfg?.color ?? "rgba(255,255,255,0.08)";
-              }}
-              maskColor="rgba(7,8,9,0.7)"
-              className="canvas-minimap"
-              style={{
-                width: 120,
-                height: 80,
-                backgroundColor: "rgba(10,12,14,0.85)",
-                border: "1px solid rgba(184,115,51,0.1)",
-                borderRadius: 8,
-                marginBottom: 16,
-                marginLeft: 16,
-                opacity: 0.5,
-                transition: "opacity 0.3s ease",
-              }}
-            />
+            {/* Minimap — bottom-left, compact, low opacity — hidden when canvas is empty */}
+            {nodes.length > 0 && (
+              <MiniMap
+                position="bottom-left"
+                nodeStrokeWidth={0}
+                nodeColor={(n) => {
+                  const d = n.data as WorkflowNodeData;
+                  const cfg = CATEGORY_CONFIG[d?.category as NodeCategory];
+                  return cfg?.color ?? "rgba(255,255,255,0.08)";
+                }}
+                maskColor="rgba(7,8,9,0.7)"
+                className="canvas-minimap"
+                style={{
+                  width: 120,
+                  height: 80,
+                  backgroundColor: "rgba(10,12,14,0.85)",
+                  border: "1px solid rgba(184,115,51,0.1)",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  marginLeft: 16,
+                  opacity: 0.5,
+                  transition: "opacity 0.3s ease",
+                }}
+              />
+            )}
           </ReactFlow>
 
           {/* Context menu */}
@@ -1081,11 +1083,11 @@ function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerP
             <FullscreenVideoPlayer />
           </ErrorBoundary>
 
-          {/* ── Architectural title block — bottom right ── */}
+          {/* ── Architectural title block — bottom right, offset for NODE LIBRARY panel ── */}
           <div style={{
             position: 'absolute',
             bottom: 14,
-            right: 14,
+            right: 56,
             zIndex: 2,
             pointerEvents: 'none',
             display: 'flex',
