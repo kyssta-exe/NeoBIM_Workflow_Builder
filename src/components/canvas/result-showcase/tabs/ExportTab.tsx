@@ -2,9 +2,10 @@
 
 import { useCallback } from "react";
 import { motion } from "framer-motion";
-import { FileDown, Film, File, Download, Package } from "lucide-react";
+import { FileDown, Film, File, Download, Package, Image as ImageIcon } from "lucide-react";
 import { useExecutionStore } from "@/stores/execution-store";
 import { useWorkflowStore } from "@/stores/workflow-store";
+import { useLocale } from "@/hooks/useLocale";
 import { formatBytes } from "@/lib/utils";
 import { COLORS } from "../constants";
 import type { ShowcaseData } from "../useShowcaseData";
@@ -14,6 +15,7 @@ interface ExportTabProps {
 }
 
 export function ExportTab({ data }: ExportTabProps) {
+  const { t } = useLocale();
   const artifacts = useExecutionStore(s => s.artifacts);
   const nodes = useWorkflowStore(s => s.nodes);
 
@@ -40,8 +42,8 @@ export function ExportTab({ data }: ExportTabProps) {
   // PDF Report — always first
   downloadCards.push({
     icon: <FileDown size={20} />,
-    title: "PDF Report",
-    subtitle: "Full project report with all metrics and visuals",
+    title: t('showcase.pdfReport'),
+    subtitle: t('showcase.pdfReportDesc'),
     color: COLORS.CYAN,
     action: handleGeneratePDF,
     primary: true,
@@ -51,12 +53,23 @@ export function ExportTab({ data }: ExportTabProps) {
   if (data.videoData) {
     downloadCards.push({
       icon: <Film size={20} />,
-      title: "Video Walkthrough",
+      title: t('showcase.videoWalkthroughTitle'),
       subtitle: `${data.videoData.durationSeconds}s · ${data.videoData.shotCount} shots`,
       color: COLORS.VIOLET,
       action: data.videoData.downloadUrl,
     });
   }
+
+  // Image downloads (concept renders)
+  data.allImageUrls.forEach((url, i) => {
+    downloadCards.push({
+      icon: <ImageIcon size={20} />,
+      title: `${t('showcase.conceptRenderTitle')} ${data.allImageUrls.length > 1 ? i + 1 : ""}`.trim(),
+      subtitle: t('showcase.hiResRender'),
+      color: COLORS.EMERALD,
+      action: url,
+    });
+  });
 
   // File artifacts
   data.fileDownloads.forEach(file => {
@@ -77,7 +90,7 @@ export function ExportTab({ data }: ExportTabProps) {
         color: COLORS.TEXT_PRIMARY,
         marginBottom: -8,
       }}>
-        Download Center
+        {t('showcase.downloadCenterTitle')}
       </div>
 
       <div style={{
@@ -120,7 +133,7 @@ export function ExportTab({ data }: ExportTabProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <Package size={12} style={{ color: COLORS.TEXT_MUTED }} />
           <span style={{ fontSize: 11, color: COLORS.TEXT_MUTED }}>
-            {data.totalArtifacts} total artifacts · {downloadCards.length} downloadable
+            {data.totalArtifacts} {t('showcase.totalArtifacts')} · {downloadCards.length} {t('showcase.downloadable')}
           </span>
         </div>
       </div>
