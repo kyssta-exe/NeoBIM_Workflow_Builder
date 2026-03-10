@@ -516,28 +516,14 @@ export function buildInteriorPrompt(buildingDescription: string): string {
  *   3s–4s: Right side — camera orbits to the right elevation
  *   4s–5s: Top-down — camera rises to a dramatic aerial roof perspective
  */
-export function buildFloorPlanExteriorPrompt(_buildingDescription: string, roomInfo?: string): string {
-  const rooms = roomInfo ? ` The floor plan contains these rooms: ${roomInfo.slice(0, 250)}.` : "";
-
+export function buildFloorPlanExteriorPrompt(_buildingDescription: string, _roomInfo?: string): string {
   return (
-    "Use the provided 2D architectural floor plan as the only source of truth " +
-    "and convert it into an accurate BIM-style 3D architectural model following AEC industry standards. " +
-    "Strictly interpret the floor plan geometry — wall positions, room dimensions, door and window placements, circulation paths. " +
-    "Do not invent or guess new spaces that are not shown in the floor plan. " +
-    "The 3D building must match the exact footprint, room count, and layout of the provided floor plan." +
-    rooms + " " +
-    "Exterior overview (5 seconds): " +
-    "Camera starts at the front elevation — slow cinematic dolly toward the building entrance, " +
-    "showing the complete front façade with accurate proportions derived from the floor plan. " +
-    "Camera smoothly orbits to the left side elevation, revealing the building's depth and massing. " +
-    "Continues orbiting to the back elevation showing rear façade and service areas. " +
-    "Orbits to the right side elevation revealing the full perimeter. " +
-    "Camera rises on a sweeping crane shot to a dramatic top-down aerial perspective — " +
-    "roof plan visible matching the floor plan footprint exactly. " +
-    "Ultra-realistic rendering, global illumination, natural daylight with soft shadows, " +
-    "realistic material textures (concrete, glass, metal, stone), " +
-    "cinematic smooth camera movement, professional real-estate marketing quality, " +
-    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
+    "Use the provided 2D floor plan as the only source of truth and convert it into an accurate BIM-style 3D architectural model following AEC standards. " +
+    "Strictly interpret walls, doors, windows, room layout, scale, and spatial relationships exactly as shown, without inventing or modifying any spaces. " +
+    "Generate an ultra-realistic 3D architectural exterior view. " +
+    "Show exterior views including front elevation approach and top-down aerial view of the building derived from the floor plan footprint. " +
+    "Use cinematic camera movement, realistic materials, global illumination, natural lighting, and architectural visualization quality. " +
+    "Ensure the final result is a high-end real estate style 3D render that strictly matches the provided 2D floor plan."
   );
 }
 
@@ -552,32 +538,14 @@ export function buildFloorPlanExteriorPrompt(_buildingDescription: string, roomI
  *           showcasing every room visible in the floor plan with furniture
  *           consistent with each room type
  */
-export function buildFloorPlanInteriorPrompt(_buildingDescription: string, roomInfo?: string): string {
-  const rooms = roomInfo
-    ? ` Walk through exactly these rooms as shown in the floor plan: ${roomInfo.slice(0, 300)}. Furnish each room to match its labeled function.`
-    : "";
-
+export function buildFloorPlanInteriorPrompt(_buildingDescription: string, _roomInfo?: string): string {
   return (
-    "Interior walkthrough of the 3D building converted from the provided 2D architectural floor plan. " +
-    "Strictly interpret the floor plan geometry — walk through only the rooms, corridors, and spaces shown in the plan. " +
-    "Do not invent or guess new spaces that are not visible in the floor plan." +
-    rooms + " " +
-    "Interior walkthrough (10 seconds): " +
-    "Camera enters the building through the main entrance door shown in the floor plan. " +
-    "Smooth first-person walkthrough following the natural circulation path — " +
-    "moving through corridors and into each room exactly as positioned in the floor plan layout. " +
-    "Each room is furnished with items consistent with its type — " +
-    "bedrooms with beds, wardrobes, and nightstands; kitchens with countertops, cabinets, and appliances; " +
-    "living rooms with sofas, coffee tables, and entertainment units; bathrooms with fixtures and tiling; " +
-    "offices with desks and chairs; dining areas with tables and seating. " +
-    "Camera showcases the spatial flow, room proportions, and connectivity between spaces. " +
-    "Focus on the interior spatial experience — ceiling heights, natural light from windows, " +
-    "door positions matching the floor plan, wall thicknesses and partition layouts. " +
-    "Ultra-realistic rendering, global illumination, natural daylight streaming through windows, " +
-    "warm interior lighting blended with cool daylight, realistic material textures " +
-    "(hardwood floors, stone countertops, painted walls, glass partitions, metal fixtures), " +
-    "cinematic smooth camera movement, professional real-estate marketing quality, " +
-    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
+    "Use the provided 2D floor plan as the only source of truth and convert it into an accurate BIM-style 3D architectural model following AEC standards. " +
+    "Strictly interpret walls, doors, windows, room layout, scale, and spatial relationships exactly as shown, without inventing or modifying any spaces. " +
+    "Generate an ultra-realistic 3D architectural interior walkthrough. " +
+    "Smooth interior walkthrough covering all spaces shown in the plan, following a natural circulation path. " +
+    "Use cinematic camera movement, realistic materials, global illumination, natural lighting, and architectural visualization quality. " +
+    "Ensure the final result is a high-end real estate style 3D render that strictly matches the provided 2D floor plan."
   );
 }
 
@@ -614,19 +582,13 @@ export function buildCombinedWalkthroughPrompt(buildingDescription: string): str
  */
 export function buildFloorPlanCombinedPrompt(_buildingDescription: string, _roomInfo?: string): string {
   return (
-    "Use the provided 2D architectural floor plan as the only source of truth " +
-    "and convert it into an accurate BIM-style 3D architectural model. " +
-    "Strictly interpret the floor plan geometry. Do not invent spaces not shown in the plan. " +
-    "Shot on RED V-Raptor 8K, anamorphic lens. Single continuous camera movement. " +
-    "Camera starts with an exterior overview — front elevation approach, " +
-    "orbiting around the building showing all sides, rising to a top-down aerial view. " +
-    "Camera descends and enters the building through the main entrance — " +
-    "smooth first-person walkthrough following natural circulation paths, " +
-    "moving through rooms exactly as positioned in the floor plan. " +
-    "Each room furnished consistently with its type. " +
-    "Ultra-realistic rendering, global illumination, natural daylight, " +
-    "realistic materials, cinematic smooth camera, professional real-estate quality, " +
-    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
+    "Use the provided 2D floor plan as the only source of truth and convert it into an accurate BIM-style 3D architectural model following AEC standards. " +
+    "Strictly interpret walls, doors, windows, room layout, scale, and spatial relationships exactly as shown, without inventing or modifying any spaces. " +
+    "Generate a 15-second ultra-realistic 3D architectural walkthrough video. " +
+    "First 5 seconds: exterior views showing front, top view of the building derived from the floor plan footprint. " +
+    "Next 10 seconds: smooth interior walkthrough covering all spaces shown in the plan, following a natural circulation path. " +
+    "Use cinematic camera movement, realistic materials, global illumination, natural lighting, and architectural visualization quality. " +
+    "Ensure the final result is a high-end real estate style 3D render that strictly matches the provided 2D floor plan."
   );
 }
 
