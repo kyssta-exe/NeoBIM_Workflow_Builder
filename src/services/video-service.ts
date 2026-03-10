@@ -431,321 +431,223 @@ export async function generateDualWalkthrough(
   };
 }
 
-// ─── Prompt Builders ────────────────────────────────────────────────────────
-
-function detectBuildingType(desc: string) {
-  const lower = desc.toLowerCase();
-  const isHighrise =
-    /(\d{2,})\s*(?:stor|floor)/i.test(lower) ||
-    lower.includes("tower") ||
-    lower.includes("skyscraper");
-  const isResidential =
-    lower.includes("villa") ||
-    lower.includes("house") ||
-    lower.includes("residential");
-  const hasGlass =
-    lower.includes("glass") ||
-    lower.includes("curtain wall") ||
-    lower.includes("glazing");
-  return { isHighrise, isResidential, hasGlass };
-}
+// ─── Prompt Builders (PDF / Concept Render → Video) ─────────────────────────
 
 /**
- * Build prompt for Part 1 (5s): Ultra-realistic exterior — front elevation approach,
- * cinematic side orbit, and dramatic aerial rise to roof plan.
+ * Build prompt for Part 1 (5s): Cinematic exterior views of the building.
+ * Philosophy: use the text description as source of truth, don't over-describe
+ * the building — Kling sees the concept render image. We only tell it HOW
+ * the video should look (camera movement, rendering style).
  *
  * Scene timeline:
- *   0s–2s: Front elevation — camera slowly moves toward main entrance
- *   2s–4s: Side elevation — cinematic orbit revealing building depth
- *   4s–5s: Aerial rise — camera rises to top-down roof plan view
+ *   0s–1s: Front elevation approach
+ *   1s–3s: Side elevations — left and right orbit
+ *   3s–4s: Back elevation
+ *   4s–5s: Top-down aerial view
  */
 export function buildExteriorPrompt(buildingDescription: string): string {
-  const desc = buildingDescription.slice(0, 600);
-  const { isHighrise, hasGlass } = detectBuildingType(desc);
-
-  const materialNote = hasGlass
-    ? "Glass curtain wall façade with physically accurate reflections of sky and clouds, visible unitized panel joints, structural silicone seals, aluminum mullion profiles, triple-glazed low-e coated units."
-    : "Photorealistic material rendering — exposed steel I-beams with visible bolt connections, bush-hammered concrete texture with formwork marks, weathering steel Corten cladding panels, anodized aluminum window frames.";
-
-  if (isHighrise) {
-    return (
-      `Hyper-realistic cinematic architectural visualization, indistinguishable from real drone footage, of: ${desc.slice(0, 180)}. ` +
-      "Shot on RED V-Raptor 8K, anamorphic lens, f/2.8 shallow depth of field. " +
-      "Camera starts at street level showing front elevation — slow forward dolly toward grand entrance lobby, " +
-      "capturing every surface detail: polished granite paving, stainless steel bollards, recessed ground lighting, mature landscaped trees casting dappled shadows, " +
-      "the full tower rising above with perfectly proportioned floor-to-floor heights and visible structural grid. " +
-      "Camera smoothly orbits to side elevation with fluid Steadicam movement — " +
-      "revealing the building's true depth and massing, curtain wall depth profiles, shadow box spandrel panels, " +
-      "protruding balcony slabs with glass balustrades, vertical fin sunshading elements. " +
-      "Camera rises on a sweeping crane shot to dramatic aerial view — " +
-      "rooftop with HVAC chillers, cooling towers, photovoltaic arrays, green roof planters, helicopter pad markings, mechanical penthouse louvres. " +
-      `${materialNote} ` +
-      "Golden hour warm sunlight with long dramatic shadows, volumetric atmospheric haze, " +
-      "cinematic color grading, photorealistic global illumination, sub-surface scattering on translucent materials, " +
-      "8K texture resolution, V-Ray/Corona render quality, ultra detailed, no distortion, no artifacts."
-    );
-  }
+  const desc = buildingDescription.slice(0, 800);
 
   return (
-    `Hyper-realistic cinematic architectural visualization, indistinguishable from real drone footage, of: ${desc.slice(0, 180)}. ` +
-    "Shot on RED V-Raptor 8K, anamorphic lens, f/2.8 shallow depth of field. " +
-    "Camera starts showing front elevation — slow forward dolly toward main entrance, " +
-    "capturing polished stone paving, landscaped forecourt, entrance canopy with steel tension cables, " +
-    "ground floor glazed shopfronts, the full building rising with proportioned structural bays. " +
-    "Camera smoothly orbits to side elevation with fluid Steadicam movement — " +
-    "revealing full building depth, façade material transitions, rain screen cladding panels, " +
-    "structural columns visible through glazing, secondary service entrances, loading dock. " +
-    "Camera rises on sweeping crane shot to bird's-eye aerial — " +
-    "complete roof visible with mechanical penthouses, HVAC plant, solar panels, green roof, drainage outlets, parapet coping stones, surrounding streetscape. " +
-    `${materialNote} ` +
-    "Golden hour warm sunlight with long dramatic shadows, volumetric atmospheric haze, " +
-    "cinematic color grading, photorealistic global illumination, sub-surface scattering on translucent materials, " +
-    "8K texture resolution, V-Ray/Corona render quality, ultra detailed, no distortion, no artifacts."
+    `Use the provided text description as the only source of truth and generate an accurate BIM-style 3D architectural model following AEC industry standards. ` +
+    `Interpret the text to construct the building's layout, structure, rooms, dimensions, materials, and architectural features exactly as described. ` +
+    `Do not add elements, rooms, or features not mentioned in the text. ` +
+    `The rendered building must visually match the provided concept image. ` +
+    `Building description: ${desc.slice(0, 350)}. ` +
+    "Cinematic exterior views (5 seconds): " +
+    "Camera starts at the front elevation — slow cinematic dolly toward the building entrance, " +
+    "showing the complete front façade with accurate proportions. " +
+    "Camera smoothly orbits to the side elevations, revealing the building's depth, massing, and façade details. " +
+    "Continues to the back elevation showing rear façade and service areas. " +
+    "Camera rises on a sweeping crane shot to a dramatic top-down aerial perspective — " +
+    "complete roof plan visible with accurate building footprint. " +
+    "Physically accurate proportions, realistic materials, global illumination, " +
+    "natural lighting with soft shadows, cinematic smooth camera movement, " +
+    "high-end real-estate style architectural visualization, " +
+    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
   );
 }
 
 /**
- * Build prompt for Part 2 (10s): BIM sectional cutaway revealing structure,
- * then interior walkthrough with detailed BIM elements.
+ * Build prompt for Part 2 (10s): Smooth interior walkthrough showcasing
+ * all spaces described in the text, following natural circulation.
+ * Same philosophy: trust the input image + text, describe camera movement only.
  *
  * Scene timeline:
- *   0s–3s: Roof transitions to BIM sectional cutaway — floors visible layer by layer
- *          showing structural beams, columns, floor slabs, building core, staircases, elevator shafts
- *   3s–10s: Camera moves inside — modern lobby and office floor with interior BIM details:
- *           glass partitions, staircases, elevators, furniture layout, lighting fixtures, finishes
+ *   0s–2s: Camera enters through main entrance into lobby/foyer
+ *   2s–10s: Smooth walkthrough through all described interior spaces
  */
 export function buildInteriorPrompt(buildingDescription: string): string {
-  const desc = buildingDescription.slice(0, 600);
-  const { isHighrise, isResidential } = detectBuildingType(desc);
-
-  if (isHighrise) {
-    return (
-      `Hyper-realistic cinematic interior architectural visualization, indistinguishable from real footage, of: ${desc.slice(0, 180)}. ` +
-      "Shot on ARRI Alexa Mini, wide-angle prime lens, cinematic shallow depth of field. " +
-      "Scene opens with dramatic sectional cutaway — building slices open revealing every floor in cross-section, " +
-      "steel wide-flange beams with bolted connections, reinforced concrete columns with visible rebar ties, " +
-      "post-tensioned floor slabs, concrete building core with elevator shafts and fire stairs, MEP risers with color-coded pipes. " +
-      "Camera descends into grand double-height lobby — " +
-      "Carrara marble reception desk, board-formed concrete feature walls, polished terrazzo floor with brass inlay strips, " +
-      "recessed linear LED cove lighting, floor-to-ceiling frameless glass entrance doors. " +
-      "Camera glides through corridor — suspended metal ceiling with integrated linear diffusers, " +
-      "recessed LED downlights casting precise beam patterns, chrome sprinkler heads, smoke detectors. " +
-      "Enters open-plan office — Herman Miller workstations, acoustic felt ceiling baffles, " +
-      "full-height glass partitions with manifestation dots, raised access floor with visible cable management, " +
-      "panoramic city views through floor-to-ceiling curtain wall. " +
-      "Warm 3200K interior lighting blended with cool 5600K daylight, realistic caustics through glass, volumetric light rays, " +
-      "photorealistic material rendering — real wood grain, brushed stainless, honed stone, woven carpet texture, " +
-      "V-Ray/Corona render quality, 8K textures, ultra detailed, no distortion, no artifacts."
-    );
-  }
-
-  if (isResidential) {
-    return (
-      `Hyper-realistic cinematic interior architectural visualization, indistinguishable from real footage, of: ${desc.slice(0, 180)}. ` +
-      "Shot on ARRI Alexa Mini, wide-angle prime lens, cinematic shallow depth of field. " +
-      "Scene opens with dramatic sectional cutaway — roof peels away revealing timber rafter structure, " +
-      "engineered I-joists, insulated cavity walls, service voids with plumbing and electrical runs. " +
-      "Camera enters through solid European oak front door — herringbone tile entrance hall, " +
-      "glides into double-height living space with exposed glulam beams, wide-plank engineered oak flooring, " +
-      "floor-to-ceiling triple-glazed windows with motorized blinds filtering warm sunlight, " +
-      "bespoke built-in joinery in satin lacquer finish. " +
-      "Moves through kitchen — book-matched Calacatta marble island, integrated Gaggenau appliances, " +
-      "hand-made ceramic splashback tiles, brushed brass pendant fixtures. " +
-      "Through full-height sliding glass doors onto covered terrace — ipe timber decking, cast concrete planters, " +
-      "architectural landscaping with ornamental grasses and specimen trees. " +
-      "Warm morning sunlight streaming through windows casting long shadows on surfaces, " +
-      "visible dust particles in volumetric light rays, realistic caustics through glass, " +
-      "photorealistic material rendering — real wood grain, natural stone veining, brushed metal, linen texture, " +
-      "V-Ray/Corona render quality, 8K textures, ultra detailed, no distortion, no artifacts."
-    );
-  }
+  const desc = buildingDescription.slice(0, 800);
 
   return (
-    `Hyper-realistic cinematic interior architectural visualization, indistinguishable from real footage, of: ${desc.slice(0, 180)}. ` +
-    "Shot on ARRI Alexa Mini, wide-angle prime lens, cinematic shallow depth of field. " +
-    "Scene opens with dramatic sectional cutaway — building slices open revealing every floor, " +
-    "steel beams with bolted connections, concrete columns, floor slabs, building core, elevator shafts, fire stairs. " +
-    "Camera enters through main entrance — polished concrete lobby with double-height ceiling, " +
-    "feature reception desk in stone and timber, recessed linear LED lighting, frameless glass doors. " +
-    "Glides through corridor — suspended metal ceiling grid, integrated LED panels, sprinkler heads, " +
-    "air diffusers, acoustic wall panels in felt fabric. " +
-    "Passes glazed meeting room — frameless glass partitions, acoustic seals visible, cable management below raised floor. " +
-    "Enters open office — contemporary workstations, task lighting, acoustic ceiling baffles, " +
-    "exposed painted ductwork and cable trays above, full-height curtain wall with city views. " +
-    "Warm 3200K interior lighting blended with cool 5600K daylight, realistic caustics through glass, volumetric light rays, " +
-    "photorealistic material rendering — concrete formwork marks, real wood grain, brushed steel, woven carpet, " +
-    "V-Ray/Corona render quality, 8K textures, ultra detailed, no distortion, no artifacts."
+    `Smooth interior walkthrough of the building strictly matching the provided text description and concept image. ` +
+    `Show only the spaces, rooms, and features mentioned in the text — do not add rooms or areas not described. ` +
+    `Building description: ${desc.slice(0, 350)}. ` +
+    "Interior walkthrough (10 seconds): " +
+    "Camera enters the building through the main entrance. " +
+    "Smooth first-person walkthrough following a natural circulation path — " +
+    "showcasing all spaces described in the text in the correct layout order. " +
+    "Each space is furnished consistently with its described function. " +
+    "Camera showcases spatial flow, room proportions, ceiling heights, and connectivity between spaces. " +
+    "Natural light streaming through windows, door positions and wall layouts matching the description. " +
+    "Physically accurate proportions, realistic materials " +
+    "(hardwood floors, stone countertops, painted walls, glass partitions, metal fixtures), " +
+    "global illumination, natural lighting blended with warm interior light, " +
+    "cinematic smooth camera movement, high-end real-estate style architectural visualization, " +
+    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
   );
 }
 
 // ─── Floor Plan → Video Prompts ──────────────────────────────────────────────
 
 /**
- * Build prompt for floor plan exterior (5s): 2D plan transforms into 3D building.
- * The source image IS the floor plan — Kling will animate it into a 3D reveal.
+ * Build prompt for floor plan exterior (5s): Camera orbits the building formed
+ * from the 2D floor plan image. We DON'T describe the building — Kling sees
+ * the floor plan image and converts it. We only describe HOW the video looks.
  *
  * Scene timeline:
- *   0s–2s: Top-down view of a professional architectural floor plan on a drafting table
- *   2s–4s: The floor plan lines begin rising, extruding into 3D walls and a complete building
- *   4s–5s: Camera sweeps to a dramatic exterior aerial orbit of the newly formed 3D building
+ *   0s–1s: Front elevation — camera approaches the building from the front
+ *   1s–2s: Left side — camera orbits to reveal the left elevation
+ *   2s–3s: Back elevation — camera continues orbit showing the rear
+ *   3s–4s: Right side — camera orbits to the right elevation
+ *   4s–5s: Top-down — camera rises to a dramatic aerial roof perspective
  */
-export function buildFloorPlanExteriorPrompt(buildingDescription: string, roomInfo?: string): string {
-  const desc = buildingDescription.slice(0, 400);
-  const rooms = roomInfo ? ` Rooms: ${roomInfo.slice(0, 200)}.` : "";
+export function buildFloorPlanExteriorPrompt(_buildingDescription: string, roomInfo?: string): string {
+  const rooms = roomInfo ? ` The floor plan contains these rooms: ${roomInfo.slice(0, 250)}.` : "";
 
   return (
-    `Hyper-realistic cinematic architectural visualization. Source image is a 2D architectural floor plan drawing of: ${desc.slice(0, 150)}.${rooms} ` +
-    "Shot on RED V-Raptor 8K, anamorphic lens, f/2.8 shallow depth of field. " +
-    "Camera starts looking straight down at the architectural floor plan — clean white paper with room layouts, wall lines, and labels. " +
-    "The 2D drawing magically begins transforming — floor plan lines rise and extrude upward into solid 3D walls, " +
-    "glass windows materialize in wall openings, concrete floor slabs form between stories, " +
-    "a complete photorealistic multi-story building grows organically from the flat blueprint. " +
-    "Camera smoothly lifts and orbits as the 3D building finishes forming — " +
-    "revealing a stunning modern building with full material detail: glass curtain walls reflecting golden hour sky, " +
-    "stone and concrete cladding, aluminum window frames, landscaped entrance, mature trees casting shadows. " +
-    "Golden hour warm sunlight with long dramatic shadows, volumetric atmospheric haze, " +
-    "cinematic color grading, photorealistic global illumination, V-Ray/Corona render quality, " +
-    "8K texture resolution, ultra detailed, no distortion, no artifacts."
+    "Use the provided 2D architectural floor plan as the only source of truth " +
+    "and convert it into an accurate BIM-style 3D architectural model following AEC industry standards. " +
+    "Strictly interpret the floor plan geometry — wall positions, room dimensions, door and window placements, circulation paths. " +
+    "Do not invent or guess new spaces that are not shown in the floor plan. " +
+    "The 3D building must match the exact footprint, room count, and layout of the provided floor plan." +
+    rooms + " " +
+    "Exterior overview (5 seconds): " +
+    "Camera starts at the front elevation — slow cinematic dolly toward the building entrance, " +
+    "showing the complete front façade with accurate proportions derived from the floor plan. " +
+    "Camera smoothly orbits to the left side elevation, revealing the building's depth and massing. " +
+    "Continues orbiting to the back elevation showing rear façade and service areas. " +
+    "Orbits to the right side elevation revealing the full perimeter. " +
+    "Camera rises on a sweeping crane shot to a dramatic top-down aerial perspective — " +
+    "roof plan visible matching the floor plan footprint exactly. " +
+    "Ultra-realistic rendering, global illumination, natural daylight with soft shadows, " +
+    "realistic material textures (concrete, glass, metal, stone), " +
+    "cinematic smooth camera movement, professional real-estate marketing quality, " +
+    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
   );
 }
 
 /**
- * Build prompt for floor plan interior (10s): Camera descends into the building
- * that was built from the floor plan, walking through the rooms.
+ * Build prompt for floor plan interior (10s): Camera enters the building
+ * and walks through rooms exactly as laid out in the floor plan.
+ * We only describe HOW the video looks — Kling reads the floor plan image.
  *
  * Scene timeline:
- *   0s–3s: Aerial view of 3D building → camera descends through roof into interior
- *   3s–10s: First-person walkthrough through rooms matching the floor plan layout
+ *   0s–2s: Camera enters the building through the main entrance
+ *   2s–10s: First-person walkthrough following natural circulation paths,
+ *           showcasing every room visible in the floor plan with furniture
+ *           consistent with each room type
  */
-export function buildFloorPlanInteriorPrompt(buildingDescription: string, roomInfo?: string): string {
-  const desc = buildingDescription.slice(0, 400);
-  const rooms = roomInfo ? ` Floor plan rooms: ${roomInfo.slice(0, 300)}.` : "";
+export function buildFloorPlanInteriorPrompt(_buildingDescription: string, roomInfo?: string): string {
+  const rooms = roomInfo
+    ? ` Walk through exactly these rooms as shown in the floor plan: ${roomInfo.slice(0, 300)}. Furnish each room to match its labeled function.`
+    : "";
 
   return (
-    `Hyper-realistic cinematic interior architectural visualization of: ${desc.slice(0, 150)}.${rooms} ` +
-    "Shot on ARRI Alexa Mini, wide-angle prime lens, cinematic shallow depth of field. " +
-    "Camera descends from aerial view through the building's roof — " +
-    "roof peels away in a dramatic sectional cutaway revealing every floor in cross-section, " +
-    "structural beams, concrete columns, floor slabs, staircases, elevator shafts, MEP risers. " +
-    "Camera enters the main floor — moving through rooms exactly as laid out in the architectural plan. " +
-    "Grand entrance lobby with polished stone flooring, feature reception desk, recessed linear LED lighting. " +
-    "Glides through corridors — suspended ceiling grid, integrated lighting, acoustic panels. " +
-    "Enters living spaces and offices — contemporary furniture, floor-to-ceiling windows with natural light streaming in, " +
-    "real material textures: hardwood floors, natural stone countertops, brushed metal fixtures, woven textiles. " +
-    "Through each room showing the spatial flow of the architectural plan brought to life in photorealistic 3D. " +
-    "Warm 3200K interior lighting blended with cool 5600K daylight, realistic caustics through glass, volumetric light rays, " +
-    "photorealistic material rendering — real wood grain, honed stone, brushed stainless, woven carpet texture, " +
-    "V-Ray/Corona render quality, 8K textures, ultra detailed, no distortion, no artifacts."
+    "Interior walkthrough of the 3D building converted from the provided 2D architectural floor plan. " +
+    "Strictly interpret the floor plan geometry — walk through only the rooms, corridors, and spaces shown in the plan. " +
+    "Do not invent or guess new spaces that are not visible in the floor plan." +
+    rooms + " " +
+    "Interior walkthrough (10 seconds): " +
+    "Camera enters the building through the main entrance door shown in the floor plan. " +
+    "Smooth first-person walkthrough following the natural circulation path — " +
+    "moving through corridors and into each room exactly as positioned in the floor plan layout. " +
+    "Each room is furnished with items consistent with its type — " +
+    "bedrooms with beds, wardrobes, and nightstands; kitchens with countertops, cabinets, and appliances; " +
+    "living rooms with sofas, coffee tables, and entertainment units; bathrooms with fixtures and tiling; " +
+    "offices with desks and chairs; dining areas with tables and seating. " +
+    "Camera showcases the spatial flow, room proportions, and connectivity between spaces. " +
+    "Focus on the interior spatial experience — ceiling heights, natural light from windows, " +
+    "door positions matching the floor plan, wall thicknesses and partition layouts. " +
+    "Ultra-realistic rendering, global illumination, natural daylight streaming through windows, " +
+    "warm interior lighting blended with cool daylight, realistic material textures " +
+    "(hardwood floors, stone countertops, painted walls, glass partitions, metal fixtures), " +
+    "cinematic smooth camera movement, professional real-estate marketing quality, " +
+    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
   );
 }
 
 // ─── Combined Single-Video Prompts (10s, no segments) ────────────────────────
 
 /**
- * Combined walkthrough prompt for concept render input.
- * Single continuous 10s video: exterior approach → orbit → interior entry.
- * Replaces the old dual 5s+10s approach with one smooth shot.
+ * Combined walkthrough prompt for concept render input (fallback single 10s video).
+ * Exterior views + interior entry in one continuous shot.
+ * Same philosophy: trust the input, describe camera movement only.
  */
 export function buildCombinedWalkthroughPrompt(buildingDescription: string): string {
-  const desc = buildingDescription.slice(0, 500);
-  const { isHighrise, hasGlass } = detectBuildingType(desc);
-
-  const materialNote = hasGlass
-    ? "Glass curtain wall with sky reflections, aluminum mullions, triple-glazed low-e units."
-    : "Photorealistic materials — exposed concrete with formwork marks, weathering steel cladding, anodized aluminum frames.";
-
-  const interiorStyle = isHighrise
-    ? "grand double-height lobby with Carrara marble reception desk, polished terrazzo floor, recessed LED cove lighting, " +
-      "open-plan office with Herman Miller workstations, full-height glass partitions, panoramic city views"
-    : "polished concrete lobby with feature reception desk, natural timber accents, " +
-      "open workspaces with contemporary furniture, floor-to-ceiling windows with natural light";
+  const desc = buildingDescription.slice(0, 800);
 
   return (
-    `Hyper-realistic cinematic architectural visualization, indistinguishable from real drone footage, of: ${desc.slice(0, 150)}. ` +
-    "Shot on RED V-Raptor 8K, anamorphic lens, f/2.8. Single continuous camera movement. " +
-    "Camera starts at street level — slow forward dolly toward the building entrance, " +
-    "capturing polished stone paving, landscaped forecourt, mature trees casting dappled shadows, the full building rising above. " +
-    "Camera smoothly orbits the building revealing depth and massing — façade details, structural grid, curtain wall profiles. " +
-    "Camera glides through the main entrance into the interior — " +
-    `${interiorStyle}. ` +
-    `${materialNote} ` +
-    "Golden hour sunlight, volumetric haze, cinematic color grading, photorealistic global illumination, " +
-    "V-Ray/Corona render quality, 8K textures, ultra detailed, no distortion, no artifacts."
+    `Use the provided text description as the only source of truth and generate an accurate BIM-style 3D architectural model. ` +
+    `Interpret the text exactly as described, without adding elements not mentioned. ` +
+    `Building description: ${desc.slice(0, 400)}. ` +
+    "Single continuous camera movement. " +
+    "Camera starts with cinematic exterior views — front elevation approach, " +
+    "orbiting around the building showing all sides, rising to a top-down aerial view. " +
+    "Camera descends and enters the building through the main entrance — " +
+    "smooth first-person walkthrough following natural circulation paths, " +
+    "showcasing all spaces described in the text. " +
+    "Physically accurate proportions, realistic materials, global illumination, " +
+    "natural lighting, cinematic smooth camera, high-end real-estate quality, " +
+    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
   );
 }
 
 /**
- * Combined floor plan prompt for a single 10s video.
- * 2D plan → 3D building extrusion → interior walkthrough in one continuous shot.
+ * Combined floor plan prompt for a single 10s video (fallback if dual isn't used).
+ * Exterior orbit + interior walkthrough in one continuous shot.
+ * Same philosophy: don't describe the building, just describe camera movement.
  */
-export function buildFloorPlanCombinedPrompt(buildingDescription: string, roomInfo?: string): string {
-  const desc = buildingDescription.slice(0, 400);
-  const rooms = roomInfo ? ` Rooms: ${roomInfo.slice(0, 200)}.` : "";
-
+export function buildFloorPlanCombinedPrompt(_buildingDescription: string, _roomInfo?: string): string {
   return (
-    `Hyper-realistic cinematic architectural visualization. Source image is a 2D architectural floor plan of: ${desc.slice(0, 150)}.${rooms} ` +
+    "Use the provided 2D architectural floor plan as the only source of truth " +
+    "and convert it into an accurate BIM-style 3D architectural model. " +
+    "Strictly interpret the floor plan geometry. Do not invent spaces not shown in the plan. " +
     "Shot on RED V-Raptor 8K, anamorphic lens. Single continuous camera movement. " +
-    "Camera starts looking down at the architectural floor plan — clean drawing with room layouts, wall lines, and labels. " +
-    "The 2D drawing begins transforming — floor plan lines rise and extrude upward into solid 3D walls, " +
-    "glass windows materialize in openings, concrete floor slabs form between stories, " +
-    "a complete photorealistic building grows from the flat blueprint. " +
-    "Camera lifts and smoothly orbits the newly formed 3D building — " +
-    "glass façade reflecting golden hour sky, stone cladding, landscaped entrance with mature trees. " +
-    "Camera descends and glides through the main entrance into the interior — " +
-    "polished stone lobby, feature reception desk, recessed LED lighting, " +
-    "contemporary furniture, floor-to-ceiling windows with warm natural light streaming in. " +
-    "Golden hour sunlight, volumetric atmospheric haze, cinematic color grading, " +
-    "photorealistic global illumination, V-Ray/Corona render quality, " +
-    "8K textures, ultra detailed, no distortion, no artifacts."
+    "Camera starts with an exterior overview — front elevation approach, " +
+    "orbiting around the building showing all sides, rising to a top-down aerial view. " +
+    "Camera descends and enters the building through the main entrance — " +
+    "smooth first-person walkthrough following natural circulation paths, " +
+    "moving through rooms exactly as positioned in the floor plan. " +
+    "Each room furnished consistently with its type. " +
+    "Ultra-realistic rendering, global illumination, natural daylight, " +
+    "realistic materials, cinematic smooth camera, professional real-estate quality, " +
+    "8K resolution, V-Ray/Corona render quality, no distortion, no artifacts."
   );
 }
 
 /**
  * Build a cinematic AEC walkthrough prompt from the building description.
- * Single-video fallback: complete 15s timeline in one video.
- * Kept under 2500 chars (Kling API limit).
- *
- * Scene timeline (15s):
- *   0s–3s:  Front elevation — camera moves toward main entrance
- *   3s–6s:  Side elevation — cinematic orbit revealing depth
- *   6s–9s:  Aerial rise — roof plan with BIM elements
- *   9s–12s: BIM sectional cutaway — floors layer by layer
- *   12s–15s: Interior walkthrough — lobby and office floor
+ * Legacy single-video fallback — kept for backward compatibility.
  */
 export function buildArchitecturalVideoPrompt(
   buildingDescription: string
 ): string {
   const desc = buildingDescription.slice(0, 800);
-  const lower = desc.toLowerCase();
-
-  const hasGlass =
-    lower.includes("glass") ||
-    lower.includes("curtain wall") ||
-    lower.includes("glazing");
-
-  const materialNote = hasGlass
-    ? "Glass curtain wall façade reflecting sunlight, visible structural grid, ray-traced reflections."
-    : "Exposed steel structural frame, reinforced concrete slabs, realistic architectural materials, visible structural grid.";
-
-  // Universal 5-phase camera motion matching the user's scene timeline
-  const cameraMotion =
-    "Front elevation view — camera slowly moves forward toward main entrance, " +
-    "large façade with visible structural grid, landscaped plaza, realistic shadows and architectural proportions. " +
-    "Camera smoothly transitions to side elevation with cinematic orbit — " +
-    "building depth visible, façade panels, structural columns, curtain wall systems, architectural details. " +
-    "Camera rises upward into aerial top view — roof plan with HVAC units, skylights, mechanical equipment, service walkways, parapet walls. " +
-    "Roof transitions into BIM sectional cutaway — floors visible layer by layer showing structural beams, columns, floor slabs, building core, staircases, elevator shafts. " +
-    "Camera moves inside showing modern lobby and office floor — glass partitions, staircases, elevators, furniture layout, lighting fixtures, architectural finishes.";
 
   return (
-    `Ultra-realistic 3D BIM architectural visualization of: ${desc.slice(0, 200)}. ` +
-    "Highly detailed parametric architecture, high-polygon detailed BIM building model. " +
-    `${cameraMotion} ` +
-    `${materialNote} ` +
-    "Cinematic drone movement, smooth orbit, architectural flythrough, slow dolly camera motion, " +
-    "natural daylight, realistic shadows, soft interior lighting, global illumination, " +
-    "photorealistic architecture render, professional BIM visualization, extremely detailed geometry, 4K architectural animation, " +
-    "Unreal Engine quality rendering, ray tracing, ultra detailed, no distortion."
+    `Use the provided text description as the only source of truth and generate an accurate BIM-style 3D architectural model following AEC industry standards. ` +
+    `Interpret the text exactly as described, without adding elements not mentioned. ` +
+    `Building description: ${desc.slice(0, 300)}. ` +
+    "Create an ultra-realistic 3D architectural walkthrough video. " +
+    "Cinematic exterior views including front, sides, back, and top view of the building. " +
+    "Then smooth interior walkthrough showcasing all spaces described in the text, " +
+    "following a natural circulation path. " +
+    "Physically accurate proportions, realistic materials, global illumination, " +
+    "natural lighting, cinematic smooth camera movement, " +
+    "high-end real-estate style architectural visualization, " +
+    "8K resolution, no distortion, no artifacts."
   );
 }
 
