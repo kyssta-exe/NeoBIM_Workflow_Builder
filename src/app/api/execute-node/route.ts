@@ -1385,8 +1385,13 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       // Takes a concept render image (from GN-003) + building description
       // and generates a cinematic walkthrough video via Kling 3.0 Official API.
 
+      console.log("[GN-009] === INPUT DATA KEYS ===", Object.keys(inputData ?? {}));
+      console.log("[GN-009] Has fileData:", !!(inputData?.fileData), "Has url:", !!(inputData?.url), "Has imageUrl:", !!(inputData?.imageUrl), "Has svg:", !!(inputData?.svg));
+      console.log("[GN-009] KLING_ACCESS_KEY set:", !!process.env.KLING_ACCESS_KEY, "KLING_SECRET_KEY set:", !!process.env.KLING_SECRET_KEY);
+
       if (!process.env.KLING_ACCESS_KEY || !process.env.KLING_SECRET_KEY) {
         // Fallback to client-side Three.js rendering when Kling keys are not configured
+        console.error("[GN-009] ❌ KLING KEYS MISSING — falling back to Three.js");
         const buildingDesc = (inputData?.content as string) ?? (inputData?.description as string) ?? "Modern architectural building";
         const upFloors = Number(inputData?.floors) || 5;
         const upFloorHeight = Number(inputData?.height) / upFloors || 3.6;
@@ -1555,6 +1560,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
 
       // Fallback to Three.js client-side rendering if Kling failed or no render image
       if (!klingSucceeded) {
+        console.error("[GN-009] ❌ KLING FAILED — renderImageUrl:", renderImageUrl ? renderImageUrl.slice(0, 80) : "EMPTY", "isFloorPlan:", isFloorPlanInput);
         const upFloors = Number(inputData?.floors) || 5;
         const upFloorHeight = Number(inputData?.height) / upFloors || 3.6;
         const upFootprint = Number(inputData?.footprint) || 600;
