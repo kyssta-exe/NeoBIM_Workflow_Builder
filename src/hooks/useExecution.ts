@@ -219,7 +219,100 @@ async function persistVideoToR2(
 const VIDEO_POLL_INTERVAL_MS = 6_000; // Poll every 6 seconds
 const VIDEO_POLL_TIMEOUT_MS = 600_000; // 10 minute timeout
 
-/** Poll /api/video-status until video generation completes or fails */
+/** Poll /api/video-status for a SINGLE video task (floor plans) */
+async function pollSingleVideoGeneration(
+  nodeId: string,
+  taskId: string,
+  addArtifactFn: (nodeId: string, artifact: ExecutionArtifact) => void,
+  setVideoProgressFn: (nodeId: string, state: { progress: number; status: "submitting" | "processing" | "complete" | "failed"; taskId?: string; failureMessage?: string }) => void,
+  clearVideoProgressFn: (nodeId: string) => void,
+  currentArtifactData: Record<string, unknown>,
+  executionId: string,
+): Promise<void> {
+  const deadline = Date.now() + VIDEO_POLL_TIMEOUT_MS;
+
+  console.log("[POLL] === Starting SINGLE video poll ===");
+  console.log("[POLL] taskId:", taskId);
+
+  setVideoProgressFn(nodeId, { progress: 5, status: "processing", taskId });
+
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, VIDEO_POLL_INTERVAL_MS));
+
+    try {
+      console.log("[POLL] Checking single video status...");
+      const res = await fetch(`/api/video-status?taskId=${encodeURIComponent(taskId)}`);
+
+      if (!res.ok) {
+        console.error("[POLL] HTTP error:", res.status);
+        continue;
+      }
+
+      const status = await res.json();
+      console.log("[POLL] Single status:", JSON.stringify(status));
+
+      setVideoProgressFn(nodeId, {
+        progress: status.progress,
+        status: status.isComplete ? "complete" : status.hasFailed ? "failed" : "processing",
+        taskId,
+        failureMessage: status.failureMessage ?? undefined,
+      });
+
+      if (status.hasFailed) {
+        console.error("[POLL] Single video failed:", status.failureMessage);
+        toast.error("Video generation failed", {
+          description: status.failureMessage ?? "Unknown error",
+          duration: 6000,
+        });
+        return;
+      }
+
+      if (status.isComplete && status.videoUrl) {
+        console.log("[RENDER] Single video complete! URL:", status.videoUrl.slice(0, 100));
+
+        const finalArtifact: ExecutionArtifact = {
+          id: `video-${nodeId}`,
+          executionId,
+          tileInstanceId: nodeId,
+          type: "video",
+          data: {
+            ...currentArtifactData,
+            videoUrl: status.videoUrl,
+            downloadUrl: status.videoUrl,
+            label: "Cinematic Walkthrough — 10s · 1 shot",
+            videoGenerationStatus: "complete",
+            generationProgress: 100,
+            durationSeconds: 10,
+            shotCount: 1,
+          },
+          metadata: { engine: "kling-official", real: true },
+          createdAt: new Date(),
+        };
+
+        addArtifactFn(nodeId, finalArtifact);
+        clearVideoProgressFn(nodeId);
+
+        toast.success("Video walkthrough ready!", {
+          description: "10s cinematic walkthrough generated successfully",
+          duration: 5000,
+        });
+        return;
+      }
+    } catch (err) {
+      console.error("[POLL] Error:", err);
+    }
+  }
+
+  // Timeout
+  setVideoProgressFn(nodeId, {
+    progress: 0,
+    status: "failed",
+    failureMessage: "Video generation timed out after 10 minutes",
+  });
+  toast.error("Video generation timed out", { duration: 6000 });
+}
+
+/** Poll /api/video-status until video generation completes or fails (DUAL mode) */
 async function pollVideoGeneration(
   nodeId: string,
   exteriorTaskId: string,
@@ -823,11 +916,34 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
         if (artifact.type === "video" && artData?.videoGenerationStatus) {
           if (
             artData.videoGenerationStatus === "processing" &&
+            artData.taskId &&
+            !artData.exteriorTaskId
+          ) {
+            // Single video path (floor plans): poll single task
+            log("info", "Single video generation started — polling for progress");
+            toast.info("Video generating in background...", {
+              description: "10s AEC walkthrough — you'll be notified when it's ready",
+              duration: 5000,
+            });
+
+            pollSingleVideoGeneration(
+              node.id,
+              artData.taskId as string,
+              addArtifact,
+              setVideoGenProgress,
+              clearVideoGenProgress,
+              artData,
+              executionId,
+            ).catch(err => {
+              console.error("[Video Poll] Unhandled error:", err);
+            });
+          } else if (
+            artData.videoGenerationStatus === "processing" &&
             artData.exteriorTaskId &&
             artData.interiorTaskId
           ) {
-            // Kling API path: poll server for progress
-            log("info", "Video generation started in background — polling for progress");
+            // Dual video path (concept renders): poll both tasks
+            log("info", "Dual video generation started — polling for progress");
             toast.info("Video generating in background...", {
               description: "15s AEC walkthrough — you'll be notified when it's ready",
               duration: 5000,

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { checkDualVideoStatus } from "@/services/video-service";
+import { checkDualVideoStatus, checkSingleVideoStatus } from "@/services/video-service";
 import { formatErrorResponse } from "@/lib/user-errors";
 
 /**
- * GET /api/video-status?exteriorTaskId=X&interiorTaskId=Y
+ * GET /api/video-status?taskId=X              (single 10s video)
+ * GET /api/video-status?exteriorTaskId=X&interiorTaskId=Y  (dual 5s+10s)
  *
- * Polls the Kling API for the status of both video generation tasks.
- * Returns progress percentage (0-100) and video URLs when complete.
+ * Polls the Kling API for video generation status.
+ * Returns progress percentage (0-100) and video URL(s) when complete.
  */
 export async function GET(req: NextRequest) {
   // Auth check
@@ -20,30 +21,48 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = new URL(req.url);
+  const singleTaskId = searchParams.get("taskId");
   const exteriorTaskId = searchParams.get("exteriorTaskId");
   const interiorTaskId = searchParams.get("interiorTaskId");
 
-  if (!exteriorTaskId || !interiorTaskId) {
-    return NextResponse.json(
-      formatErrorResponse({
-        title: "Missing parameters",
-        message: "Both exteriorTaskId and interiorTaskId are required.",
-        code: "VAL_001",
-      }),
-      { status: 400 }
-    );
-  }
-
   try {
-    console.log("[POLL] /api/video-status called with exteriorTaskId:", exteriorTaskId, "interiorTaskId:", interiorTaskId);
+    // ── Single video mode (floor plans) ──
+    if (singleTaskId) {
+      console.log("[POLL] /api/video-status (single) taskId:", singleTaskId);
+      const status = await checkSingleVideoStatus(singleTaskId);
+      console.log("[POLL] checkSingleVideoStatus result:", JSON.stringify(status));
+
+      return NextResponse.json({
+        ...status,
+        mode: "single",
+        ...(status.isComplete && {
+          costUsd: 10 * 0.10,
+          totalDurationSeconds: 10,
+        }),
+      });
+    }
+
+    // ── Dual video mode (concept renders) ──
+    if (!exteriorTaskId || !interiorTaskId) {
+      return NextResponse.json(
+        formatErrorResponse({
+          title: "Missing parameters",
+          message: "Provide either taskId (single) or both exteriorTaskId and interiorTaskId (dual).",
+          code: "VAL_001",
+        }),
+        { status: 400 }
+      );
+    }
+
+    console.log("[POLL] /api/video-status (dual) exteriorTaskId:", exteriorTaskId, "interiorTaskId:", interiorTaskId);
     const status = await checkDualVideoStatus(exteriorTaskId, interiorTaskId);
     console.log("[POLL] checkDualVideoStatus result:", JSON.stringify(status));
 
     return NextResponse.json({
       ...status,
-      // Include cost estimate when complete
+      mode: "dual",
       ...(status.isComplete && {
-        costUsd: 5 * 0.10 + 10 * 0.10, // 5s exterior + 10s interior
+        costUsd: 5 * 0.10 + 10 * 0.10,
         totalDurationSeconds: 15,
       }),
     });

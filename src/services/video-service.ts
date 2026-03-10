@@ -596,9 +596,10 @@ export function buildFloorPlanCombinedPrompt(_buildingDescription: string, _room
   return (
     "Use the provided 2D floor plan as the only source of truth and convert it into an accurate BIM-style 3D architectural model following AEC standards. " +
     "Strictly interpret walls, doors, windows, room layout, scale, and spatial relationships exactly as shown, without inventing or modifying any spaces. " +
-    "Generate a 15-second ultra-realistic 3D architectural walkthrough video. " +
-    "First 5 seconds: exterior views showing front, top view of the building derived from the floor plan footprint. " +
-    "Next 10 seconds: smooth interior walkthrough covering all spaces shown in the plan, following a natural circulation path. " +
+    "Generate a 10-second ultra-realistic 3D architectural walkthrough video in one continuous camera movement. " +
+    "First 2-3 seconds: exterior view showing the front elevation and a brief top-down aerial view of the building derived from the floor plan footprint. " +
+    "Camera then smoothly descends and enters through the main entrance. " +
+    "Remaining 7-8 seconds: smooth interior walkthrough covering all spaces shown in the plan, following a natural circulation path through each room. " +
     "Use cinematic camera movement, realistic materials, global illumination, natural lighting, and architectural visualization quality. " +
     "Ensure the final result is a high-end real estate style 3D render that strictly matches the provided 2D floor plan."
   );
@@ -703,6 +704,64 @@ export async function submitDualWalkthrough(
   };
 
   return result;
+}
+
+// ─── Single Video Submission (floor plans) ──────────────────────────────────
+
+export interface SubmittedSingleVideoTask {
+  taskId: string;
+  submittedAt: number;
+}
+
+/**
+ * Submit a SINGLE 10s video task to Kling API and return immediately.
+ * Used for floor plans where a continuous shot (exterior + interior) is needed
+ * to maintain building consistency.
+ */
+export async function submitSingleWalkthrough(
+  imageUrl: string,
+  prompt: string,
+  mode: "std" | "pro" = "pro",
+): Promise<SubmittedSingleVideoTask> {
+  const negativePrompt = "blur, distortion, low quality, warped geometry, melting walls, deformed architecture, shaky camera, noise, artifacts, morphing surfaces, bent lines, wobbly structure, jittery motion, flickering textures, plastic appearance, fisheye distortion, floating objects, wireframe, cartoon, sketch, low polygon, unrealistic proportions, text overlay, watermark, oversaturated colors, CGI look, video game graphics, toy model, miniature, tilt-shift, abstract, surreal, people walking, cars moving, birds flying, lens flare";
+
+  console.log("[GN-009] submitSingleWalkthrough: Submitting SINGLE 10s walkthrough");
+  console.log("[GN-009] Image type:", imageUrl?.startsWith("http") ? "URL" : "base64", "length:", imageUrl?.length);
+  console.log("[GN-009] Prompt:", prompt);
+
+  const result = await createTask(imageUrl, prompt, negativePrompt, "10", "16:9", mode);
+
+  console.log("[GN-009] Single task submitted! taskId:", result.data.task_id);
+  return { taskId: result.data.task_id, submittedAt: Date.now() };
+}
+
+/**
+ * Check status of a single video task. Non-blocking single check.
+ */
+export async function checkSingleVideoStatus(taskId: string): Promise<{
+  status: "submitted" | "processing" | "succeed" | "failed";
+  videoUrl: string | null;
+  progress: number;
+  isComplete: boolean;
+  hasFailed: boolean;
+  failureMessage: string | null;
+}> {
+  const result = await klingFetch(`${KLING_IMAGE2VIDEO_PATH}/${taskId}`, { method: "GET" });
+
+  const taskStatus = result.data.task_status as "submitted" | "processing" | "succeed" | "failed";
+  const videoUrl = result.data.task_result?.videos?.[0]?.url ?? null;
+
+  const progress = taskStatus === "succeed" ? 100 : taskStatus === "processing" ? 50 : taskStatus === "submitted" ? 10 : 0;
+  const hasFailed = taskStatus === "failed";
+  const isComplete = taskStatus === "succeed";
+
+  const failureMessage = hasFailed
+    ? (result.data.task_status_msg ?? "Unknown error")
+    : null;
+
+  console.log("[Video] Single task status:", { taskId, taskStatus, progress, videoUrl: videoUrl?.slice(0, 80) });
+
+  return { status: taskStatus, videoUrl, progress, isComplete, hasFailed, failureMessage };
 }
 
 export interface VideoTaskStatus {

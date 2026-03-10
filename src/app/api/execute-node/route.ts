@@ -22,7 +22,7 @@ import { APIError, UserErrors, formatErrorResponse } from "@/lib/user-errors";
 import { generatePDFBase64 } from "@/services/pdf-report-server";
 import { uploadBase64ToR2 } from "@/lib/r2";
 import { reconstructHiFi3D, isMeshyConfigured } from "@/services/meshy-service";
-import { submitDualWalkthrough } from "@/services/video-service";
+import { submitDualWalkthrough, submitSingleWalkthrough, buildFloorPlanCombinedPrompt } from "@/services/video-service";
 
 // Detect region/city from text for cost estimation
 function detectRegionFromText(text: string): string | null {
@@ -1544,75 +1544,94 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       }
 
       console.log("[GN-009] About to call video function:");
-      console.log("[GN-009] Function name: submitDualWalkthrough");
       console.log("[GN-009] Image being passed (first 100 chars):", renderImageUrl?.slice(0, 100));
       console.log("[GN-009] Image type:", renderImageUrl?.startsWith("http") ? "URL" : renderImageUrl?.startsWith("data:") ? "data URI" : "raw base64");
       console.log("[GN-009] Image total length:", renderImageUrl?.length);
       console.log("[GN-009] Mode: pro");
       console.log("[GN-009] isFloorPlan flag:", isFloorPlanInput);
-      console.log("[GN-009] roomInfo:", roomInfo || "NONE");
       console.log("[GN-009] buildingDesc (first 200 chars):", buildingDesc?.slice(0, 200));
 
-      // Submit dual video tasks (5s exterior + 10s interior) to Kling API
       try {
-        const submitted = await submitDualWalkthrough(
-          renderImageUrl,
-          buildingDesc,
-          "pro",
-          isFloorPlanInput ? { isFloorPlan: true, roomInfo } : undefined,
-        );
+        if (isFloorPlanInput) {
+          // ── SINGLE 10s video for floor plans (continuous exterior→interior shot) ──
+          console.log("[GN-009] Function: submitSingleWalkthrough (floor plan → single 10s continuous shot)");
+          const combinedPrompt = buildFloorPlanCombinedPrompt(buildingDesc, roomInfo);
+          console.log("[GN-009] Combined prompt:", combinedPrompt);
 
-        console.log("[GN-009] Video function returned:");
-        console.log("[GN-009] Result type:", typeof submitted);
-        console.log("[GN-009] Result keys:", Object.keys(submitted));
-        console.log("[GN-009] Has exteriorTaskId:", !!submitted.exteriorTaskId);
-        console.log("[GN-009] Has interiorTaskId:", !!submitted.interiorTaskId);
-        console.log("[GN-009] exteriorTaskId:", submitted.exteriorTaskId || "NONE");
-        console.log("[GN-009] interiorTaskId:", submitted.interiorTaskId || "NONE");
-        console.log("[GN-009] submittedAt:", submitted.submittedAt);
+          const submitted = await submitSingleWalkthrough(renderImageUrl, combinedPrompt, "pro");
 
-        const pipelineLabel = isFloorPlanInput
-          ? "floor plan image → Kling Official API (pro, dual) → ffmpeg concat → MP4"
-          : "concept render → Kling Official API (pro, dual) → ffmpeg concat → MP4";
-        const walkthroughLabel = isFloorPlanInput
-          ? "Floor Plan → Cinematic Walkthrough — 15s (generating...)"
-          : "AEC Cinematic Walkthrough — 15s (generating...)";
+          console.log("[GN-009] Single task submitted! taskId:", submitted.taskId);
 
-        artifact = {
-          id: generateId(),
-          executionId: executionId ?? "local",
-          tileInstanceId,
-          type: "video",
-          data: {
-            name: `walkthrough_${generateId()}.mp4`,
-            videoUrl: "",
-            downloadUrl: "",
-            label: walkthroughLabel,
-            content: `15s AEC walkthrough: 5s exterior + 10s interior stitched — ${buildingDesc.slice(0, 100)}`,
-            durationSeconds: 15,
-            shotCount: 1,
-            pipeline: pipelineLabel,
-            costUsd: 1.50,
-            videoGenerationStatus: "processing",
-            exteriorTaskId: submitted.exteriorTaskId,
-            interiorTaskId: submitted.interiorTaskId,
-            generationProgress: 0,
-            isFloorPlanInput,
-          },
-          metadata: {
-            engine: "kling-official",
-            real: true,
-            exteriorTaskId: submitted.exteriorTaskId,
-            interiorTaskId: submitted.interiorTaskId,
-            submittedAt: submitted.submittedAt,
-            isFloorPlanInput,
-          },
-          createdAt: new Date(),
-        };
-        console.log("[GN-009] Artifact data.exteriorTaskId:", submitted.exteriorTaskId);
-        console.log("[GN-009] Artifact data.interiorTaskId:", submitted.interiorTaskId);
-        console.log("[GN-009] Artifact data.videoGenerationStatus:", "processing");
-        console.log("[GN-009] Artifact data.durationSeconds:", 15);
+          artifact = {
+            id: generateId(),
+            executionId: executionId ?? "local",
+            tileInstanceId,
+            type: "video",
+            data: {
+              name: `walkthrough_${generateId()}.mp4`,
+              videoUrl: "",
+              downloadUrl: "",
+              label: "Floor Plan → Cinematic Walkthrough — 10s (generating...)",
+              content: `10s AEC walkthrough: exterior + interior in one continuous shot — ${buildingDesc.slice(0, 100)}`,
+              durationSeconds: 10,
+              shotCount: 1,
+              pipeline: "floor plan image → Kling Official API (pro, single 10s) → MP4",
+              costUsd: 1.00,
+              videoGenerationStatus: "processing",
+              taskId: submitted.taskId,
+              generationProgress: 0,
+              isFloorPlanInput: true,
+            },
+            metadata: {
+              engine: "kling-official",
+              real: true,
+              taskId: submitted.taskId,
+              submittedAt: submitted.submittedAt,
+              isFloorPlanInput: true,
+            },
+            createdAt: new Date(),
+          };
+          console.log("[GN-009] Artifact data.taskId:", submitted.taskId);
+          console.log("[GN-009] Artifact data.durationSeconds: 10");
+        } else {
+          // ── DUAL video for non-floor-plan (concept renders) ──
+          console.log("[GN-009] Function: submitDualWalkthrough (concept render → dual 5s+10s)");
+          const submitted = await submitDualWalkthrough(renderImageUrl, buildingDesc, "pro");
+
+          console.log("[GN-009] Dual tasks submitted! exterior:", submitted.exteriorTaskId, "interior:", submitted.interiorTaskId);
+
+          artifact = {
+            id: generateId(),
+            executionId: executionId ?? "local",
+            tileInstanceId,
+            type: "video",
+            data: {
+              name: `walkthrough_${generateId()}.mp4`,
+              videoUrl: "",
+              downloadUrl: "",
+              label: "AEC Cinematic Walkthrough — 15s (generating...)",
+              content: `15s AEC walkthrough: 5s exterior + 10s interior — ${buildingDesc.slice(0, 100)}`,
+              durationSeconds: 15,
+              shotCount: 2,
+              pipeline: "concept render → Kling Official API (pro, dual) → MP4",
+              costUsd: 1.50,
+              videoGenerationStatus: "processing",
+              exteriorTaskId: submitted.exteriorTaskId,
+              interiorTaskId: submitted.interiorTaskId,
+              generationProgress: 0,
+              isFloorPlanInput: false,
+            },
+            metadata: {
+              engine: "kling-official",
+              real: true,
+              exteriorTaskId: submitted.exteriorTaskId,
+              interiorTaskId: submitted.interiorTaskId,
+              submittedAt: submitted.submittedAt,
+              isFloorPlanInput: false,
+            },
+            createdAt: new Date(),
+          };
+        }
         console.log("========== GN-009 VIDEO WALKTHROUGH END ==========");
       } catch (klingErr) {
         const errMsg = klingErr instanceof Error ? klingErr.message : String(klingErr);
