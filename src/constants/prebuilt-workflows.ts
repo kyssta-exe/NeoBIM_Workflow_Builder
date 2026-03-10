@@ -1,5 +1,23 @@
 import type { WorkflowTemplate } from "@/types/workflow";
 
+// ─── Layout Constants ────────────────────────────────────────────────────────
+// Input nodes are 320px wide, standard nodes are 220px wide.
+// We use generous gaps (200px after input, 120px between standard nodes)
+// to prevent visual overlap from glows, corner accents, and fitView scaling.
+const INPUT_W = 320;
+const NODE_W = 220;
+const GAP_AFTER_INPUT = 200;  // gap between input right edge and next node
+const GAP_BETWEEN = 120;      // gap between standard nodes
+
+const X1 = 0;                                          // input node
+const X2 = X1 + INPUT_W + GAP_AFTER_INPUT;             // 520
+const X3 = X2 + NODE_W + GAP_BETWEEN;                  // 860
+const X4 = X3 + NODE_W + GAP_BETWEEN;                  // 1200
+const X5 = X4 + NODE_W + GAP_BETWEEN;                  // 1540
+const X6 = X5 + NODE_W + GAP_BETWEEN;                  // 1880
+
+const Y = 200; // default vertical position
+
 export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
   {
     id: "wf-01",
@@ -18,7 +36,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-001",
             label: "Text Prompt",
@@ -32,7 +50,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "TR-003",
             label: "Design Brief Analyzer",
@@ -49,7 +67,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 660, y: 200 },
+          position: { x: X3, y: Y },
           data: {
             catalogueId: "GN-001",
             label: "Massing Generator",
@@ -66,7 +84,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n4",
           type: "workflowNode",
-          position: { x: 940, y: 200 },
+          position: { x: X4, y: Y },
           data: {
             catalogueId: "GN-003",
             label: "Concept Render Generator",
@@ -89,87 +107,6 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
     },
   },
   {
-    id: "wf-02",
-    name: "PDF Brief → Massing",
-    description:
-      "Upload a PDF brief → get it parsed, analyzed, and visualized as a 3D massing model automatically.",
-    tags: ["pdf", "brief", "massing", "requirements"],
-    category: "Concept Design",
-    complexity: "intermediate",
-    estimatedRunTime: "~60 seconds",
-    requiredInputs: ["PDF project brief document"],
-    expectedOutputs: ["Extracted requirements JSON", "Program cards", "3D massing model"],
-    thumbnail: "https://picsum.photos/seed/wf02/600/400",
-    tileGraph: {
-      nodes: [
-        {
-          id: "n1",
-          type: "workflowNode",
-          position: { x: 100, y: 200 },
-          data: {
-            catalogueId: "IN-002",
-            label: "PDF Upload",
-            category: "input",
-            status: "idle",
-            inputs: [],
-            outputs: [{ id: "pdf-out", label: "PDF", type: "pdf" }],
-            icon: "FileText",
-          },
-        },
-        {
-          id: "n2",
-          type: "workflowNode",
-          position: { x: 380, y: 200 },
-          data: {
-            catalogueId: "TR-001",
-            label: "Brief Parser",
-            category: "transform",
-            status: "idle",
-            inputs: [{ id: "pdf-in", label: "PDF", type: "pdf" }],
-            outputs: [{ id: "text-out", label: "Structured Text", type: "text" }],
-            icon: "ScanText",
-          },
-        },
-        {
-          id: "n3",
-          type: "workflowNode",
-          position: { x: 660, y: 200 },
-          data: {
-            catalogueId: "TR-002",
-            label: "Requirements Extractor",
-            category: "transform",
-            status: "idle",
-            inputs: [{ id: "text-in", label: "Text", type: "text" }],
-            outputs: [{ id: "req-out", label: "Requirements JSON", type: "json" }],
-            icon: "Sparkles",
-          },
-        },
-        {
-          id: "n4",
-          type: "workflowNode",
-          position: { x: 940, y: 200 },
-          data: {
-            catalogueId: "GN-001",
-            label: "Massing Generator",
-            category: "generate",
-            status: "idle",
-            inputs: [{ id: "req-in", label: "Requirements", type: "json" }],
-            outputs: [
-              { id: "geo-out", label: "3D Massing", type: "geometry" },
-              { id: "kpi-out", label: "KPIs", type: "json" },
-            ],
-            icon: "Box",
-          },
-        },
-      ],
-      edges: [
-        { id: "e1-2", source: "n1", sourceHandle: "pdf-out", target: "n2", targetHandle: "pdf-in", type: "animatedEdge" },
-        { id: "e2-3", source: "n2", sourceHandle: "text-out", target: "n3", targetHandle: "text-in", type: "animatedEdge" },
-        { id: "e3-4", source: "n3", sourceHandle: "req-out", target: "n4", targetHandle: "req-in", type: "animatedEdge" },
-      ],
-    },
-  },
-  {
     id: "wf-03",
     name: "Massing → Concept Images",
     description:
@@ -186,7 +123,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-005",
             label: "Parameter Input",
@@ -200,7 +137,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "TR-005",
             label: "Visualization Style Composer",
@@ -220,7 +157,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 660, y: 200 },
+          position: { x: X3, y: Y },
           data: {
             catalogueId: "GN-003",
             label: "Concept Render Generator",
@@ -259,7 +196,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-005",
             label: "Parameter Input",
@@ -273,7 +210,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "GN-001",
             label: "Massing Generator",
@@ -310,7 +247,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-005",
             label: "Parameter Input",
@@ -324,7 +261,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "GN-001",
             label: "Massing Generator",
@@ -341,7 +278,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 660, y: 200 },
+          position: { x: X3, y: Y },
           data: {
             catalogueId: "EX-001",
             label: "IFC Exporter",
@@ -380,7 +317,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-004",
             label: "IFC Upload",
@@ -394,7 +331,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "TR-007",
             label: "Quantity Extractor",
@@ -408,7 +345,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 660, y: 200 },
+          position: { x: X3, y: Y },
           data: {
             catalogueId: "TR-008",
             label: "BOQ / Cost Mapper",
@@ -422,7 +359,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n4",
           type: "workflowNode",
-          position: { x: 940, y: 200 },
+          position: { x: X4, y: Y },
           data: {
             catalogueId: "EX-002",
             label: "BOQ / Spreadsheet Exporter",
@@ -438,129 +375,6 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         { id: "e1-2", source: "n1", sourceHandle: "ifc-out", target: "n2", targetHandle: "ifc-in", type: "animatedEdge" },
         { id: "e2-3", source: "n2", sourceHandle: "qty-out", target: "n3", targetHandle: "qty-in", type: "animatedEdge" },
         { id: "e3-4", source: "n3", sourceHandle: "boq-out", target: "n4", targetHandle: "boq-in", type: "animatedEdge" },
-      ],
-    },
-  },
-  {
-    id: "wf-10",
-    name: "PDF Brief → Full Pipeline",
-    description:
-      "From PDF brief → parsed data, 3D massing, concept render, and IFC export — a complete design pipeline.",
-    tags: ["full-pipeline", "hero", "pdf", "massing", "renders", "ifc", "advanced"],
-    category: "Full Pipeline",
-    complexity: "advanced",
-    estimatedRunTime: "~3 minutes",
-    requiredInputs: ["PDF project brief document"],
-    expectedOutputs: [
-      "Extracted requirements and program cards",
-      "3 massing variants with KPIs",
-      "Concept renders per variant",
-      "Downloadable IFC file",
-    ],
-    thumbnail: "https://picsum.photos/seed/wf10/600/400",
-    tileGraph: {
-      nodes: [
-        {
-          id: "n1",
-          type: "workflowNode",
-          position: { x: 100, y: 200 },
-          data: {
-            catalogueId: "IN-002",
-            label: "PDF Upload",
-            category: "input",
-            status: "idle",
-            inputs: [],
-            outputs: [{ id: "pdf-out", label: "PDF", type: "pdf" }],
-            icon: "FileText",
-          },
-        },
-        {
-          id: "n2",
-          type: "workflowNode",
-          position: { x: 380, y: 200 },
-          data: {
-            catalogueId: "TR-001",
-            label: "Brief Parser",
-            category: "transform",
-            status: "idle",
-            inputs: [{ id: "pdf-in", label: "PDF", type: "pdf" }],
-            outputs: [{ id: "text-out", label: "Structured Text", type: "text" }],
-            icon: "ScanText",
-          },
-        },
-        {
-          id: "n3",
-          type: "workflowNode",
-          position: { x: 660, y: 200 },
-          data: {
-            catalogueId: "TR-002",
-            label: "Requirements Extractor",
-            category: "transform",
-            status: "idle",
-            inputs: [{ id: "text-in", label: "Text", type: "text" }],
-            outputs: [{ id: "req-out", label: "Requirements JSON", type: "json" }],
-            icon: "Sparkles",
-          },
-        },
-        {
-          id: "n4",
-          type: "workflowNode",
-          position: { x: 940, y: 200 },
-          data: {
-            catalogueId: "GN-001",
-            label: "Massing Generator",
-            category: "generate",
-            status: "idle",
-            inputs: [{ id: "req-in", label: "Requirements", type: "json" }],
-            outputs: [
-              { id: "geo-out", label: "3D Massing", type: "geometry" },
-              { id: "kpi-out", label: "KPIs", type: "json" },
-            ],
-            icon: "Box",
-          },
-        },
-        {
-          id: "n5",
-          type: "workflowNode",
-          position: { x: 1220, y: 100 },
-          data: {
-            catalogueId: "GN-003",
-            label: "Concept Render Generator",
-            category: "generate",
-            status: "idle",
-            inputs: [
-              { id: "ctrl-in", label: "Control Image", type: "image" },
-              { id: "prompt-in", label: "Style Prompt", type: "text" },
-            ],
-            outputs: [{ id: "images-out", label: "Concept Images", type: "image" }],
-            icon: "Palette",
-          },
-        },
-        {
-          id: "n6",
-          type: "workflowNode",
-          position: { x: 1220, y: 320 },
-          data: {
-            catalogueId: "EX-001",
-            label: "IFC Exporter",
-            category: "export",
-            status: "idle",
-            inputs: [
-              { id: "geo-in", label: "3D Geometry", type: "geometry" },
-              { id: "meta-in", label: "Metadata", type: "json" },
-            ],
-            outputs: [{ id: "ifc-out", label: "IFC File", type: "ifc" }],
-            icon: "Download",
-          },
-        },
-      ],
-      edges: [
-        { id: "e1-2", source: "n1", sourceHandle: "pdf-out", target: "n2", targetHandle: "pdf-in", type: "animatedEdge" },
-        { id: "e2-3", source: "n2", sourceHandle: "text-out", target: "n3", targetHandle: "text-in", type: "animatedEdge" },
-        { id: "e3-4", source: "n3", sourceHandle: "req-out", target: "n4", targetHandle: "req-in", type: "animatedEdge" },
-        { id: "e4-5a", source: "n4", sourceHandle: "geo-out", target: "n5", targetHandle: "ctrl-in", type: "animatedEdge" },
-        { id: "e4-6a", source: "n4", sourceHandle: "geo-out", target: "n6", targetHandle: "geo-in", type: "animatedEdge" },
-        { id: "e4-6b", source: "n4", sourceHandle: "kpi-out", target: "n6", targetHandle: "meta-in", type: "animatedEdge" },
       ],
     },
   },
@@ -581,7 +395,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-001",
             label: "Text Prompt",
@@ -595,7 +409,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "TR-003",
             label: "Design Brief Analyzer",
@@ -612,7 +426,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 660, y: 200 },
+          position: { x: X3, y: Y },
           data: {
             catalogueId: "GN-004",
             label: "Floor Plan Generator",
@@ -650,7 +464,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 250 },
+          position: { x: X1, y: 250 },
           data: {
             catalogueId: "IN-001",
             label: "Text Prompt",
@@ -664,7 +478,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 400, y: 250 },
+          position: { x: X2, y: 250 },
           data: {
             catalogueId: "TR-003",
             label: "Design Brief Analyzer",
@@ -681,7 +495,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 740, y: 120 },
+          position: { x: X3, y: 100 },
           data: {
             catalogueId: "GN-004",
             label: "Floor Plan Generator",
@@ -698,7 +512,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n4",
           type: "workflowNode",
-          position: { x: 740, y: 380 },
+          position: { x: X3, y: 400 },
           data: {
             catalogueId: "GN-003",
             label: "Concept Render Generator",
@@ -737,7 +551,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n1",
           type: "workflowNode",
-          position: { x: 100, y: 200 },
+          position: { x: X1, y: Y },
           data: {
             catalogueId: "IN-006",
             label: "Location Input",
@@ -751,7 +565,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n2",
           type: "workflowNode",
-          position: { x: 380, y: 200 },
+          position: { x: X2, y: Y },
           data: {
             catalogueId: "TR-012",
             label: "Site Analysis",
@@ -768,7 +582,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n3",
           type: "workflowNode",
-          position: { x: 660, y: 200 },
+          position: { x: X3, y: Y },
           data: {
             catalogueId: "TR-003",
             label: "Design Brief Analyzer",
@@ -785,7 +599,7 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         {
           id: "n4",
           type: "workflowNode",
-          position: { x: 940, y: 200 },
+          position: { x: X4, y: Y },
           data: {
             catalogueId: "GN-003",
             label: "Concept Render Generator",
@@ -804,6 +618,264 @@ export const PREBUILT_WORKFLOWS: WorkflowTemplate[] = [
         { id: "e1-2", source: "n1", sourceHandle: "geo-out", target: "n2", targetHandle: "geo-in", type: "animatedEdge" },
         { id: "e2-3", source: "n2", sourceHandle: "site-out", target: "n3", targetHandle: "json-in", type: "animatedEdge" },
         { id: "e3-4", source: "n3", sourceHandle: "text-out", target: "n4", targetHandle: "ctrl-in", type: "animatedEdge" },
+      ],
+    },
+  },
+  {
+    id: "wf-14",
+    name: "Detailed PDF → Renders + Video",
+    description:
+      "Upload a detailed PDF brief → parse every detail, extract requirements, analyze design intent, generate ultra-realistic concept renders, then produce a cinematic walkthrough video. Best visual output from any document.",
+    tags: ["pdf", "concept", "render", "video", "walkthrough", "ultra-realistic", "full-pipeline", "brief"],
+    category: "Concept Design",
+    complexity: "advanced",
+    estimatedRunTime: "~5 minutes",
+    requiredInputs: ["Detailed PDF project brief"],
+    expectedOutputs: [
+      "Parsed brief text",
+      "Structured requirements JSON",
+      "Building description & program cards",
+      "Ultra-detailed photorealistic concept renders",
+      "Cinematic walkthrough video (MP4)",
+    ],
+    thumbnail: "https://picsum.photos/seed/wf14/600/400",
+    tileGraph: {
+      nodes: [
+        {
+          id: "n1",
+          type: "workflowNode",
+          position: { x: X1, y: Y },
+          data: {
+            catalogueId: "IN-002",
+            label: "PDF Upload",
+            category: "input",
+            status: "idle",
+            inputs: [],
+            outputs: [{ id: "pdf-out", label: "PDF", type: "pdf" }],
+            icon: "FileText",
+          },
+        },
+        {
+          id: "n2",
+          type: "workflowNode",
+          position: { x: X2, y: Y },
+          data: {
+            catalogueId: "TR-001",
+            label: "Brief Parser",
+            category: "transform",
+            status: "idle",
+            inputs: [{ id: "pdf-in", label: "PDF", type: "pdf" }],
+            outputs: [{ id: "text-out", label: "Structured Text", type: "text" }],
+            icon: "ScanText",
+          },
+        },
+        {
+          id: "n3",
+          type: "workflowNode",
+          position: { x: X3, y: Y },
+          data: {
+            catalogueId: "TR-002",
+            label: "Requirements Extractor",
+            category: "transform",
+            status: "idle",
+            inputs: [{ id: "text-in", label: "Text", type: "text" }],
+            outputs: [{ id: "req-out", label: "Requirements JSON", type: "json" }],
+            icon: "Sparkles",
+          },
+        },
+        {
+          id: "n4",
+          type: "workflowNode",
+          position: { x: X4, y: Y },
+          data: {
+            catalogueId: "TR-003",
+            label: "Design Brief Analyzer",
+            category: "transform",
+            status: "idle",
+            inputs: [{ id: "json-in", label: "Requirements", type: "json" }],
+            outputs: [
+              { id: "text-out", label: "Description", type: "text" },
+              { id: "prog-out", label: "Program Blocks", type: "json" },
+            ],
+            icon: "Building2",
+          },
+        },
+        {
+          id: "n5",
+          type: "workflowNode",
+          position: { x: X5, y: Y },
+          data: {
+            catalogueId: "GN-003",
+            label: "Concept Render Generator",
+            category: "generate",
+            status: "idle",
+            inputs: [
+              { id: "ctrl-in", label: "Control Image", type: "image" },
+              { id: "prompt-in", label: "Style Prompt", type: "text" },
+            ],
+            outputs: [{ id: "images-out", label: "Concept Images", type: "image" }],
+            icon: "Palette",
+          },
+        },
+        {
+          id: "n6",
+          type: "workflowNode",
+          position: { x: X6, y: Y },
+          data: {
+            catalogueId: "GN-009",
+            label: "Video Walkthrough Generator",
+            category: "generate",
+            status: "idle",
+            inputs: [
+              { id: "geo-in", label: "3D Model / Renders", type: "geometry" },
+              { id: "style-in", label: "Style & Camera", type: "json" },
+            ],
+            outputs: [{ id: "video-out", label: "MP4 Video", type: "binary" }],
+            icon: "Video",
+          },
+        },
+      ],
+      edges: [
+        { id: "e1-2", source: "n1", sourceHandle: "pdf-out", target: "n2", targetHandle: "pdf-in", type: "animatedEdge" },
+        { id: "e2-3", source: "n2", sourceHandle: "text-out", target: "n3", targetHandle: "text-in", type: "animatedEdge" },
+        { id: "e3-4", source: "n3", sourceHandle: "req-out", target: "n4", targetHandle: "json-in", type: "animatedEdge" },
+        { id: "e4-5", source: "n4", sourceHandle: "text-out", target: "n5", targetHandle: "prompt-in", type: "animatedEdge" },
+        { id: "e5-6", source: "n5", sourceHandle: "images-out", target: "n6", targetHandle: "geo-in", type: "animatedEdge" },
+        { id: "e4-6", source: "n4", sourceHandle: "text-out", target: "n6", targetHandle: "style-in", type: "animatedEdge" },
+      ],
+    },
+  },
+  {
+    id: "wf-15",
+    name: "2D Floor Plan → Video Render",
+    description:
+      "Upload a 2D floor plan image → AI analyzes the layout, generates a 3D massing model, composes visualization style, renders a photorealistic concept image, and produces a cinematic video walkthrough.",
+    tags: ["floor-plan", "video", "walkthrough", "render", "3d", "animation"],
+    category: "Visualization",
+    complexity: "advanced",
+    estimatedRunTime: "~6 minutes",
+    requiredInputs: ["2D floor plan image (scan, screenshot, or export)"],
+    expectedOutputs: [
+      "Floor plan analysis & extracted features",
+      "3D massing model from plan",
+      "Styled visualization prompt",
+      "Photorealistic concept render",
+      "Cinematic MP4 video walkthrough",
+    ],
+    thumbnail: "https://picsum.photos/seed/wf15/600/400",
+    tileGraph: {
+      nodes: [
+        {
+          id: "n1",
+          type: "workflowNode",
+          position: { x: X1, y: Y },
+          data: {
+            catalogueId: "IN-003",
+            label: "Image Upload",
+            category: "input",
+            status: "idle",
+            inputs: [],
+            outputs: [{ id: "image-out", label: "Image", type: "image" }],
+            icon: "Image",
+          },
+        },
+        {
+          id: "n2",
+          type: "workflowNode",
+          position: { x: X2, y: Y },
+          data: {
+            catalogueId: "TR-004",
+            label: "Image Understanding",
+            category: "transform",
+            status: "idle",
+            inputs: [{ id: "image-in", label: "Image", type: "image" }],
+            outputs: [
+              { id: "text-out", label: "Design Interpretation", type: "text" },
+              { id: "feat-out", label: "Extracted Features", type: "json" },
+            ],
+            icon: "Eye",
+          },
+        },
+        {
+          id: "n3",
+          type: "workflowNode",
+          position: { x: X3, y: Y },
+          data: {
+            catalogueId: "GN-001",
+            label: "Massing Generator",
+            category: "generate",
+            status: "idle",
+            inputs: [{ id: "req-in", label: "Requirements", type: "json" }],
+            outputs: [
+              { id: "geo-out", label: "3D Massing", type: "geometry" },
+              { id: "kpi-out", label: "KPIs", type: "json" },
+            ],
+            icon: "Box",
+          },
+        },
+        {
+          id: "n4",
+          type: "workflowNode",
+          position: { x: X4, y: Y },
+          data: {
+            catalogueId: "TR-005",
+            label: "Visualization Style Composer",
+            category: "transform",
+            status: "idle",
+            inputs: [
+              { id: "geo-in", label: "3D Geometry", type: "geometry" },
+              { id: "text-in", label: "Style Text", type: "text" },
+            ],
+            outputs: [
+              { id: "prompt-out", label: "Composed Prompt", type: "text" },
+              { id: "ctrl-out", label: "Control Image", type: "image" },
+            ],
+            icon: "Wand2",
+          },
+        },
+        {
+          id: "n5",
+          type: "workflowNode",
+          position: { x: X5, y: Y },
+          data: {
+            catalogueId: "GN-003",
+            label: "Concept Render Generator",
+            category: "generate",
+            status: "idle",
+            inputs: [
+              { id: "ctrl-in", label: "Control Image", type: "image" },
+              { id: "prompt-in", label: "Style Prompt", type: "text" },
+            ],
+            outputs: [{ id: "images-out", label: "Concept Images", type: "image" }],
+            icon: "Palette",
+          },
+        },
+        {
+          id: "n6",
+          type: "workflowNode",
+          position: { x: X6, y: Y },
+          data: {
+            catalogueId: "GN-009",
+            label: "Video Walkthrough Generator",
+            category: "generate",
+            status: "idle",
+            inputs: [
+              { id: "geo-in", label: "3D Model / Renders", type: "geometry" },
+              { id: "style-in", label: "Style & Camera", type: "json" },
+            ],
+            outputs: [{ id: "video-out", label: "MP4 Video", type: "binary" }],
+            icon: "Video",
+          },
+        },
+      ],
+      edges: [
+        { id: "e1-2", source: "n1", sourceHandle: "image-out", target: "n2", targetHandle: "image-in", type: "animatedEdge" },
+        { id: "e2-3", source: "n2", sourceHandle: "feat-out", target: "n3", targetHandle: "req-in", type: "animatedEdge" },
+        { id: "e3-4a", source: "n3", sourceHandle: "geo-out", target: "n4", targetHandle: "geo-in", type: "animatedEdge" },
+        { id: "e2-4b", source: "n2", sourceHandle: "text-out", target: "n4", targetHandle: "text-in", type: "animatedEdge" },
+        { id: "e4-5", source: "n4", sourceHandle: "prompt-out", target: "n5", targetHandle: "prompt-in", type: "animatedEdge" },
+        { id: "e5-6", source: "n5", sourceHandle: "images-out", target: "n6", targetHandle: "geo-in", type: "animatedEdge" },
+        { id: "e2-6", source: "n2", sourceHandle: "text-out", target: "n6", targetHandle: "style-in", type: "animatedEdge" },
       ],
     },
   },

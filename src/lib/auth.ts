@@ -13,6 +13,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   callbacks: {
     ...authConfig.callbacks,
+    async jwt({ token, user, trigger }) {
+      // On sign-in, populate token from user object
+      if (user) {
+        token.sub = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        // Don't store data URLs in JWT (too large for cookies)
+        token.picture = user.image?.startsWith("data:") ? "uploaded" : (user.image ?? null);
+        token.role = (user as { role?: string }).role;
+      }
+      // On session update (e.g. after profile save or Stripe payment), refresh from DB
+      if (trigger === "update" && token.sub) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { role: true, name: true, image: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.name = dbUser.name;
+            token.picture = dbUser.image?.startsWith("data:") ? "uploaded" : (dbUser.image ?? null);
+          }
+        } catch {
+          // Keep existing token data if DB lookup fails
+        }
+      }
+      return token;
+    },
     async signIn({ user }) {
       try {
         if (user.id) {
@@ -28,7 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      allowDangerousEmailAccountLinking: false,
     }),
     CredentialsProvider({
       name: "credentials",

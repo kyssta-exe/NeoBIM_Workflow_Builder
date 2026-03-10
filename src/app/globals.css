@@ -232,8 +232,8 @@
 
   .glass-heavy {
     background: rgba(12, 12, 22, 0.92);
-    backdrop-filter: blur(24px) saturate(1.4);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.1);
+    -webkit-backdrop-filter: blur(12px) saturate(1.1);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
@@ -558,7 +558,7 @@
   .node-card {
     position: relative;
     background: rgba(18,18,30,0.85);
-    backdrop-filter: blur(24px);
+    backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 16px;
     overflow: visible;
@@ -1577,6 +1577,12 @@
   box-shadow: 0 2px 8px rgba(79,138,255,0.2);
 }
 
+/* ── Landing hero CTA shimmer ─────────────────────────────────── */
+@keyframes hero-btn-shimmer {
+  0%, 100% { transform: translateX(-120%); }
+  50% { transform: translateX(120%); }
+}
+
 /* ── Upgrade button ────────────────────────────────────────────── */
 @keyframes sb-upgrade-shimmer {
   0%   { left: -100%; }
@@ -2029,13 +2035,13 @@
 }
 
 @keyframes atelier-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
 }
 
 @keyframes atelier-glow-pulse {
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.08; }
+  0%, 100% { opacity: 0.05; }
+  50% { opacity: 0.12; }
 }
 
 /* Atelier font families */
@@ -2057,6 +2063,32 @@
 @keyframes skeleton-shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATIC PARTICLE ANIMATION (lightweight opacity-only, GPU-composited)
+   ═══════════════════════════════════════════════════════════════════ */
+.dp-static-particle {
+  animation: dp-particle-fade 6s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@keyframes dp-particle-fade {
+  0%, 100% { opacity: 0.05; }
+  50% { opacity: 0.25; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PREFERS-REDUCED-MOTION — kill ALL infinite animations for a11y + perf
+   ═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

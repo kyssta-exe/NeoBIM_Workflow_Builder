@@ -20,6 +20,8 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const animFrameRef = useRef<number>(0);
+  const isVisibleRef = useRef(true);
+  const lastRenderTimeRef = useRef(0);
   const sceneRef = useRef<{
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
@@ -50,7 +52,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
 
   const [viewMode, setViewMode] = useState<ViewMode>("orbit");
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("day");
-  const [showLabels, setShowLabels] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
   const [showMinimap, setShowMinimap] = useState(true);
   const [isExploded, setIsExploded] = useState(false);
   const [isSectionCut, setIsSectionCut] = useState(false);
@@ -147,10 +149,10 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: false,
-      powerPreference: "high-performance",
+      powerPreference: "default",
     });
     renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.shadowMap.enabled = false;
     renderer.localClippingEnabled = true;
     container.appendChild(renderer.domElement);
@@ -409,8 +411,20 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     const direction = new THREE.Vector3();
     const fpMoveSpeed = 6;
 
+    // Target ~30 FPS (33ms per frame) instead of uncapped 60 FPS
+    const TARGET_FRAME_MS = 33;
+
     function animate() {
       animFrameRef.current = requestAnimationFrame(animate);
+
+      // Skip rendering when viewer is off-screen (IntersectionObserver)
+      if (!isVisibleRef.current) return;
+
+      // Throttle to ~30 FPS
+      const now = performance.now();
+      if (now - lastRenderTimeRef.current < TARGET_FRAME_MS) return;
+      lastRenderTimeRef.current = now;
+
       const delta = Math.min(clock.getDelta(), 0.05);
       const sr = sceneRef.current;
       if (!sr) return;
@@ -497,8 +511,8 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       // ─── Render ──────────────────────────────────────────
       renderer.render(scene, camera);
 
-      // ─── Minimap (render every 6th frame for perf) ────────
-      if (sr.minimapRenderer && sr.minimapCamera && showMinimapRef.current && sr.frameCount % 6 === 0) {
+      // ─── Minimap (render every 15th frame for perf) ────────
+      if (sr.minimapRenderer && sr.minimapCamera && showMinimapRef.current && sr.frameCount % 15 === 0) {
         sr.minimapRenderer.render(scene, sr.minimapCamera);
       }
       if (sr.minimapRenderer) {
@@ -559,6 +573,19 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
     const cleanup = buildScene();
     return () => { cleanup?.(); };
   }, [buildScene]);
+
+  // ─── Pause rendering when viewer is off-screen ─────────────────────
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // ─── Time of Day Update ──────────────────────────────────────────
   useEffect(() => {
@@ -664,7 +691,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
   }, []);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: isFullscreen ? "100vh" : 420 }}>
+    <div style={{ position: "relative", width: "100%", height: isFullscreen ? "100vh" : "calc(100vh - 120px)", minHeight: 500 }}>
       {/* Loading overlay */}
       {isLoading && (
         <div style={{
@@ -688,7 +715,7 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
         ref={containerRef}
         style={{
           width: "100%",
-          height: isFullscreen ? "100vh" : 420,
+          height: isFullscreen ? "100vh" : "100%",
           borderRadius: isFullscreen ? 0 : 12,
           overflow: "hidden",
           cursor: viewMode === "orbit" ? "grab" : "crosshair",
@@ -701,72 +728,75 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
       {/* ─── UI Overlay ────────────────────────────────────── */}
       {!isLoading && (
         <div style={{
-          position: "absolute", top: 10, left: 10,
+          position: "absolute", top: 16, left: 16,
           display: "flex", flexDirection: "column", gap: 6,
           pointerEvents: "none",
           animation: "viewer-fade-in 0.6s ease 0.3s both",
         }}>
           {/* View mode toggle */}
-          <div style={{ display: "flex", gap: 4, pointerEvents: "all" }}>
-            <ToolbarBtn
-              active={viewMode === "orbit"}
-              onClick={() => { if (viewMode !== "orbit") toggleViewMode(); }}
-              label="Orbit"
-            />
-            <ToolbarBtn
-              active={viewMode === "firstperson"}
-              onClick={() => { if (viewMode !== "firstperson") toggleViewMode(); }}
-              label="Walk"
-            />
-          </div>
+          <ToolbarGroup pointerEvents="all">
+            <GroupLabel>View</GroupLabel>
+            <div style={{ display: "flex", gap: 2 }}>
+              <ToolbarBtn active={viewMode === "orbit"} onClick={() => { if (viewMode !== "orbit") toggleViewMode(); }} label="🌐 Orbit" />
+              <ToolbarBtn active={viewMode === "firstperson"} onClick={() => { if (viewMode !== "firstperson") toggleViewMode(); }} label="🚶 Walk" />
+            </div>
+          </ToolbarGroup>
 
           {/* Time of day */}
-          <div style={{ display: "flex", gap: 4, pointerEvents: "all" }}>
-            <ToolbarBtn active={timeOfDay === "day"} onClick={() => setTimeOfDay("day")} label="Day" />
-            <ToolbarBtn active={timeOfDay === "sunset"} onClick={() => setTimeOfDay("sunset")} label="Sunset" />
-            <ToolbarBtn active={timeOfDay === "night"} onClick={() => setTimeOfDay("night")} label="Night" />
-          </div>
+          <ToolbarGroup pointerEvents="all">
+            <GroupLabel>Lighting</GroupLabel>
+            <div style={{ display: "flex", gap: 2 }}>
+              <ToolbarBtn active={timeOfDay === "day"} onClick={() => setTimeOfDay("day")} label="☀️ Day" />
+              <ToolbarBtn active={timeOfDay === "sunset"} onClick={() => setTimeOfDay("sunset")} label="🌅 Dusk" />
+              <ToolbarBtn active={timeOfDay === "night"} onClick={() => setTimeOfDay("night")} label="🌙 Night" />
+            </div>
+          </ToolbarGroup>
 
           {/* Feature toggles */}
-          <div style={{ display: "flex", gap: 4, pointerEvents: "all" }}>
-            <ToolbarBtn active={showLabels} onClick={() => setShowLabels(v => !v)} label="Labels" />
-            <ToolbarBtn active={showMinimap} onClick={() => setShowMinimap(v => !v)} label="Map" />
-            <ToolbarBtn active={isExploded} onClick={() => setIsExploded(v => !v)} label="Explode" />
-            <ToolbarBtn active={isSectionCut} onClick={() => setIsSectionCut(v => !v)} label="Section" />
-            <ToolbarBtn active={isXray} onClick={() => setIsXray(v => !v)} label="X-Ray" />
-          </div>
+          <ToolbarGroup pointerEvents="all">
+            <GroupLabel>Analysis</GroupLabel>
+            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              <ToolbarBtn active={showLabels} onClick={() => setShowLabels(v => !v)} label="Tags" />
+              <ToolbarBtn active={showMinimap} onClick={() => setShowMinimap(v => !v)} label="Map" />
+              <ToolbarBtn active={isExploded} onClick={() => setIsExploded(v => !v)} label="Explode" />
+              <ToolbarBtn active={isSectionCut} onClick={() => setIsSectionCut(v => !v)} label="Section" />
+              <ToolbarBtn active={isXray} onClick={() => setIsXray(v => !v)} label="X-Ray" />
+            </div>
+          </ToolbarGroup>
         </div>
       )}
 
       {/* Right side controls */}
       {!isLoading && (
         <div style={{
-          position: "absolute", top: 10, right: 10,
+          position: "absolute", top: 16, right: 16,
           display: "flex", flexDirection: "column", gap: 6,
           alignItems: "flex-end",
           pointerEvents: "none",
           animation: "viewer-fade-in 0.6s ease 0.5s both",
         }}>
           <div style={{ pointerEvents: "all" }}>
-            <ToolbarBtn active={isFullscreen} onClick={toggleFullscreen} label={isFullscreen ? "Exit" : "Full"} />
+            <ToolbarBtn active={isFullscreen} onClick={toggleFullscreen} label={isFullscreen ? "✕ Exit" : "⛶ Full"} />
           </div>
 
           {/* Building info badge */}
           <div style={{
             background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(10px)",
-            borderRadius: 8,
-            padding: "8px 12px",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            borderRadius: 10,
+            padding: "10px 14px",
             border: "1px solid rgba(255,255,255,0.08)",
             pointerEvents: "none",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           }}>
-            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.1em", marginBottom: 4 }}>
+            <div style={{ fontSize: 8, color: "rgba(0,245,255,0.5)", textTransform: "uppercase" as const, letterSpacing: "0.14em", marginBottom: 5, fontWeight: 700, fontFamily: "'Space Mono', monospace" }}>
               Building Info
             </div>
-            <div style={{ fontSize: 11, color: "#E0E0EA", fontWeight: 600 }}>
+            <div style={{ fontSize: 14, color: "#F0F0FA", fontWeight: 700, letterSpacing: "-0.01em" }}>
               {floors}F · {height.toFixed(1)}m · {footprint} m²
             </div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
               {buildingType ?? "Mixed-Use"} · GFA {Math.round(floors * footprint * 0.98).toLocaleString()} m²
             </div>
           </div>
@@ -837,22 +867,67 @@ export default function ArchitecturalViewer({ floors, height, footprint, buildin
 
 // ─── Toolbar Button ───────────────────────────────────────────────────────────
 
+// ─── Toolbar Group (glass panel) ──────────────────────────────────────────────
+
+function ToolbarGroup({ children, pointerEvents }: { children: React.ReactNode; pointerEvents?: string }) {
+  return (
+    <div style={{
+      background: "rgba(0,0,0,0.5)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
+      borderRadius: 10,
+      padding: "6px 8px 8px",
+      border: "1px solid rgba(255,255,255,0.07)",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+      pointerEvents: (pointerEvents as React.CSSProperties["pointerEvents"]) ?? "none",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function GroupLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      fontSize: 8, fontWeight: 700, color: "rgba(0,245,255,0.45)",
+      textTransform: "uppercase" as const, letterSpacing: "0.14em",
+      padding: "0 4px 4px", fontFamily: "'Space Mono', monospace",
+    }}>
+      {children}
+    </div>
+  );
+}
+
 function ToolbarBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
       onClick={onClick}
       style={{
-        padding: "4px 10px",
+        padding: "5px 11px",
         borderRadius: 6,
-        background: active ? "rgba(79,138,255,0.25)" : "rgba(0,0,0,0.5)",
-        border: `1px solid ${active ? "rgba(79,138,255,0.5)" : "rgba(255,255,255,0.15)"}`,
-        color: active ? "#7AB4FF" : "rgba(255,255,255,0.5)",
-        fontSize: 10,
-        fontWeight: 600,
+        background: active
+          ? "linear-gradient(135deg, rgba(0,245,255,0.2), rgba(79,138,255,0.2))"
+          : "rgba(255,255,255,0.04)",
+        border: active ? "1px solid rgba(0,245,255,0.35)" : "1px solid transparent",
+        color: active ? "#7EDDFF" : "rgba(255,255,255,0.55)",
+        fontSize: 11,
+        fontWeight: active ? 700 : 500,
         cursor: "pointer",
-        backdropFilter: "blur(10px)",
-        transition: "all 0.15s ease",
+        transition: "all 0.2s ease",
         letterSpacing: "0.02em",
+        boxShadow: active ? "0 0 10px rgba(0,245,255,0.12)" : "none",
+      }}
+      onMouseEnter={e => {
+        if (!active) {
+          e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+          e.currentTarget.style.color = "#FFFFFF";
+        }
+      }}
+      onMouseLeave={e => {
+        if (!active) {
+          e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+          e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+        }
       }}
     >
       {label}

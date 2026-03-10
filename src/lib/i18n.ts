@@ -333,6 +333,14 @@ const en = {
   'settings.unlimitedRuns': 'Unlimited runs',
   'settings.active': 'Active',
   'settings.upgradeToPro': 'Upgrade to Pro',
+  'settings.displayName': 'Display Name',
+  'settings.changeAvatar': 'Change photo',
+  'settings.removeAvatar': 'Remove photo',
+  'settings.saveProfile': 'Save Profile',
+  'settings.profileSaved': 'Profile updated successfully!',
+  'settings.profileSaveFailed': 'Failed to update profile',
+  'settings.imageTooLarge': 'Image is too large. Maximum 5MB.',
+  'settings.invalidImageType': 'Please select an image file (JPEG, PNG, WebP).',
 
   // ===== ANALYTICS =====
   'analytics.loading': 'Loading analytics...',
@@ -470,6 +478,43 @@ const en = {
   'landing.prompt3': 'Build a massing study from project brief to 3D model...',
   'landing.prompt4': 'Design a facade optimization workflow with AI...',
 
+  // ===== LANDING ROADMAP / COMMUNITY VOTING =====
+  'landing.roadmap.ctaLabel': 'COMMUNITY ROADMAP',
+  'landing.roadmap.ctaText': 'What Gets Built Next — You Decide',
+  'landing.roadmap.ctaButton': 'Vote Now',
+  'landing.roadmap.sectionAnnotation': 'TENDER BOARD',
+  'landing.roadmap.sectionTitle1': 'Submit Your',
+  'landing.roadmap.sectionTitle2': 'Workflow Brief',
+  'landing.roadmap.sectionSubtitle': 'Vote on the features that matter most to your practice. Top-voted items get prioritised in our sprint backlog.',
+  'landing.roadmap.voteButton': 'Vote',
+  'landing.roadmap.voted': 'Voted',
+  'landing.roadmap.votes': 'votes',
+  'landing.roadmap.statusProposed': 'Proposed',
+  'landing.roadmap.statusInReview': 'In Review',
+  'landing.roadmap.statusApproved': 'Approved',
+  'landing.roadmap.statusInProgress': 'In Progress',
+  'landing.roadmap.categoryInput': 'Input',
+  'landing.roadmap.categoryTransform': 'Transform',
+  'landing.roadmap.categoryGenerate': 'Generate',
+  'landing.roadmap.categoryExport': 'Export',
+  'landing.roadmap.signUpToVote': 'Sign up to submit your own workflow brief',
+  'landing.roadmap.totalVotes': 'Total Votes',
+  'landing.roadmap.itemsInPipeline': 'Items in Pipeline',
+  'landing.roadmap.itemsApproved': 'Approved',
+  'landing.roadmap.item1Title': 'IFC Structural Analysis',
+  'landing.roadmap.item1Desc': 'Parse IFC models and run automated structural checks against Eurocode and ACI standards.',
+  'landing.roadmap.item2Title': 'Parametric Facade Generator',
+  'landing.roadmap.item2Desc': 'Generate facade panel layouts from design parameters — CW, unitised, and rain-screen systems.',
+  'landing.roadmap.item3Title': 'MEP Clash Detection',
+  'landing.roadmap.item3Desc': 'Automated clash detection between MEP disciplines with severity scoring and resolution suggestions.',
+  'landing.roadmap.item4Title': 'Revit .rvt Import',
+  'landing.roadmap.item4Desc': 'Native Revit file import — extract rooms, walls, levels, and families directly into your workflow.',
+  'landing.roadmap.item5Title': 'AI Site Plan Layout',
+  'landing.roadmap.item5Desc': 'AI-driven site plan generation from zoning constraints, setbacks, and program requirements.',
+  'landing.roadmap.item6Title': 'DWG/DXF Export',
+  'landing.roadmap.item6Desc': 'Export workflow outputs as DWG/DXF for direct use in AutoCAD, BricsCAD, and other CAD tools.',
+  'landing.roadmap.revision': 'Rev',
+
   // ===== TOAST MESSAGES =====
   'toast.duplicated': 'Duplicated',
   'toast.deleted': 'Deleted',
@@ -567,6 +612,158 @@ const en = {
   'demo.complete': 'Workflow complete! Create an account to save your work and unlock all features.',
   'demo.hitRun': 'Hit Run in the toolbar',
   'demo.createFreeAccount': 'Create Free Account',
+
+  // ===== RESULT SHOWCASE =====
+  // Header
+  'showcase.back': 'Back',
+  'showcase.complete': 'Complete',
+  'showcase.artifacts': 'artifacts',
+  'showcase.nodes': 'nodes',
+
+  // Tabs
+  'showcase.tabOverview': 'Overview',
+  'showcase.tabMedia': 'Media',
+  'showcase.tabData': 'Data & Analysis',
+  'showcase.tabModel': '3D Model',
+  'showcase.tabExport': 'Export',
+
+  // Overview — Sections
+  'showcase.deliverables': 'Deliverables',
+  'showcase.projectBrief': 'Project Brief',
+  'showcase.technologyStack': 'Technology Stack',
+  'showcase.quickActions': 'Quick Actions',
+  'showcase.showLess': 'Show less',
+  'showcase.showMoreLines': 'Show more',
+  'showcase.lines': 'lines',
+
+  // Overview — Quick Actions
+  'showcase.view3dModel': 'View 3D Model',
+  'showcase.interactiveMassing': 'Interactive architectural massing',
+  'showcase.watchWalkthrough': 'Watch Walkthrough',
+  'showcase.viewRenders': 'View Renders',
+  'showcase.conceptRender': 'concept render',
+  'showcase.conceptRenders': 'concept renders',
+  'showcase.downloadCenter': 'Download Center',
+  'showcase.pdfVideoFiles': 'PDF report, video, files',
+
+  // Overview — Artifact type labels
+  'showcase.typeDocument': 'Document',
+  'showcase.typeRender': 'Render',
+  'showcase.typeWalkthrough': 'Walkthrough',
+  'showcase.type3dModel': '3D Model',
+  'showcase.typeMetrics': 'Metrics',
+  'showcase.typeDataTable': 'Data Table',
+  'showcase.typeStructuredData': 'Structured Data',
+  'showcase.typeFloorPlan': 'Floor Plan',
+  'showcase.typeExportFile': 'Export File',
+
+  // Overview — Execution stats
+  'showcase.statsArtifacts': 'Artifacts',
+  'showcase.statsNodesRun': 'Nodes Run',
+  'showcase.statsPipeline': 'Pipeline',
+  'showcase.statsSteps': 'steps',
+
+  // Overview — AEC Footer
+  'showcase.aecGrade': 'AEC-grade output quality',
+  'showcase.enterpriseReady': 'Enterprise-ready deliverables',
+  'showcase.dimensionallyAccurate': 'Dimensionally accurate',
+  'showcase.contextAware': 'Context-aware generation',
+
+  // Media tab
+  'showcase.videoWalkthrough': 'Video Walkthrough',
+  'showcase.theaterMode': 'Theater Mode',
+  'showcase.duration': 'Duration',
+  'showcase.shots': 'Shots',
+  'showcase.pipeline': 'Pipeline',
+  'showcase.cost': 'Cost',
+  'showcase.imagesRenders': 'Images & Renders',
+  'showcase.floorPlan': 'Floor Plan',
+
+  // Data tab
+  'showcase.kpiTitle': 'Key Performance Indicators',
+  'showcase.tables': 'Tables',
+  'showcase.structuredData': 'Structured Data',
+  'showcase.total': 'Total',
+  'showcase.showAllRows': 'Show all',
+  'showcase.rows': 'rows',
+  'showcase.keys': 'keys',
+
+  // Model tab
+  'showcase.no3dModel': 'No 3D model available',
+  'showcase.buildingSpecs': 'Building Specifications',
+  'showcase.specBuildingType': 'Building Type',
+  'showcase.specFloors': 'Floors',
+  'showcase.specHeight': 'Height',
+  'showcase.specFootprint': 'Footprint',
+  'showcase.specGfa': 'GFA',
+  'showcase.specRenderer': 'Renderer',
+  'showcase.specFormat': 'Format',
+  'showcase.specPolycount': 'Polycount',
+  'showcase.specTopology': 'Topology',
+  'showcase.procedural': 'Procedural',
+  'showcase.threejs': 'Three.js',
+  'showcase.glbFormat': 'GLB / glTF',
+
+  // Export tab
+  'showcase.downloadCenterTitle': 'Download Center',
+  'showcase.pdfReport': 'PDF Report',
+  'showcase.pdfReportDesc': 'Full project report with all metrics and visuals',
+  'showcase.videoWalkthroughTitle': 'Video Walkthrough',
+  'showcase.conceptRenderTitle': 'Concept Render',
+  'showcase.hiResRender': 'High-resolution architectural render',
+  'showcase.totalArtifacts': 'total artifacts',
+  'showcase.downloadable': 'downloadable',
+
+  // Hero section
+  'showcase.cinematicWalkthrough': 'Cinematic Walkthrough',
+  'showcase.fullscreen': 'Fullscreen',
+
+  // Pipeline
+  'showcase.pipelineTitle': 'Pipeline',
+
+  // Cost & Compliance
+  'showcase.costBreakdown': 'Cost Breakdown',
+  'showcase.complianceChecks': 'Compliance Checks',
+
+  // ===== SHOWCASE (Enhanced Report) =====
+  'showcase.executionTimeline': 'Execution Timeline',
+  'showcase.executedOn': 'Executed on',
+  'showcase.workflowEngine': 'Workflow Engine',
+  'showcase.nodesPassed': 'nodes passed',
+  'showcase.artifactsGenerated': 'artifacts generated',
+  'showcase.pipelineSteps': 'pipeline steps',
+  'showcase.viewDetails': 'View Details',
+  'showcase.viewResults': 'View Results',
+  'showcase.downloadImage': 'Download Image',
+  'showcase.downloadSvg': 'Download SVG',
+  'showcase.downloadCsv': 'Download CSV',
+  'showcase.downloadJson': 'Download JSON',
+  'showcase.copyJson': 'Copy JSON',
+  'showcase.copied': 'Copied!',
+  'showcase.exportCsv': 'Export as CSV',
+  'showcase.exportJson': 'Export as JSON',
+  'showcase.svgFloorPlan': 'SVG Floor Plan',
+  'showcase.svgFloorPlanDesc': 'Vector floor plan drawing',
+  'showcase.tableDataCsv': 'Table Data (CSV)',
+  'showcase.tableDataCsvDesc': 'All tables as spreadsheet-compatible CSV',
+  'showcase.jsonDataExport': 'Structured Data (JSON)',
+  'showcase.jsonDataExportDesc': 'All structured data in JSON format',
+  'showcase.textReport': 'Text Report',
+  'showcase.textReportDesc': 'Full text output from all document nodes',
+  'showcase.allImagesZip': 'All Images',
+  'showcase.allImagesZipDesc': 'Download all concept renders',
+  'showcase.projectMetadata': 'Project Metadata',
+  'showcase.generatedBy': 'Generated by',
+  'showcase.reportDate': 'Report Date',
+  'showcase.workflowId': 'Workflow',
+  'showcase.successRate': 'Success Rate',
+  'showcase.generating': 'Generating...',
+  'showcase.noDataAvailable': 'No data available for this section',
+  'showcase.executionComplete': 'Execution Complete',
+  'showcase.pdfFullReport': 'Full Project Report (PDF)',
+  'showcase.pdfFullReportDesc': 'Comprehensive AEC report with executive summary, KPIs, cost analysis, compliance, and all deliverables',
+  'showcase.downloadAll': 'Download All',
+  'showcase.items': 'items',
 } as const;
 
 const de: Record<keyof typeof en, string | string[]> = {
@@ -589,7 +786,7 @@ const de: Record<keyof typeof en, string | string[]> = {
 
   // ===== AUTH =====
   'auth.welcomeBack': 'Willkommen zurück',
-  'auth.signInToContinue': 'Anmelden um mit BuildFlow fortzufahren',
+  'auth.signInToContinue': 'Anmelden, um mit BuildFlow fortzufahren',
   'auth.continueWithGoogle': 'Weiter mit Google',
   'auth.connecting': 'Verbinde…',
   'auth.orEmail': 'oder E-Mail',
@@ -605,7 +802,7 @@ const de: Record<keyof typeof en, string | string[]> = {
   'auth.startBuilding': 'Erstellen Sie beeindruckende AEC-Workflows',
   'auth.noAccount': 'Noch kein Konto?',
   'auth.hasAccount': 'Bereits ein Konto?',
-  'auth.invalidCredentials': 'Ungültige E-Mail oder Passwort. Bitte versuchen Sie es erneut.',
+  'auth.invalidCredentials': 'E-Mail oder Passwort ungültig. Bitte versuchen Sie es erneut.',
   'auth.enterPassword': 'Bitte geben Sie Ihr Passwort ein',
   'auth.genericError': 'Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.',
   'auth.googleError': 'Google-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.',
@@ -694,7 +891,7 @@ const de: Record<keyof typeof en, string | string[]> = {
 
   // ===== CANVAS EMPTY STATE =====
   'canvas.emptyTitle': 'Erstellen Sie Ihren ersten Workflow',
-  'canvas.emptyDesc': 'Ziehen Sie Nodes aus der Bibliothek, oder beschreiben Sie was Sie wollen mit KI',
+  'canvas.emptyDesc': 'Ziehen Sie Nodes aus der Bibliothek oder beschreiben Sie mit KI, was Sie möchten',
   'canvas.browseTemplates': 'Vorlagen durchsuchen',
   'canvas.tryAiPrompt': 'KI-Eingabe testen',
   'canvas.untitledWorkflow': 'Unbenannter Workflow',
@@ -734,7 +931,7 @@ const de: Record<keyof typeof en, string | string[]> = {
   'execution.executionError': 'Ausführungsfehler',
   'execution.completed': 'Workflow abgeschlossen',
   'execution.completedWithErrors': 'Mit Fehlern abgeschlossen',
-  'execution.nodesSucceeded': 'Knoten erfolgreich',
+  'execution.nodesSucceeded': 'Nodes erfolgreich',
 
   // ===== HISTORY =====
   'history.title': 'Ausführungsverlauf',
@@ -900,6 +1097,14 @@ const de: Record<keyof typeof en, string | string[]> = {
   'settings.unlimitedRuns': 'Unbegrenzte Ausführungen',
   'settings.active': 'Aktiv',
   'settings.upgradeToPro': 'Auf Pro upgraden',
+  'settings.displayName': 'Anzeigename',
+  'settings.changeAvatar': 'Foto ändern',
+  'settings.removeAvatar': 'Foto entfernen',
+  'settings.saveProfile': 'Profil speichern',
+  'settings.profileSaved': 'Profil erfolgreich aktualisiert!',
+  'settings.profileSaveFailed': 'Profil konnte nicht aktualisiert werden',
+  'settings.imageTooLarge': 'Bild ist zu groß. Maximal 5MB.',
+  'settings.invalidImageType': 'Bitte wählen Sie eine Bilddatei (JPEG, PNG, WebP).',
 
   // ===== ANALYTICS =====
   'analytics.loading': 'Auswertungen werden geladen...',
@@ -1037,6 +1242,43 @@ const de: Record<keyof typeof en, string | string[]> = {
   'landing.prompt3': 'Eine Baukörperstudie vom Projektbriefing zum 3D-Modell erstellen...',
   'landing.prompt4': 'Einen Fassadenoptimierungs-Workflow mit KI entwerfen...',
 
+  // ===== LANDING ROADMAP / COMMUNITY VOTING =====
+  'landing.roadmap.ctaLabel': 'COMMUNITY-ROADMAP',
+  'landing.roadmap.ctaText': 'Was als Nächstes gebaut wird — Sie entscheiden',
+  'landing.roadmap.ctaButton': 'Jetzt abstimmen',
+  'landing.roadmap.sectionAnnotation': 'AUSSCHREIBUNGSTAFEL',
+  'landing.roadmap.sectionTitle1': 'Reichen Sie Ihr',
+  'landing.roadmap.sectionTitle2': 'Workflow-Briefing ein',
+  'landing.roadmap.sectionSubtitle': 'Stimmen Sie für die Features ab, die für Ihre Praxis am wichtigsten sind. Meistgewählte Punkte werden in unserem Sprint priorisiert.',
+  'landing.roadmap.voteButton': 'Abstimmen',
+  'landing.roadmap.voted': 'Abgestimmt',
+  'landing.roadmap.votes': 'Stimmen',
+  'landing.roadmap.statusProposed': 'Vorgeschlagen',
+  'landing.roadmap.statusInReview': 'In Prüfung',
+  'landing.roadmap.statusApproved': 'Genehmigt',
+  'landing.roadmap.statusInProgress': 'In Bearbeitung',
+  'landing.roadmap.categoryInput': 'Eingabe',
+  'landing.roadmap.categoryTransform': 'Transformation',
+  'landing.roadmap.categoryGenerate': 'Generierung',
+  'landing.roadmap.categoryExport': 'Export',
+  'landing.roadmap.signUpToVote': 'Registrieren Sie sich, um Ihr eigenes Workflow-Briefing einzureichen',
+  'landing.roadmap.totalVotes': 'Gesamtstimmen',
+  'landing.roadmap.itemsInPipeline': 'In der Pipeline',
+  'landing.roadmap.itemsApproved': 'Genehmigt',
+  'landing.roadmap.item1Title': 'IFC-Tragwerksanalyse',
+  'landing.roadmap.item1Desc': 'IFC-Modelle parsen und automatisierte Tragwerksprüfungen nach Eurocode und ACI-Standards durchführen.',
+  'landing.roadmap.item2Title': 'Parametrischer Fassadengenerator',
+  'landing.roadmap.item2Desc': 'Fassadenpaneel-Layouts aus Designparametern generieren — Pfosten-Riegel, Element- und vorgehängte Systeme.',
+  'landing.roadmap.item3Title': 'MEP-Kollisionserkennung',
+  'landing.roadmap.item3Desc': 'Automatische Kollisionserkennung zwischen TGA-Gewerken mit Schweregradbewertung und Lösungsvorschlägen.',
+  'landing.roadmap.item4Title': 'Revit .rvt Import',
+  'landing.roadmap.item4Desc': 'Nativer Revit-Dateiimport — Räume, Wände, Geschosse und Familien direkt in Ihren Workflow extrahieren.',
+  'landing.roadmap.item5Title': 'KI-Lageplangestaltung',
+  'landing.roadmap.item5Desc': 'KI-gesteuerte Lageplanerstellung aus Bebauungsvorschriften, Abstandsflächen und Raumprogramm.',
+  'landing.roadmap.item6Title': 'DWG/DXF-Export',
+  'landing.roadmap.item6Desc': 'Workflow-Ergebnisse als DWG/DXF exportieren für AutoCAD, BricsCAD und andere CAD-Tools.',
+  'landing.roadmap.revision': 'Rev',
+
   // ===== TOAST MESSAGES =====
   'toast.duplicated': 'Dupliziert',
   'toast.deleted': 'Gelöscht',
@@ -1134,6 +1376,158 @@ const de: Record<keyof typeof en, string | string[]> = {
   'demo.complete': 'Workflow abgeschlossen! Erstellen Sie ein Konto, um Ihre Arbeit zu speichern und alle Funktionen freizuschalten.',
   'demo.hitRun': 'Klicken Sie auf Ausführen in der Toolbar',
   'demo.createFreeAccount': 'Kostenloses Konto erstellen',
+
+  // ===== RESULT SHOWCASE =====
+  // Header
+  'showcase.back': 'Zurück',
+  'showcase.complete': 'Abgeschlossen',
+  'showcase.artifacts': 'Artefakte',
+  'showcase.nodes': 'Nodes',
+
+  // Tabs
+  'showcase.tabOverview': 'Übersicht',
+  'showcase.tabMedia': 'Medien',
+  'showcase.tabData': 'Daten & Analyse',
+  'showcase.tabModel': '3D-Modell',
+  'showcase.tabExport': 'Export',
+
+  // Overview — Sections
+  'showcase.deliverables': 'Ergebnisse',
+  'showcase.projectBrief': 'Projektbeschreibung',
+  'showcase.technologyStack': 'Technologie-Stack',
+  'showcase.quickActions': 'Schnellaktionen',
+  'showcase.showLess': 'Weniger anzeigen',
+  'showcase.showMoreLines': 'Mehr anzeigen',
+  'showcase.lines': 'Zeilen',
+
+  // Overview — Quick Actions
+  'showcase.view3dModel': '3D-Modell ansehen',
+  'showcase.interactiveMassing': 'Interaktiver architektonischer Baukörper',
+  'showcase.watchWalkthrough': 'Rundgang ansehen',
+  'showcase.viewRenders': 'Renderings ansehen',
+  'showcase.conceptRender': 'Konzeptrendering',
+  'showcase.conceptRenders': 'Konzeptrenderings',
+  'showcase.downloadCenter': 'Download-Center',
+  'showcase.pdfVideoFiles': 'PDF-Bericht, Video, Dateien',
+
+  // Overview — Artifact type labels
+  'showcase.typeDocument': 'Dokument',
+  'showcase.typeRender': 'Rendering',
+  'showcase.typeWalkthrough': 'Rundgang',
+  'showcase.type3dModel': '3D-Modell',
+  'showcase.typeMetrics': 'Kennzahlen',
+  'showcase.typeDataTable': 'Datentabelle',
+  'showcase.typeStructuredData': 'Strukturierte Daten',
+  'showcase.typeFloorPlan': 'Grundriss',
+  'showcase.typeExportFile': 'Exportdatei',
+
+  // Overview — Execution stats
+  'showcase.statsArtifacts': 'Artefakte',
+  'showcase.statsNodesRun': 'Ausgeführte Nodes',
+  'showcase.statsPipeline': 'Pipeline',
+  'showcase.statsSteps': 'Schritte',
+
+  // Overview — AEC Footer
+  'showcase.aecGrade': 'AEC-konforme Ausgabequalität',
+  'showcase.enterpriseReady': 'Unternehmensreife Ergebnisse',
+  'showcase.dimensionallyAccurate': 'Maßlich korrekt',
+  'showcase.contextAware': 'Kontextbewusste Generierung',
+
+  // Media tab
+  'showcase.videoWalkthrough': 'Video-Rundgang',
+  'showcase.theaterMode': 'Kinomodus',
+  'showcase.duration': 'Dauer',
+  'showcase.shots': 'Aufnahmen',
+  'showcase.pipeline': 'Pipeline',
+  'showcase.cost': 'Kosten',
+  'showcase.imagesRenders': 'Bilder & Renderings',
+  'showcase.floorPlan': 'Grundriss',
+
+  // Data tab
+  'showcase.kpiTitle': 'Leistungskennzahlen',
+  'showcase.tables': 'Tabellen',
+  'showcase.structuredData': 'Strukturierte Daten',
+  'showcase.total': 'Gesamt',
+  'showcase.showAllRows': 'Alle anzeigen',
+  'showcase.rows': 'Zeilen',
+  'showcase.keys': 'Schlüssel',
+
+  // Model tab
+  'showcase.no3dModel': 'Kein 3D-Modell verfügbar',
+  'showcase.buildingSpecs': 'Gebäudespezifikationen',
+  'showcase.specBuildingType': 'Gebäudetyp',
+  'showcase.specFloors': 'Geschosse',
+  'showcase.specHeight': 'Höhe',
+  'showcase.specFootprint': 'Grundfläche',
+  'showcase.specGfa': 'BGF',
+  'showcase.specRenderer': 'Renderer',
+  'showcase.specFormat': 'Format',
+  'showcase.specPolycount': 'Polygone',
+  'showcase.specTopology': 'Topologie',
+  'showcase.procedural': 'Prozedural',
+  'showcase.threejs': 'Three.js',
+  'showcase.glbFormat': 'GLB / glTF',
+
+  // Export tab
+  'showcase.downloadCenterTitle': 'Download-Center',
+  'showcase.pdfReport': 'PDF-Bericht',
+  'showcase.pdfReportDesc': 'Vollständiger Projektbericht mit allen Kennzahlen und Visualisierungen',
+  'showcase.videoWalkthroughTitle': 'Video-Rundgang',
+  'showcase.conceptRenderTitle': 'Konzeptrendering',
+  'showcase.hiResRender': 'Hochauflösendes Architektur-Rendering',
+  'showcase.totalArtifacts': 'Artefakte gesamt',
+  'showcase.downloadable': 'herunterladbar',
+
+  // Hero section
+  'showcase.cinematicWalkthrough': 'Filmischer Rundgang',
+  'showcase.fullscreen': 'Vollbild',
+
+  // Pipeline
+  'showcase.pipelineTitle': 'Pipeline',
+
+  // Cost & Compliance
+  'showcase.costBreakdown': 'Kostenaufschlüsselung',
+  'showcase.complianceChecks': 'Konformitätsprüfungen',
+
+  // ===== SHOWCASE (Enhanced Report) =====
+  'showcase.executionTimeline': 'Ausführungs-Zeitleiste',
+  'showcase.executedOn': 'Ausgeführt am',
+  'showcase.workflowEngine': 'Workflow-Engine',
+  'showcase.nodesPassed': 'Nodes bestanden',
+  'showcase.artifactsGenerated': 'Artefakte generiert',
+  'showcase.pipelineSteps': 'Pipeline-Schritte',
+  'showcase.viewDetails': 'Details ansehen',
+  'showcase.viewResults': 'Ergebnisse ansehen',
+  'showcase.downloadImage': 'Bild herunterladen',
+  'showcase.downloadSvg': 'SVG herunterladen',
+  'showcase.downloadCsv': 'CSV herunterladen',
+  'showcase.downloadJson': 'JSON herunterladen',
+  'showcase.copyJson': 'JSON kopieren',
+  'showcase.copied': 'Kopiert!',
+  'showcase.exportCsv': 'Als CSV exportieren',
+  'showcase.exportJson': 'Als JSON exportieren',
+  'showcase.svgFloorPlan': 'SVG-Grundriss',
+  'showcase.svgFloorPlanDesc': 'Vektor-Grundrisszeichnung',
+  'showcase.tableDataCsv': 'Tabellendaten (CSV)',
+  'showcase.tableDataCsvDesc': 'Alle Tabellen als tabellenkalkulationskompatible CSV',
+  'showcase.jsonDataExport': 'Strukturierte Daten (JSON)',
+  'showcase.jsonDataExportDesc': 'Alle strukturierten Daten im JSON-Format',
+  'showcase.textReport': 'Textbericht',
+  'showcase.textReportDesc': 'Vollständige Textausgabe aller Dokumentknoten',
+  'showcase.allImagesZip': 'Alle Bilder',
+  'showcase.allImagesZipDesc': 'Alle Konzeptrenderings herunterladen',
+  'showcase.projectMetadata': 'Projektmetadaten',
+  'showcase.generatedBy': 'Generiert von',
+  'showcase.reportDate': 'Berichtsdatum',
+  'showcase.workflowId': 'Workflow',
+  'showcase.successRate': 'Erfolgsrate',
+  'showcase.generating': 'Wird generiert...',
+  'showcase.noDataAvailable': 'Keine Daten für diesen Abschnitt verfügbar',
+  'showcase.executionComplete': 'Ausführung abgeschlossen',
+  'showcase.pdfFullReport': 'Vollständiger Projektbericht (PDF)',
+  'showcase.pdfFullReportDesc': 'Umfassender AEC-Bericht mit Zusammenfassung, KPIs, Kostenanalyse, Konformität und allen Ergebnissen',
+  'showcase.downloadAll': 'Alles herunterladen',
+  'showcase.items': 'Elemente',
 };
 
 const translations: Record<Locale, Record<string, string | readonly string[]>> = { en, de };
