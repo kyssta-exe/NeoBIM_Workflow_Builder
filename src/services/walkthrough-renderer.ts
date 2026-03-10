@@ -374,9 +374,9 @@ function setupEnvironment(scene: THREE.Scene, _buildingHeight: number) {
 export async function renderWalkthrough(
   config: WalkthroughConfig,
 ): Promise<WalkthroughResult> {
-  const WIDTH = config.resolution?.width ?? 1280;
-  const HEIGHT = config.resolution?.height ?? 720;
-  const FPS = config.fps ?? 30;
+  const WIDTH = config.resolution?.width ?? 960;
+  const HEIGHT = config.resolution?.height ?? 540;
+  const FPS = config.fps ?? 24;
   const DURATION = config.durationSeconds ?? 15;
   const TOTAL_FRAMES = FPS * DURATION;
 
@@ -396,16 +396,16 @@ export async function renderWalkthrough(
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: false, // Disabled for faster rendering
     alpha: false,
     preserveDrawingBuffer: true,
+    powerPreference: "high-performance",
   });
   renderer.setSize(WIDTH, HEIGHT);
   renderer.setPixelRatio(1);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = false; // Disabled for speed — shadows are expensive
   renderer.localClippingEnabled = true;
 
   // ── Build the building ──
@@ -470,10 +470,10 @@ export async function renderWalkthrough(
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(WIDTH, HEIGHT),
-    0.3,  // strength
-    0.5,  // radius
-    0.85, // threshold
+    new THREE.Vector2(WIDTH / 2, HEIGHT / 2), // Half-res bloom for speed
+    0.25, // strength (slightly reduced)
+    0.4,  // radius
+    0.9,  // threshold (higher = fewer pixels bloomed = faster)
   );
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
@@ -511,7 +511,7 @@ export async function renderWalkthrough(
 
   const mediaRecorder = new MediaRecorder(stream, {
     mimeType,
-    videoBitsPerSecond: 5_000_000,
+    videoBitsPerSecond: 3_000_000, // 3 Mbps — good quality at 960×540
   });
   const chunks: Blob[] = [];
   mediaRecorder.ondataavailable = (e) => {
@@ -521,7 +521,7 @@ export async function renderWalkthrough(
   const recordingDone = new Promise<Blob>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error("Video recording timed out"));
-    }, (DURATION + 30) * 1000); // Duration + 30s grace period
+    }, 90_000); // 90s max — render should complete in ~20-40s
 
     mediaRecorder.onstop = () => {
       clearTimeout(timeout);
@@ -590,8 +590,8 @@ export async function renderWalkthrough(
       const percent = 10 + (t * 88); // 10-98%
       report(percent, PHASE_LABELS[phaseIndex]);
 
-      // Yield to browser to avoid blocking
-      if (frame % 3 === 0) {
+      // Yield to browser every 6 frames to avoid blocking but keep rendering fast
+      if (frame % 6 === 0) {
         await yieldFrame();
       }
     }
@@ -638,5 +638,7 @@ function smoothstep(t: number): number {
 }
 
 function yieldFrame(): Promise<void> {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  // Use setTimeout(0) instead of requestAnimationFrame — rAF throttles to 1fps
+  // when the tab is not focused, which would make rendering take 6+ minutes
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
