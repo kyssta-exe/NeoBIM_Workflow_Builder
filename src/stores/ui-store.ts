@@ -38,6 +38,14 @@ interface UIState {
   requestAddNode: (catalogueId: string) => void;
   clearPendingNodeAdd: () => void;
 
+  // Fullscreen artifact viewer (node id whose 3D artifact to show)
+  artifactViewerNodeId: string | null;
+  setArtifactViewerNodeId: (id: string | null) => void;
+
+  // Fullscreen video player (node id whose video artifact to show)
+  videoPlayerNodeId: string | null;
+  setVideoPlayerNodeId: (id: string | null) => void;
+
   // Actions
   setActivePanel: (panel: PanelId) => void;
   toggleNodeLibrary: () => void;
@@ -81,6 +89,12 @@ export const useUIStore = create<UIState>()((set) => ({
   pendingNodeAdd: null,
   requestAddNode: (catalogueId) => set({ pendingNodeAdd: catalogueId }),
   clearPendingNodeAdd: () => set({ pendingNodeAdd: null }),
+
+  artifactViewerNodeId: null,
+  setArtifactViewerNodeId: (id) => set({ artifactViewerNodeId: id }),
+
+  videoPlayerNodeId: null,
+  setVideoPlayerNodeId: (id) => set({ videoPlayerNodeId: id }),
 
   setActivePanel: (panel) =>
     set({

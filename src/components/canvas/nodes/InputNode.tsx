@@ -7,6 +7,7 @@
  */
 
 import React, { useRef, useCallback } from "react";
+import { toast } from "sonner";
 import { useWorkflowStore } from "@/stores/workflow-store";
 import type { WorkflowNodeData } from "@/types/nodes";
 
@@ -81,12 +82,26 @@ export function FileUploadInput({ nodeId, data, accept, label, maxMB = 20, showP
 
   const handleFile = useCallback((file: File) => {
     if (maxMB && file.size > maxMB * 1024 * 1024) {
-      alert(`File too large. Max ${maxMB}MB.`);
+      toast.error(`File too large. Max ${maxMB}MB.`);
       return;
     }
     inputFileStore.set(nodeId, file);
     const currentNode = useWorkflowStore.getState().nodes.find(n => n.id === nodeId);
     if (!currentNode) return;
+
+    // Convert file to base64 so downstream nodes (TR-004, etc.) can access the data
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(",")[1]; // strip data:...;base64, prefix
+      const node = useWorkflowStore.getState().nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      updateNode(nodeId, {
+        data: { ...node.data, inputValue: file.name, fileSize: file.size, fileData: base64, fileName: file.name, mimeType: file.type },
+      });
+    };
+    reader.readAsDataURL(file);
+
+    // Set filename immediately (base64 follows async)
     updateNode(nodeId, { data: { ...currentNode.data, inputValue: file.name, fileSize: file.size } });
   }, [nodeId, updateNode, maxMB]);
 
@@ -110,7 +125,7 @@ export function FileUploadInput({ nodeId, data, accept, label, maxMB = 20, showP
     inputFileStore.delete(nodeId);
     const currentNode = useWorkflowStore.getState().nodes.find(n => n.id === nodeId);
     if (!currentNode) return;
-    updateNode(nodeId, { data: { ...currentNode.data, inputValue: "", fileSize: undefined } });
+    updateNode(nodeId, { data: { ...currentNode.data, inputValue: "", fileSize: undefined, fileData: undefined, fileName: undefined, mimeType: undefined } });
     if (inputRef.current) inputRef.current.value = "";
   }, [nodeId, updateNode]);
 

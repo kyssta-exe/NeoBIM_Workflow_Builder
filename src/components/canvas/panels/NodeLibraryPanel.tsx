@@ -15,13 +15,9 @@ import { generateId } from "@/lib/utils";
 import { useLocale } from "@/hooks/useLocale";
 import { useUIStore } from "@/stores/ui-store";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import { hexToRgb } from "@/lib/ui-constants";
 
-function hexToRgb(hex: string): string {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!r) return "184, 115, 51";
-  return `${parseInt(r[1], 16)}, ${parseInt(r[2], 16)}, ${parseInt(r[3], 16)}`;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getIcon(name: string, size = 13): React.ReactNode {
   const icons = LucideIcons as unknown as Record<
@@ -377,8 +373,8 @@ export function NodeLibraryPanel() {
           borderRadius: 4,
           overflow: "hidden",
           boxShadow: "0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(184,115,51,0.08), 0 0 60px rgba(184,115,51,0.05)",
-          backdropFilter: "blur(40px)",
-          WebkitBackdropFilter: "blur(40px)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           display: "flex", flexDirection: "column",
         }}
       >
@@ -398,7 +394,7 @@ export function NodeLibraryPanel() {
               style={{
                 width: "100%", height: 46,
                 background: "transparent",
-                border: "none",
+                borderTop: "none", borderLeft: "none", borderRight: "none",
                 borderBottom: "1px solid rgba(184,115,51,0.2)",
                 borderRadius: 0,
                 paddingLeft: 40, paddingRight: search ? 36 : 14,

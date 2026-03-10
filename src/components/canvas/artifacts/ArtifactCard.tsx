@@ -2,18 +2,23 @@
 
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Download, ChevronDown, X, FileText, Image as ImageIcon, Database, BarChart2, Table2, File, LayoutGrid, Box, RefreshCw, Loader2 } from "lucide-react";
+import { Download, ChevronDown, X, FileText, Image as ImageIcon, Database, BarChart2, Table2, File, LayoutGrid, Box, RefreshCw, Loader2, Video } from "lucide-react";
 import DOMPurify from "dompurify";
 import dynamic from "next/dynamic";
 
-const MassingViewer = dynamic(() => import("./MassingViewer"), {
+const ArchitecturalViewer = dynamic(() => import("./architectural-viewer/ArchitecturalViewer"), {
   ssr: false,
-  loading: () => <div style={{ height: 220, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading 3D viewer…</span></div>,
+  loading: () => <div style={{ height: 400, background: "#0D0D1A", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading Architectural Viewer…</span></div>,
 });
 
-const FloorPlan3DViewer = dynamic(() => import("./FloorPlan3DViewer"), {
+const Building3DViewer = dynamic(() => import("./Building3DViewer"), {
   ssr: false,
-  loading: () => <div style={{ height: 400, background: "#07070e", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading 3D viewer…</span></div>,
+  loading: () => <div style={{ height: 320, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading 3D viewer…</span></div>,
+});
+
+const VideoBody = dynamic(() => import("./VideoBody").then(m => ({ default: m.VideoBody })), {
+  ssr: false,
+  loading: () => <div style={{ height: 180, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading video player…</span></div>,
 });
 
 import { formatBytes } from "@/lib/utils";
@@ -27,17 +32,14 @@ import type {
   TableArtifactData,
   FileArtifactData,
   JsonArtifactData,
+  VideoArtifactData,
 } from "@/types/execution";
 import type { NodeCategory } from "@/types/nodes";
+import { CATEGORY_COLORS, hexToRgb } from "@/lib/ui-constants";
 
 // ─── Category → color ────────────────────────────────────────────────────────
 
-const CATEGORY_COLOR: Record<NodeCategory, string> = {
-  input:     "#00F5FF",
-  transform: "#B87333",
-  generate:  "#FFBF00",
-  export:    "#4FC3F7",
-};
+const CATEGORY_COLOR = CATEGORY_COLORS;
 
 const TYPE_COLOR: Record<ArtifactType, string> = {
   text:  "#B87333",
@@ -48,6 +50,7 @@ const TYPE_COLOR: Record<ArtifactType, string> = {
   file:  "#B87333",
   "3d":  "#FFBF00",
   svg:   "#00F5FF",
+  video: "#00F5FF",
 };
 
 const TYPE_ICON: Record<ArtifactType, React.ReactNode> = {
@@ -59,13 +62,9 @@ const TYPE_ICON: Record<ArtifactType, React.ReactNode> = {
   file:  <File size={9} />,
   "3d":  <Box size={9} />,
   svg:   <LayoutGrid size={9} />,
+  video: <Video size={9} />,
 };
 
-function hexToRgb(hex: string): string {
-  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!r) return "79, 138, 255";
-  return `${parseInt(r[1], 16)}, ${parseInt(r[2], 16)}, ${parseInt(r[3], 16)}`;
-}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -100,6 +99,10 @@ function getQualityBadge(artifact: ExecutionArtifact): QualityBadge | null {
 
   if (artifact.type === "3d" || artifact.type === "svg") {
     return { label: "AI Generated · Concept", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" };
+  }
+
+  if (artifact.type === "video") {
+    return { label: "AI Generated · Kling 3.0", color: "#00F5FF", bg: "rgba(0,245,255,0.12)" };
   }
 
   return null;
@@ -140,8 +143,8 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
         borderBottom: "1px solid rgba(184,115,51,0.1)",
         borderLeft: `3px solid ${accentColor}`,
         background: "rgba(7,8,9,0.95)",
-        backdropFilter: "blur(40px)",
-        WebkitBackdropFilter: "blur(40px)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         overflow: "hidden",
         boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
         animation: prefersReduced ? "none" : "slide-up 0.4s ease-out",
@@ -268,6 +271,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
               {artifact.type === "file"  && <FileBody  data={artifact.data as FileArtifactData}  />}
               {artifact.type === "svg"   && <SvgBody   data={artifact.data as SvgArtifactData}   />}
               {artifact.type === "3d"    && <Massing3dBody data={artifact.data as Massing3dData} />}
+              {artifact.type === "video" && <VideoBody data={artifact.data as VideoArtifactData} nodeId={artifact.tileInstanceId} />}
             </ArtifactErrorBoundary>
           </motion.div>
         )}
@@ -285,6 +289,13 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
           <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
             <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
               AI-generated concept visualization. Not architecturally accurate.
+            </p>
+          </div>
+        )}
+        {!collapsed && artifact.type === "video" && (
+          <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+            <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
+              AI-generated cinematic walkthrough. For presentation purposes only.
             </p>
           </div>
         )}
@@ -538,7 +549,6 @@ interface SvgArtifactData {
 
 function SvgBody({ data }: { data: SvgArtifactData }) {
   const { t } = useLocale();
-  const [viewMode, setViewMode] = useState<"2d" | "3d">("2d");
   const svgHtml = data?.svg ?? "";
   const sanitizedSvg = useMemo(
     () => (typeof window !== "undefined" ? DOMPurify.sanitize(svgHtml, { USE_PROFILES: { svg: true, svgFilters: true } }) : ""),
@@ -549,77 +559,20 @@ function SvgBody({ data }: { data: SvgArtifactData }) {
 
   return (
     <div>
-      {/* View mode toggle */}
+      <div
+        style={{
+          background: "#FAFAFA",
+          borderRadius: 0,
+          overflow: "auto",
+          maxHeight: 240,
+          padding: 4,
+        }}
+        dangerouslySetInnerHTML={{ __html: sanitizedSvg }}
+      />
       {hasRooms && (
-        <div style={{
-          display: "flex",
-          gap: 4,
-          padding: "6px 12px 6px 14px",
-        }}>
-          <button
-            onClick={() => setViewMode("2d")}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 6,
-              background: viewMode === "2d" ? "rgba(0,245,255,0.15)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${viewMode === "2d" ? "rgba(0,245,255,0.3)" : "rgba(255,255,255,0.08)"}`,
-              color: viewMode === "2d" ? "#00F5FF" : "#5C5C78",
-              fontSize: 10,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            2D Plan
-          </button>
-          <button
-            onClick={() => setViewMode("3d")}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 6,
-              background: viewMode === "3d" ? "rgba(255,191,0,0.15)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${viewMode === "3d" ? "rgba(255,191,0,0.3)" : "rgba(255,255,255,0.08)"}`,
-              color: viewMode === "3d" ? "#FFBF00" : "#5C5C78",
-              fontSize: 10,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            View in 3D
-          </button>
-        </div>
-      )}
-
-      {viewMode === "2d" ? (
-        <>
-          <div
-            style={{
-              background: "#FAFAFA",
-              borderRadius: 0,
-              overflow: "auto",
-              maxHeight: 240,
-              padding: 4,
-            }}
-            dangerouslySetInnerHTML={{ __html: sanitizedSvg }}
-          />
-          {hasRooms && (
-            <div style={{ padding: "6px 14px 10px", fontSize: 10, color: "#5C5C78" }}>
-              {data.roomList!.length} {t('artifact.rooms')} · {data.totalArea ?? "?"} m² {t('artifact.total')}
-              {data.floors ? ` · ${data.floors} ${t('artifact.floors')}` : ""}
-            </div>
-          )}
-        </>
-      ) : (
-        <div style={{ padding: "0 8px 10px 10px" }}>
-          <FloorPlan3DViewer
-            rooms={data.roomList!.map(r => ({
-              name: r.name,
-              area: r.area,
-            }))}
-            floors={data.floors}
-            buildingHeight={data.floors ? data.floors * 3.2 : undefined}
-          />
+        <div style={{ padding: "6px 14px 10px", fontSize: 10, color: "#5C5C78" }}>
+          {data.roomList!.length} {t('artifact.rooms')} · {data.totalArea ?? "?"} m² {t('artifact.total')}
+          {data.floors ? ` · ${data.floors} ${t('artifact.floors')}` : ""}
         </div>
       )}
     </div>
@@ -634,98 +587,137 @@ interface Massing3dData {
   gfa: number;
   buildingType?: string;
   metrics?: Array<{ label: string; value: string | number; unit?: string }>;
+  style?: import("./architectural-viewer/types").BuildingStyle;
 }
 
 function Massing3dBody({ data }: { data: Massing3dData }) {
   const { t } = useLocale();
-  const [viewMode, setViewMode] = useState<"massing" | "floorplan">("massing");
+  const [show3D, setShow3D] = useState(false);
+
+  // SAM 3D / Text-to-3D GLB model — render with Building3DViewer
+  const glbData = data as unknown as Record<string, unknown>;
+  if (glbData?.glbUrl && typeof glbData.glbUrl === "string") {
+    const isTextTo3D = typeof glbData.sourceImageUrl === "string";
+    const metaData = glbData.metadata as Record<string, unknown> | undefined;
+    const pipeline = metaData?.pipeline as string | undefined;
+
+    return (
+      <div style={{ padding: "0 8px 10px 10px" }}>
+        {/* Show source image for Text-to-3D pipeline */}
+        {isTextTo3D && (
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ fontSize: 10, color: "#6A6A80", marginBottom: 4, fontWeight: 500 }}>
+              Source Image (DALL-E 3)
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={glbData.sourceImageUrl as string}
+              alt="Generated source image"
+              style={{
+                width: "100%",
+                height: 160,
+                objectFit: "cover",
+                borderRadius: 8,
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}
+            />
+          </div>
+        )}
+        <div style={{ fontSize: 10, color: "#6A6A80", marginBottom: 4, fontWeight: 500 }}>
+          {isTextTo3D ? "3D Model (SAM 3D)" : "3D Model"}
+        </div>
+        <Building3DViewer glbUrl={glbData.glbUrl as string} height={320} />
+        <div style={{ marginTop: 6, display: "flex", gap: 6 }}>
+          <a
+            href={glbData.glbUrl as string}
+            download="model.glb"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 10, color: "#4FC3F7", textDecoration: "underline" }}
+          >
+            Download GLB
+          </a>
+          {typeof glbData.plyUrl === "string" && (
+            <a
+              href={glbData.plyUrl as string}
+              download="model.ply"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 10, color: "#4FC3F7", textDecoration: "underline" }}
+            >
+              Download PLY
+            </a>
+          )}
+        </div>
+        <div style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", marginTop: 4 }}>
+          {pipeline ? `Pipeline: ${pipeline}` : "Generated via SAM 3D (Meta)"} · Files expire in 7 days
+        </div>
+      </div>
+    );
+  }
 
   if (!data?.floors || !data?.height) {
     return <div style={{ padding: "8px 14px", fontSize: 11, color: "#5C5C78" }}>{t('artifact.noMassing')}</div>;
   }
 
-  // Generate rooms from massing data for floor plan view
-  const massingRooms = useMemo(() => {
-    const fp = data.footprint ?? 500;
-    const perFloor = fp * 0.85; // usable area
-    const isMixed = data.buildingType?.toLowerCase().includes("mixed");
-    if (isMixed) {
-      return [
-        { name: "Retail Space", area: Math.round(fp * 0.6), type: "retail" },
-        { name: "Living Room", area: Math.round(perFloor * 0.3), type: "living" },
-        { name: "Bedroom 1", area: Math.round(perFloor * 0.18), type: "bedroom" },
-        { name: "Bedroom 2", area: Math.round(perFloor * 0.14), type: "bedroom" },
-        { name: "Kitchen", area: Math.round(perFloor * 0.15), type: "kitchen" },
-        { name: "Bathroom", area: Math.round(perFloor * 0.08), type: "bathroom" },
-        { name: "Hallway", area: Math.round(perFloor * 0.15), type: "hallway" },
-      ];
-    }
-    return [
-      { name: "Living Room", area: Math.round(perFloor * 0.3), type: "living" },
-      { name: "Bedroom 1", area: Math.round(perFloor * 0.2), type: "bedroom" },
-      { name: "Bedroom 2", area: Math.round(perFloor * 0.15), type: "bedroom" },
-      { name: "Kitchen", area: Math.round(perFloor * 0.15), type: "kitchen" },
-      { name: "Bathroom", area: Math.round(perFloor * 0.08), type: "bathroom" },
-      { name: "Hallway", area: Math.round(perFloor * 0.12), type: "hallway" },
-    ];
-  }, [data.footprint, data.buildingType]);
-
   return (
     <div style={{ padding: "0 8px 10px 10px" }}>
-      {/* Toggle buttons */}
-      <div style={{
-        display: "flex",
-        gap: 4,
-        marginBottom: 6,
-      }}>
-        <button
-          onClick={() => setViewMode("massing")}
-          style={{
-            padding: "4px 12px",
-            borderRadius: 6,
-            background: viewMode === "massing" ? "rgba(184,115,51,0.15)" : "rgba(255,255,255,0.04)",
-            border: `1px solid ${viewMode === "massing" ? "rgba(184,115,51,0.3)" : "rgba(255,255,255,0.08)"}`,
-            color: viewMode === "massing" ? "#B87333" : "#5C5C78",
-            fontSize: 10,
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.15s ease",
-          }}
-        >
-          Massing
-        </button>
-        <button
-          onClick={() => setViewMode("floorplan")}
-          style={{
-            padding: "4px 12px",
-            borderRadius: 6,
-            background: viewMode === "floorplan" ? "rgba(255,191,0,0.15)" : "rgba(255,255,255,0.04)",
-            border: `1px solid ${viewMode === "floorplan" ? "rgba(255,191,0,0.3)" : "rgba(255,255,255,0.08)"}`,
-            color: viewMode === "floorplan" ? "#FFBF00" : "#5C5C78",
-            fontSize: 10,
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.15s ease",
-          }}
-        >
-          Floor Plan 3D
-        </button>
-      </div>
-
-      {viewMode === "massing" ? (
-        <MassingViewer
+      {/* Lazy-load 3D viewer — only mount WebGL when user clicks */}
+      {show3D ? (
+        <ArchitecturalViewer
           floors={data.floors}
           height={data.height}
           footprint={data.footprint ?? 500}
           gfa={data.gfa ?? data.floors * (data.footprint ?? 500)}
           buildingType={data.buildingType}
+          style={data.style}
         />
       ) : (
-        <FloorPlan3DViewer
-          rooms={massingRooms}
-          floors={data.floors}
-          buildingHeight={data.height}
-        />
+        <button
+          onClick={() => setShow3D(true)}
+          style={{
+            width: "100%", height: 200, borderRadius: 12,
+            background: "linear-gradient(145deg, #0D0D1A 0%, #111122 100%)",
+            border: "1px solid rgba(184,115,51,0.15)",
+            cursor: "pointer",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 12,
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = "rgba(184,115,51,0.35)";
+            e.currentTarget.style.background = "linear-gradient(145deg, #0F0F1E 0%, #131328 100%)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = "rgba(184,115,51,0.15)";
+            e.currentTarget.style.background = "linear-gradient(145deg, #0D0D1A 0%, #111122 100%)";
+          }}
+        >
+          {/* Isometric building icon */}
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <path d="M14 42 L14 18 L28 10 L28 34 Z" fill="rgba(184,115,51,0.08)" stroke="rgba(184,115,51,0.25)" strokeWidth="0.8" />
+            <path d="M28 10 L42 18 L42 42 L28 34 Z" fill="rgba(184,115,51,0.04)" stroke="rgba(184,115,51,0.2)" strokeWidth="0.8" />
+            <path d="M14 18 L28 10 L42 18 L28 26 Z" fill="rgba(184,115,51,0.1)" stroke="rgba(184,115,51,0.3)" strokeWidth="0.8" />
+            {/* Floor lines */}
+            <line x1="14" y1="26" x2="28" y2="18" stroke="rgba(184,115,51,0.12)" strokeWidth="0.5" />
+            <line x1="14" y1="34" x2="28" y2="26" stroke="rgba(184,115,51,0.12)" strokeWidth="0.5" />
+            <line x1="28" y1="18" x2="42" y2="26" stroke="rgba(184,115,51,0.1)" strokeWidth="0.5" />
+            <line x1="28" y1="26" x2="42" y2="34" stroke="rgba(184,115,51,0.1)" strokeWidth="0.5" />
+          </svg>
+
+          <div style={{ textAlign: "center" }}>
+            <div style={{
+              fontSize: 12, fontWeight: 600, color: "rgba(184,115,51,0.7)",
+              marginBottom: 4, letterSpacing: "0.02em",
+            }}>
+              <Box size={12} style={{ display: "inline", verticalAlign: "-1px", marginRight: 5 }} />
+              Load 3D View
+            </div>
+            <div style={{ fontSize: 10, color: "#3A3A50" }}>
+              {data.floors}F · {data.height.toFixed(1)}m · {data.footprint} m²
+            </div>
+          </div>
+        </button>
       )}
 
       {data.metrics && data.metrics.length > 0 && (

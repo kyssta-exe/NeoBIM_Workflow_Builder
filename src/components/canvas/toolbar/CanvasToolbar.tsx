@@ -12,7 +12,6 @@ import { useWorkflowStore, isUntitledWorkflow } from "@/stores/workflow-store";
 import { useLocale } from "@/hooks/useLocale";
 import {
   shareWorkflowToTwitter,
-  shareWorkflowToLinkedIn,
   copyShareLink,
 } from "@/lib/share";
 
@@ -52,7 +51,7 @@ const MODE_ICONS: Record<CreationMode, React.ReactNode> = {
 
 function Sep() {
   return (
-    <div style={{ width: 1, height: 18, background: "rgba(184,115,51,0.1)", margin: "0 6px", flexShrink: 0 }} />
+    <div style={{ width: 1, height: 18, background: "rgba(184,115,51,0.18)", margin: "0 6px", flexShrink: 0 }} />
   );
 }
 
@@ -74,19 +73,19 @@ function TBBtn({ onClick, icon, title, disabled }: TBBtnProps) {
         width: 32, height: 32, borderRadius: 8,
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "transparent", border: "none",
-        color: "rgba(255,255,255,0.3)", cursor: disabled ? "not-allowed" : "pointer",
+        color: "rgba(255,255,255,0.65)", cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.4 : 1,
         transition: "all 150ms ease",
       }}
       onMouseEnter={e => {
         if (!disabled) {
-          e.currentTarget.style.background = "rgba(184,115,51,0.1)";
+          e.currentTarget.style.background = "rgba(255,191,0,0.10)";
           e.currentTarget.style.color = "#FFBF00";
         }
       }}
       onMouseLeave={e => {
         e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "rgba(255,255,255,0.3)";
+        e.currentTarget.style.color = "rgba(255,255,255,0.65)";
       }}
     >
       {icon}
@@ -227,12 +226,12 @@ export function CanvasToolbar({
           height: 48,
           alignItems: "center", justifyContent: "space-between",
           padding: "0 14px",
-          border: "1px solid rgba(184,115,51,0.2)",
+          border: "1px solid rgba(184,115,51,0.35)",
           borderRadius: 4,
-          background: "rgba(7, 8, 9, 0.85)",
+          background: "rgba(10, 12, 15, 0.92)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(184,115,51,0.06)",
           gap: 4,
         }}
       >
@@ -250,19 +249,19 @@ export function CanvasToolbar({
               display: "flex", alignItems: "center", justifyContent: "center",
               background: isNodeLibraryOpen ? "rgba(0,245,255,0.1)" : "transparent",
               border: `1px solid ${isNodeLibraryOpen ? "rgba(0,245,255,0.3)" : "transparent"}`,
-              color: isNodeLibraryOpen ? "#00F5FF" : "rgba(255,255,255,0.3)",
+              color: isNodeLibraryOpen ? "#00F5FF" : "rgba(255,255,255,0.65)",
               cursor: "pointer", transition: "all 0.15s ease",
             }}
             onMouseEnter={e => {
               if (!isNodeLibraryOpen) {
-                e.currentTarget.style.background = "rgba(184,115,51,0.08)";
+                e.currentTarget.style.background = "rgba(255,191,0,0.10)";
                 e.currentTarget.style.color = "#FFBF00";
               }
             }}
             onMouseLeave={e => {
               if (!isNodeLibraryOpen) {
                 e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "rgba(255,255,255,0.3)";
+                e.currentTarget.style.color = "rgba(255,255,255,0.65)";
               }
             }}
           >
@@ -291,7 +290,7 @@ export function CanvasToolbar({
             >
               <span style={{ color: "#00F5FF", display: "flex" }}>{currentMode.icon}</span>
               <span style={{ fontSize: 12, fontWeight: 500 }}>{currentMode.label}</span>
-              <ChevronDown size={9} style={{ color: "#55556A" }} />
+              <ChevronDown size={9} style={{ color: "#7A7A90" }} />
             </button>
 
             <AnimatePresence>
@@ -371,7 +370,8 @@ export function CanvasToolbar({
               maxLength={80}
               autoFocus
               style={{
-                background: "transparent", border: "none",
+                background: "transparent",
+                borderTop: "none", borderLeft: "none", borderRight: "none",
                 borderBottom: "1px solid #B87333",
                 color: "#F0F0F5", fontSize: 12, fontWeight: 500,
                 outline: "none", textAlign: "center",
@@ -396,13 +396,13 @@ export function CanvasToolbar({
               onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
             >
               <span style={{
-                fontSize: 12, fontWeight: 500, color: "#8888A0",
+                fontSize: 12, fontWeight: 500, color: "#9898B0",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 maxWidth: 140,
               }}>
                 {workflowName}
               </span>
-              <Pencil size={9} style={{ color: "#3A3A4E", flexShrink: 0 }} />
+              <Pencil size={9} style={{ color: "#55556A", flexShrink: 0 }} />
               {isDirty && (
                 <div
                   title={t('canvas.unsavedChanges')}
@@ -470,7 +470,6 @@ export function CanvasToolbar({
                 >
                   {[
                     { label: "Share on X", action: () => shareWorkflowToTwitter(workflowName) },
-                    { label: "Share on LinkedIn", action: () => shareWorkflowToLinkedIn() },
                     { label: "Copy Link", action: () => copyShareLink() },
                   ].map(item => (
                     <button
@@ -622,7 +621,13 @@ export function CanvasToolbar({
                   width: 30, height: 36, padding: 0,
                   borderRadius: "0 10px 10px 0",
                   background: isWorkflowReady ? "transparent" : "transparent",
-                  border: isWorkflowReady
+                  borderTop: isWorkflowReady
+                    ? "1px solid rgba(0,245,255,0.4)"
+                    : "1px solid rgba(255,255,255,0.1)",
+                  borderRight: isWorkflowReady
+                    ? "1px solid rgba(0,245,255,0.4)"
+                    : "1px solid rgba(255,255,255,0.1)",
+                  borderBottom: isWorkflowReady
                     ? "1px solid rgba(0,245,255,0.4)"
                     : "1px solid rgba(255,255,255,0.1)",
                   borderLeft: "1px solid rgba(0,245,255,0.2)",

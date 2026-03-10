@@ -23,11 +23,11 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+import { CATEGORY_COLORS } from "@/lib/ui-constants";
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const COLORS: Record<NodeCategory, string> = {
-  input: "#00F5FF", transform: "#B87333", generate: "#FFBF00", export: "#4FC3F7",
-};
+const COLORS = CATEGORY_COLORS;
 
 // ─── Node catalogue helpers (keyword fallback) ───────────────────────────────
 
@@ -332,7 +332,7 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
             exit={{ opacity: 0, y: 20 }}
             onClick={onToggle}
             style={{
-              position: "absolute", right: 20, bottom: 20,
+              position: "absolute", right: 62, bottom: 20,
               zIndex: 25, padding: "10px 16px",
               background: "rgba(7,8,9,0.92)", border: "1px solid rgba(0,245,255,0.2)",
               borderRadius: 4,
@@ -363,13 +363,13 @@ export function AIChatPanel({ messages, onAddMessage, onClear, isOpen, onToggle 
             style={{
               position: "fixed",
               bottom: 20,
-              right: 20,
+              right: 62,
               width: 380,
               height: minimized ? "auto" : 500,
               zIndex: 55,
               background: "rgba(7,8,9,0.95)",
-              backdropFilter: "blur(40px) saturate(1.4)",
-              WebkitBackdropFilter: "blur(40px) saturate(1.4)",
+              backdropFilter: "blur(12px) saturate(1.1)",
+              WebkitBackdropFilter: "blur(12px) saturate(1.1)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 4,
               display: "flex", flexDirection: "column",

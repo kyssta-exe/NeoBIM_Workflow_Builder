@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Header } from "@/components/dashboard/Header";
 import { useSession } from "next-auth/react";
-import { Check, Sparkles, Zap, Loader2 } from "lucide-react";
+import { Check, Sparkles, Zap, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useLocale } from "@/hooks/useLocale";
 
@@ -16,13 +18,37 @@ interface UsageStats {
 
 export default function BillingPage() {
   const { t } = useLocale();
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const searchParams = useSearchParams();
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgradingTo, setUpgradingTo] = useState<string | null>(null);
 
   const userRole = (session?.user as { role?: string })?.role || "FREE";
   const currentPlan = userRole === "FREE" ? "Free" : userRole === "PRO" ? "Pro" : "Team";
+
+  // Handle success/cancel redirects from Stripe
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const canceled = searchParams.get("canceled");
+
+    if (success === "true") {
+      toast.success("Payment successful! Your plan is being activated...", {
+        icon: <CheckCircle2 size={18} />,
+        duration: 5000,
+      });
+      // Refresh session to pick up new role from DB
+      updateSession();
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard/billing");
+    } else if (canceled === "true") {
+      toast.error("Checkout was canceled. No charges were made.", {
+        icon: <XCircle size={18} />,
+        duration: 4000,
+      });
+      window.history.replaceState({}, "", "/dashboard/billing");
+    }
+  }, [searchParams, updateSession]);
 
   useEffect(() => {
     api.executions.list({ limit: 1000 })
@@ -74,8 +100,7 @@ export default function BillingPage() {
         throw new Error(data.error || 'Failed to create checkout session');
       }
     } catch (error) {
-      console.error('Checkout error:', error);
-      alert('Failed to start checkout. Please try again.');
+      toast.error('Failed to start checkout. Please try again.');
     } finally {
       setUpgradingTo(null);
     }
@@ -89,8 +114,7 @@ export default function BillingPage() {
         window.location.href = data.url;
       }
     } catch (error) {
-      console.error('Portal error:', error);
-      alert('Failed to open billing portal.');
+      toast.error('Failed to open billing portal.');
     }
   };
 
@@ -206,9 +230,7 @@ export default function BillingPage() {
                 {t('billing.hackathonDesc')}
               </p>
               <div className="flex items-center gap-2 text-xs text-[#F59E0B]">
-                <span className="font-semibold">⏰ 47 {t('billing.spotsRemaining')}</span>
-                <span>•</span>
-                <span>{t('billing.expiresIn')}</span>
+                <span className="font-semibold">⏰ Limited-time offer</span>
               </div>
             </div>
             <button 
@@ -319,7 +341,7 @@ export default function BillingPage() {
             <p className="text-sm text-[#7C7C96]">{t('billing.moneyBack')}</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
+          <div className="billing-plans grid grid-cols-3 gap-6">
             {plans.map((plan, index) => (
               <motion.div
                 key={plan.name}

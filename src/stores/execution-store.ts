@@ -1,12 +1,22 @@
 "use client";
 
 import { create } from "zustand";
+import { useWorkflowStore } from "@/stores/workflow-store";
 import type {
   Execution,
   ExecutionArtifact,
   ExecutionStatus,
   TileExecutionResult,
 } from "@/types/execution";
+
+export interface VideoGenerationState {
+  progress: number; // 0-100
+  status: "submitting" | "processing" | "rendering" | "complete" | "failed";
+  phase?: string; // Current rendering phase label (e.g., "Exterior Pull-in")
+  exteriorTaskId?: string;
+  interiorTaskId?: string;
+  failureMessage?: string;
+}
 
 interface ExecutionState {
   // Current execution
@@ -20,6 +30,12 @@ interface ExecutionState {
 
   // Artifacts by tile instance ID
   artifacts: Map<string, ExecutionArtifact>;
+
+  // Previous execution artifacts — for cache-hit detection on re-run
+  previousArtifacts: Map<string, ExecutionArtifact>;
+
+  // Video generation progress per node (for background video generation)
+  videoGenProgress: Map<string, VideoGenerationState>;
 
   // Regeneration tracking: nodeId → count (max 3)
   regenerationCounts: Map<string, number>;
@@ -37,6 +53,10 @@ interface ExecutionState {
   clearCurrentExecution: () => void;
   setProgress: (progress: number) => void;
 
+  // Video generation progress
+  setVideoGenProgress: (nodeId: string, state: VideoGenerationState) => void;
+  clearVideoGenProgress: (nodeId: string) => void;
+
   // Regeneration
   incrementRegenCount: (tileInstanceId: string) => boolean; // returns false if at max
   getRegenRemaining: (tileInstanceId: string) => number;
@@ -50,6 +70,22 @@ interface ExecutionState {
   getArtifactForTile: (tileInstanceId: string) => ExecutionArtifact | undefined;
   removeArtifact: (tileInstanceId: string) => void;
   clearArtifacts: () => void;
+
+  // Restore artifacts from DB (after loading a workflow)
+  restoreArtifactsFromDB: (dbArtifacts: Array<{
+    tileInstanceId: string;
+    nodeId: string;
+    type: string;
+    data: Record<string, unknown>;
+    nodeLabel?: string | null;
+    title?: string;
+    createdAt?: string;
+  }>, executionMeta?: {
+    id: string;
+    status: string;
+    startedAt: string;
+    completedAt?: string | null;
+  }) => void;
 }
 
 const MAX_REGENERATIONS = 3;
@@ -60,6 +96,8 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
   executionProgress: 0,
   isRateLimited: false,
   artifacts: new Map(),
+  previousArtifacts: new Map(),
+  videoGenProgress: new Map(),
   regenerationCounts: new Map(),
   regeneratingNodeId: null,
   history: [],
@@ -67,14 +105,17 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
   setRateLimited: (value) => set({ isRateLimited: value }),
 
   startExecution: (execution) =>
-    set({
+    set((state) => ({
       currentExecution: execution,
       isExecuting: true,
       executionProgress: 0,
       isRateLimited: false, // reset on new execution
+      // Snapshot current artifacts for cache-hit detection on re-run
+      previousArtifacts: new Map(state.artifacts),
       artifacts: new Map(),
+      videoGenProgress: new Map(),
       regenerationCounts: new Map(),
-    }),
+    })),
 
   updateExecutionStatus: (status) =>
     set((state) => ({
@@ -126,6 +167,20 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
 
   setProgress: (progress) => set({ executionProgress: progress }),
 
+  setVideoGenProgress: (nodeId, state) =>
+    set((s) => {
+      const newMap = new Map(s.videoGenProgress);
+      newMap.set(nodeId, state);
+      return { videoGenProgress: newMap };
+    }),
+
+  clearVideoGenProgress: (nodeId) =>
+    set((s) => {
+      const newMap = new Map(s.videoGenProgress);
+      newMap.delete(nodeId);
+      return { videoGenProgress: newMap };
+    }),
+
   addToHistory: (execution) =>
     set((state) => ({
       history: [execution, ...state.history.slice(0, 49)],
@@ -161,4 +216,51 @@ export const useExecutionStore = create<ExecutionState>()((set, get) => ({
     }),
 
   clearArtifacts: () => set({ artifacts: new Map() }),
+
+  restoreArtifactsFromDB: (dbArtifacts, executionMeta) => {
+    const newArtifacts = new Map<string, ExecutionArtifact>();
+    const restoredNodeIds: string[] = [];
+    for (const art of dbArtifacts) {
+      const nodeId = art.tileInstanceId || art.nodeId;
+      restoredNodeIds.push(nodeId);
+      newArtifacts.set(nodeId, {
+        id: `restored-${nodeId}`,
+        executionId: executionMeta?.id ?? "restored",
+        tileInstanceId: nodeId,
+        type: art.type as ExecutionArtifact["type"],
+        data: art.data,
+        metadata: { restored: true },
+        createdAt: art.createdAt ? new Date(art.createdAt) : new Date(),
+      });
+    }
+
+    const updates: Partial<ExecutionState> = { artifacts: newArtifacts };
+
+    // Restore execution metadata if provided
+    if (executionMeta) {
+      updates.currentExecution = {
+        id: executionMeta.id,
+        workflowId: "",
+        userId: "",
+        status: executionMeta.status === "SUCCESS" ? "success"
+          : executionMeta.status === "PARTIAL" ? "partial"
+          : executionMeta.status === "FAILED" ? "failed"
+          : "success",
+        startedAt: new Date(executionMeta.startedAt),
+        completedAt: executionMeta.completedAt ? new Date(executionMeta.completedAt) : undefined,
+        tileResults: [],
+        createdAt: new Date(executionMeta.startedAt),
+      };
+      updates.isExecuting = false;
+      updates.executionProgress = 100;
+    }
+
+    set(updates);
+
+    // Also restore node statuses on the canvas so nodes show green checkmarks
+    const { updateNodeStatus } = useWorkflowStore.getState();
+    for (const nodeId of restoredNodeIds) {
+      updateNodeStatus(nodeId, "success");
+    }
+  },
 }));

@@ -137,18 +137,59 @@ export async function executeNode(
       });
     }
 
-    case "TR-004": // Image Understanding
-      return mockArtifact(executionId, tileInstanceId, "text", {
-        content: `IMAGE ANALYSIS — Design Intent Extraction\n\nDetected style: Contemporary Nordic / Scandinavian minimalism\nPredominant palette: White/cream render, natural timber, large glazing\nBuilding typology: Low-to-mid rise urban residential (est. 4-6 storeys)\nFacade character: Rhythmic fenestration, clean horizontal lines, minimal ornamentation\nGround floor: Active frontage with retail/cafe evident\nLandscape integration: Strong connection to street level\nAtmosphere: Calm, dignified, community-facing\n\nSuggested style prompts: "Nordic minimal architecture, white rendered facade, timber brise-soleil, human-scale streetscape, soft natural light"`,
-        label: "Image Analysis",
-      });
+    case "TR-004": { // Image Understanding
+      // Parse upstream content for hints about building type
+      const imgContent = String(inputData?.content ?? inputData?.prompt ?? "");
+      const imgLower = imgContent.toLowerCase();
 
-    case "TR-005": // Visualization Style Composer
-      return mockArtifact(executionId, tileInstanceId, "image", {
-        url: ARCHITECTURAL_IMAGES[1],
-        label: "Style Reference (Control Image)",
+      // Infer building characteristics from the image description or user text
+      const imgFloors = (() => {
+        const m = imgContent.match(/(\d+)[\s-]*(?:stor(?:e?y|ies)|floors?|levels?)/i);
+        if (m) return parseInt(m[1], 10);
+        if (/high[\s-]?rise|tower|skyscraper/i.test(imgLower)) return 12;
+        if (/mid[\s-]?rise/i.test(imgLower)) return 6;
+        if (/villa|house|bungalow/i.test(imgLower)) return 2;
+        return 5;
+      })();
+
+      const imgBuildingType = /office|corporate/i.test(imgLower) ? "Office Building"
+        : /hotel|resort/i.test(imgLower) ? "Hotel"
+        : /school|university/i.test(imgLower) ? "Educational Facility"
+        : /hospital|medical/i.test(imgLower) ? "Healthcare Facility"
+        : /warehouse|industrial/i.test(imgLower) ? "Industrial Building"
+        : "Mixed-Use Residential";
+
+      const imgStyle = /modern|contemporary|minimal/i.test(imgLower) ? "Contemporary Nordic / Scandinavian minimalism"
+        : /classical|traditional|heritage/i.test(imgLower) ? "Classical European"
+        : /brutalist|concrete/i.test(imgLower) ? "Brutalist Concrete"
+        : "Contemporary Nordic / Scandinavian minimalism";
+
+      return mockArtifact(executionId, tileInstanceId, "text", {
+        content: `IMAGE ANALYSIS — Design Intent Extraction\n\nDetected style: ${imgStyle}\nPredominant palette: White/cream render, natural timber, large glazing\nBuilding typology: ${imgBuildingType} (est. ${imgFloors} storeys)\nFacade character: Rhythmic fenestration, clean horizontal lines, minimal ornamentation\nGround floor: Active frontage with retail/cafe evident\nLandscape integration: Strong connection to street level\nAtmosphere: Calm, dignified, community-facing\n\nSuggested style prompts: "Nordic minimal architecture, white rendered facade, timber brise-soleil, human-scale streetscape, soft natural light"`,
+        label: `Image Analysis: ${imgBuildingType}`,
+        prompt: `${imgFloors}-storey ${imgBuildingType.toLowerCase()}, ${imgStyle.toLowerCase()}, rhythmic fenestration, active ground floor retail`,
+        _raw: {
+          buildingType: imgBuildingType,
+          floors: imgFloors,
+          style: imgStyle,
+          features: ["glazing", "timber accents", "active frontage", "clean lines"],
+          facade: "Rhythmic fenestration, clean horizontal lines, minimal ornamentation",
+          massing: `${imgFloors}-storey ${imgBuildingType.toLowerCase()} with rectangular footprint`,
+          description: `${imgFloors}-storey ${imgBuildingType.toLowerCase()} with ${imgStyle.toLowerCase()} aesthetic`,
+        },
+      });
+    }
+
+    case "TR-005": { // Visualization Style Composer
+      const styleDesc = String(inputData?.content ?? inputData?.prompt ?? "modern mixed-use building");
+      const enhancedPromptMock = `Ultra-photorealistic architectural exterior render of a ${styleDesc}, golden hour lighting, Nordic minimal style, 8K resolution, cinematic composition`;
+      return mockArtifact(executionId, tileInstanceId, "text", {
+        content: enhancedPromptMock,
+        enhancedPrompt: enhancedPromptMock,
+        label: "Enhanced Architectural Prompt",
         style: "Nordic Minimal",
       });
+    }
 
     case "TR-006": // Zoning Compliance
       return mockArtifact(executionId, tileInstanceId, "json", {
@@ -331,32 +372,154 @@ export async function executeNode(
 
     case "GN-001": { // Massing Generator
       // Parse upstream data for floor count and building description
-      // Check json field (from TR-002), then text content, then defaults
       const jsonData = inputData?.json as Record<string, unknown> | undefined;
       const upstreamText = String(inputData?.content ?? inputData?.prompt ?? "");
+      const promptLower = upstreamText.toLowerCase();
 
-      const floors = (() => {
+      // ── Floor count: explicit → typology-inferred → default ──
+      const rawFloors = (() => {
         if (jsonData?.floors) return Number(jsonData.floors);
         if (inputData?._raw && typeof inputData._raw === "object" && (inputData._raw as Record<string, unknown>).floors)
           return Number((inputData._raw as Record<string, unknown>).floors);
-        const fm = upstreamText.match(/(\d+)[\s-]*(?:stor(?:e?y|ies)|floor)/i);
+        // Match: "12 floor", "12-storey", "12 story", "12-level", "12 stories", "12 floors"
+        const fm = upstreamText.match(/(\d+)[\s-]*(?:stor(?:e?y|ies)|floors?|levels?)/i);
         if (fm) return parseInt(fm[1], 10);
+        // Typology-based inference
+        if (/skyscraper|super\s*tall/i.test(promptLower)) return 30;
+        if (/high[\s-]?rise/i.test(promptLower)) return 15;
+        if (/mid[\s-]?rise/i.test(promptLower)) return 8;
+        if (/low[\s-]?rise/i.test(promptLower)) return 3;
+        if (/villa|bungalow|cottage|cabin|tiny\s*house/i.test(promptLower)) return 1;
+        if (/duplex|townhouse|maisonette|row\s*house/i.test(promptLower)) return 2;
+        if (/warehouse|industrial|factory|depot/i.test(promptLower)) return 2;
+        if (/museum|gallery|library|theater|theatre/i.test(promptLower)) return 3;
+        if (/school|university|campus|academy/i.test(promptLower)) return 3;
+        if (/hospital|medical\s*center|clinic/i.test(promptLower)) return 6;
+        if (/hotel|resort|inn/i.test(promptLower)) return 8;
+        if (/\btower\b/i.test(promptLower)) return 12;
         return 5;
       })();
+      const floors = Math.max(1, Math.min(rawFloors, 30));
 
-      const heightPerFloor = 4.2;
+      // ── Parse prompt for building style hints ──────────────────
+      const glassHeavy = /glass|glazed|curtain\s*wall|transparent|crystal/i.test(promptLower);
+      const hasRiver = /river|riverside|canal|creek/i.test(promptLower);
+      const hasLake = /lake|lakeside|pond/i.test(promptLower);
+      const hasWaterfront = /waterfront/i.test(promptLower);
+      const isModern = /modern|contemporary|minimal|sleek|futuristic|parametric/i.test(promptLower);
+      const isTower = /\btower\b|skyscraper|high[\s-]?rise/i.test(promptLower) || floors >= 10;
+
+      // Material
+      type ExtMat = "glass" | "concrete" | "brick" | "wood" | "steel" | "stone" | "terracotta" | "mixed";
+      const exteriorMaterial: ExtMat =
+        glassHeavy ? "glass" :
+        /concrete|brutalist|exposed\s*concrete/i.test(promptLower) ? "concrete" :
+        /brick|masonry|red\s*brick/i.test(promptLower) ? "brick" :
+        /wood|timber|clt|cross[\s-]?laminated/i.test(promptLower) ? "wood" :
+        /steel|metal|corten|cor[\s-]?ten|alumi?n[iu]um/i.test(promptLower) ? "steel" :
+        /stone|limestone|granite|sandstone|marble/i.test(promptLower) ? "stone" :
+        /terracotta|terra[\s-]?cotta|clay/i.test(promptLower) ? "terracotta" : "mixed";
+
+      // Environment
+      type Env = "urban" | "suburban" | "waterfront" | "park" | "desert" | "coastal" | "mountain" | "campus";
+      const environment: Env =
+        (hasRiver || hasLake || hasWaterfront) ? "waterfront" :
+        /coastal|beachfront|beach|seaside|oceanfront/i.test(promptLower) ? "coastal" :
+        /mountain|hillside|alpine|hilltop/i.test(promptLower) ? "mountain" :
+        /campus|university|school\s+grounds/i.test(promptLower) ? "campus" :
+        /urban|city|downtown|metropolitan|cbd/i.test(promptLower) ? "urban" :
+        /park|garden|green|botanical/i.test(promptLower) ? "park" :
+        /desert|arid|dry/i.test(promptLower) ? "desert" : "suburban";
+
+      // Usage
+      type Use = "residential" | "office" | "mixed" | "commercial" | "hotel" | "educational" | "healthcare" | "cultural" | "industrial" | "civic";
+      const usage: Use =
+        /office|corporate|workspace|coworking/i.test(promptLower) ? "office" :
+        /hotel|hospitality|resort|inn|boutique\s*hotel/i.test(promptLower) ? "hotel" :
+        /residential|apartment|housing|home|condo|flat|dwelling/i.test(promptLower) ? "residential" :
+        /commercial|retail|shop|mall|market/i.test(promptLower) ? "commercial" :
+        /school|university|campus|educational|academy|classroom/i.test(promptLower) ? "educational" :
+        /hospital|clinic|medical|healthcare|ward/i.test(promptLower) ? "healthcare" :
+        /museum|gallery|library|theater|theatre|concert|cultural|exhibition/i.test(promptLower) ? "cultural" :
+        /warehouse|industrial|factory|workshop|depot|storage/i.test(promptLower) ? "industrial" :
+        /civic|government|courthouse|city\s*hall|municipal/i.test(promptLower) ? "civic" : "mixed";
+
+      // Typology
+      type Typo = "tower" | "slab" | "courtyard" | "villa" | "warehouse" | "podium-tower" | "generic";
+      const typology: Typo =
+        /courtyard/i.test(promptLower) ? "courtyard" :
+        /villa|bungalow|house|cottage/i.test(promptLower) ? "villa" :
+        /warehouse|industrial|factory/i.test(promptLower) ? "warehouse" :
+        /podium.*tower|tower.*podium/i.test(promptLower) ? "podium-tower" :
+        (floors >= 15 || /\btower\b|skyscraper/i.test(promptLower)) ? "tower" :
+        "generic";
+
+      // Facade pattern
+      type Facade = "curtain-wall" | "punched-window" | "ribbon-window" | "brise-soleil" | "none";
+      const facadePattern: Facade =
+        glassHeavy ? "curtain-wall" :
+        /brise[\s-]?soleil|louv/i.test(promptLower) ? "brise-soleil" :
+        /ribbon\s*window/i.test(promptLower) ? "ribbon-window" :
+        /brick|stone|traditional|masonry/i.test(promptLower) ? "punched-window" : "none";
+
+      // Floor height override by usage
+      const floorHeightOverride =
+        /warehouse|industrial|factory/i.test(promptLower) ? 5.0 :
+        /museum|gallery|cultural|exhibition/i.test(promptLower) ? 4.5 :
+        /commercial|retail|mall/i.test(promptLower) ? 4.2 :
+        /office|corporate/i.test(promptLower) ? 3.8 :
+        /residential|apartment|housing/i.test(promptLower) ? 3.0 :
+        3.6;
+
+      // ── Dynamic footprint based on typology and floors ─────────
+      const footprint = (() => {
+        if (jsonData?.footprint_m2) return Math.round(Number(jsonData.footprint_m2));
+        if (/villa|cottage|cabin/i.test(promptLower)) return 120 + Math.round(Math.random() * 80);
+        if (/duplex|townhouse/i.test(promptLower)) return 100 + Math.round(Math.random() * 60);
+        if (/warehouse|industrial|factory/i.test(promptLower)) return 800 + Math.round(Math.random() * 400);
+        if (/museum|gallery/i.test(promptLower)) return 600 + Math.round(Math.random() * 300);
+        if (/school|university/i.test(promptLower)) return 500 + Math.round(Math.random() * 300);
+        if (/hospital/i.test(promptLower)) return 700 + Math.round(Math.random() * 400);
+        if (/skyscraper|super\s*tall/i.test(promptLower)) return 400 + Math.round(Math.random() * 200);
+        // General: taller buildings → smaller footprints
+        if (floors >= 15) return 350 + Math.round(Math.random() * 150);
+        if (floors >= 8) return 450 + Math.round(Math.random() * 200);
+        if (floors >= 4) return 500 + Math.round(Math.random() * 200);
+        return 400 + Math.round(Math.random() * 200);
+      })();
+
+      const heightPerFloor = floorHeightOverride;
       const height = (floors * heightPerFloor).toFixed(1);
-      const footprint = 567;
       const totalGFA = jsonData?.total_gfa_m2 ? Number(jsonData.total_gfa_m2) : undefined;
       const gfa = totalGFA ?? Math.round(floors * footprint * 0.98);
+
+      const buildingType = jsonData?.building_type as string ??
+        (isTower ? `${usage.charAt(0).toUpperCase() + usage.slice(1)} Tower` :
+         `${usage.charAt(0).toUpperCase() + usage.slice(1)} Building`);
+
+      const style = {
+        glassHeavy,
+        hasRiver: hasRiver || hasWaterfront,
+        hasLake,
+        isModern: isModern || glassHeavy,
+        isTower,
+        exteriorMaterial,
+        environment,
+        usage,
+        promptText: upstreamText,
+        typology,
+        facadePattern,
+        floorHeightOverride,
+        maxFloorCap: 30,
+      };
+
       return mockArtifact(executionId, tileInstanceId, "3d", {
-        // 3D massing viewer data
         floors,
         height: parseFloat(height),
         footprint,
         gfa,
-        buildingType: jsonData?.building_type as string ?? "Mixed-Use",
-        // KPI metrics (also displayed below the 3D viewer)
+        buildingType,
+        style,
         metrics: [
           { label: "GFA", value: gfa.toLocaleString(), unit: "m²" },
           { label: "Height", value: height, unit: "m" },
@@ -365,7 +528,6 @@ export async function executeNode(
           { label: "Footprint", value: String(footprint), unit: "m²" },
           { label: "Plot Ratio", value: (gfa / 1050).toFixed(2), unit: "FAR" },
         ],
-        // Pass through upstream text data so downstream nodes (GN-003) can read it
         content: inputData?.content ?? inputData?.prompt
           ?? (jsonData ? `${floors}-storey ${jsonData.building_type ?? "mixed-use"} building, ${gfa.toLocaleString()} m² GFA` : "Modern mixed-use building"),
         prompt: inputData?.prompt ?? inputData?.content
@@ -411,6 +573,122 @@ export async function executeNode(
         totalArea: 127,
         floors: 5,
       });
+
+    case "GN-007": // Image to 3D (SAM 3D) — mock
+      return mockArtifact(executionId, tileInstanceId, "3d", {
+        glbUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Box/glTF-Binary/Box.glb",
+        plyUrl: null,
+        seed: 42,
+        label: "3D Model (SAM 3D) — Mock",
+        metadata: {
+          glbFileSize: 648,
+          plyFileSize: null,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          costUsd: 0.02,
+        },
+      });
+
+    case "GN-009": { // Video Walkthrough Generator — client-side Three.js rendering
+      // Use original PDF text (_raw.rawText) as source of truth when available
+      const mockRaw = (inputData?._raw ?? null) as Record<string, unknown> | null;
+      const mockOriginalText = (mockRaw?.rawText as string) ?? null;
+      const vidDesc = mockOriginalText ?? String(inputData?.content ?? inputData?.description ?? "modern building");
+      const upstreamFloors = Number(mockRaw?.floors ?? inputData?.floors) || 5;
+      const upstreamTotalArea = Number(mockRaw?.totalArea ?? inputData?.totalArea) || 0;
+      const upstreamHeight = Number(mockRaw?.height ?? inputData?.height) || 0;
+      const upstreamFloorHeight = upstreamHeight > 0 ? upstreamHeight / upstreamFloors : 3.6;
+      const upstreamFootprint = Number(mockRaw?.footprint ?? inputData?.footprint) || (upstreamTotalArea > 0 ? Math.round(upstreamTotalArea / upstreamFloors) : 600);
+      const upstreamBuildingType = String(mockRaw?.buildingType ?? inputData?.buildingType ?? "modern office building");
+      const upstreamFacade = String(mockRaw?.facade ?? inputData?.facade ?? "");
+
+      // Infer style from building description for richer 3D rendering
+      const facadeLower = upstreamFacade.toLowerCase();
+      const descLower = vidDesc.toLowerCase();
+      const typeLower = upstreamBuildingType.toLowerCase();
+      const extMat = facadeLower.includes("glass") || facadeLower.includes("glazed") ? "glass" as const
+        : facadeLower.includes("brick") ? "brick" as const
+        : facadeLower.includes("timber") || facadeLower.includes("wood") ? "wood" as const
+        : facadeLower.includes("steel") || facadeLower.includes("metal") ? "steel" as const
+        : facadeLower.includes("stone") ? "stone" as const
+        : facadeLower.includes("concrete") || facadeLower.includes("render") ? "concrete" as const
+        : "mixed" as const;
+
+      return mockArtifact(executionId, tileInstanceId, "video", {
+        name: `walkthrough_${Date.now()}.webm`,
+        videoUrl: "", // empty — will be populated after client-side rendering
+        downloadUrl: "",
+        label: "AEC Cinematic Walkthrough — 15s Three.js Render",
+        content: `15s AEC walkthrough: 5s exterior drone orbit + 10s interior flythrough — ${vidDesc.slice(0, 100)}`,
+        durationSeconds: 15,
+        shotCount: 4,
+        pipeline: "Three.js client-side → WebM video",
+        costUsd: 0,
+        videoGenerationStatus: "client-rendering" as const,
+        _buildingConfig: {
+          floors: upstreamFloors,
+          floorHeight: upstreamFloorHeight,
+          footprint: upstreamFootprint,
+          buildingType: upstreamBuildingType,
+          style: {
+            glassHeavy: facadeLower.includes("glass") || facadeLower.includes("glazed"),
+            hasRiver: descLower.includes("river") || descLower.includes("waterfront"),
+            hasLake: descLower.includes("lake"),
+            isModern: descLower.includes("modern") || descLower.includes("contemporary") || !descLower.includes("traditional"),
+            isTower: upstreamFloors > 8,
+            exteriorMaterial: extMat,
+            environment: (descLower.includes("urban") || descLower.includes("city")) ? "urban" : "suburban",
+            usage: typeLower.includes("residential") || typeLower.includes("apartment") ? "residential"
+              : typeLower.includes("hotel") ? "hotel"
+              : typeLower.includes("mixed") ? "mixed"
+              : "office",
+            promptText: vidDesc.slice(0, 200),
+            typology: upstreamFloors > 8 ? "tower" : upstreamFloors <= 3 ? "villa" : "slab",
+            facadePattern: facadeLower.includes("curtain") ? "curtain-wall" : "punched-window",
+            maxFloorCap: 30,
+          },
+        },
+      });
+    }
+
+    case "GN-010": { // Hi-Fi 3D Reconstructor — mock
+      const hifiDesc = String(inputData?.content ?? inputData?.description ?? "modern building");
+      const hifiSeed = hifiDesc.slice(0, 15).replace(/\s+/g, "-").toLowerCase() || "building";
+      return mockArtifact(executionId, tileInstanceId, "3d", {
+        glbUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Box/glTF-Binary/Box.glb",
+        thumbnailUrl: `https://picsum.photos/seed/${hifiSeed}-3d/512/512`,
+        textureUrls: [],
+        label: "Hi-Fi 3D Model (Meshy v4) — Mock",
+        content: hifiDesc.slice(0, 200),
+        metadata: {
+          costUsd: 0.10,
+          durationMs: 45000,
+          taskId: `mock-meshy-${Date.now()}`,
+          pipeline: "multi-view renders → Meshy v4 → textured GLB",
+          topology: "quad",
+          polycount: 30000,
+        },
+      });
+    }
+
+    case "GN-008": { // Text to 3D Generator — mock
+      const t2dPrompt = String(inputData?.content ?? inputData?.prompt ?? "modern building");
+      const t2dSeed = t2dPrompt.slice(0, 15).replace(/\s+/g, "-").toLowerCase() || "building";
+      return mockArtifact(executionId, tileInstanceId, "3d", {
+        glbUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Box/glTF-Binary/Box.glb",
+        plyUrl: null,
+        seed: 42,
+        label: "3D Model (Text to 3D) — Mock",
+        sourceImageUrl: `https://picsum.photos/seed/${t2dSeed}/1024/1024`,
+        revisedPrompt: `Photorealistic architectural rendering of: ${t2dPrompt}`,
+        metadata: {
+          glbFileSize: 648,
+          plyFileSize: null,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          costUsd: 0.06,
+          pipeline: "text → DALL-E 3 → SAM 3D",
+        },
+      });
+    }
 
     case "EX-001": { // IFC Exporter
       const ifcContent = `ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('BuildFlow Mock Export'),'2;1');\nFILE_NAME('mock_building.ifc','${new Date().toISOString().split("T")[0]}',('BuildFlow'),('BuildFlow'),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCPROJECT('0001',#2,$,'Mock Building Project',$,$,$,$,$);\nENDSEC;\nEND-ISO-10303-21;`;
@@ -510,32 +788,11 @@ export async function executeNode(
 
 function getNodeDelay(catalogueId: string): number {
   const delays: Record<string, number> = {
-    "IN-001": 500,
-    "IN-002": 800,
-    "IN-003": 600,
-    "IN-004": 1200,
-    "IN-005": 300,
-    "IN-006": 900,
-    "TR-001": 2500,
-    "TR-002": 3000,
-    "TR-003": 2000,
-    "TR-004": 2500,
-    "TR-005": 1500,
-    "TR-006": 3500,
-    "TR-007": 2800,
-    "TR-008": 2200,
-    "TR-009": 2500,
-    "TR-010": 3000,
-    "TR-012": 2000,
-    "GN-001": 3500,
-    "GN-002": 5000,
-    "GN-003": 4000,
-    "GN-004": 4500,
-    "EX-001": 2500,
-    "EX-002": 1800,
-    "EX-003": 2200,
-    "EX-004": 2000,
-    "EX-006": 1500,
+    "IN-001": 200, "IN-002": 300, "IN-003": 250, "IN-004": 500, "IN-005": 150, "IN-006": 400,
+    "TR-001": 800, "TR-002": 1000, "TR-003": 700, "TR-004": 800, "TR-005": 500, "TR-006": 1200,
+    "TR-007": 900, "TR-008": 700, "TR-009": 800, "TR-010": 1000, "TR-012": 700,
+    "GN-001": 1200, "GN-002": 1800, "GN-003": 1400, "GN-004": 1600, "GN-008": 1800,
+    "EX-001": 800, "EX-002": 600, "EX-003": 700, "EX-004": 700, "EX-006": 500,
   };
-  return delays[catalogueId] ?? 2000;
+  return delays[catalogueId] ?? 600;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useRef, useState } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useExecution } from "@/hooks/useExecution";
 import {
   ReactFlow,
@@ -22,12 +23,11 @@ import { Layers3, Sparkles, BookOpen, X } from "lucide-react";
 import {
   shareExecutionToTwitter,
 } from "@/lib/share";
-import { ExecutionCompleteModal } from "./modals/ExecutionCompleteModal";
 
 import dynamic from "next/dynamic";
 import { BaseNode } from "./nodes/BaseNode";
 import { AnimatedEdge } from "./edges/AnimatedEdge";
-// NodeLibraryPanel moved to left sidebar — see NodeLibrarySidebar component
+import { RightNodePanel } from "./panels/RightNodePanel";
 import { CanvasToolbar } from "./toolbar/CanvasToolbar";
 
 import { ExecutionLog } from "./ExecutionLog";
@@ -45,9 +45,15 @@ const ContextMenu = dynamic(
   { ssr: false }
 );
 
-// Three.js scene — must be client-only
-const PostExecutionScene = dynamic(
-  () => import("./PostExecutionScene"),
+// Architectural 3D walkthrough viewer — client-only
+const ArchitecturalViewer = dynamic(
+  () => import("./artifacts/architectural-viewer/ArchitecturalViewer"),
+  { ssr: false }
+);
+
+// Fullscreen video player — client-only
+const FullscreenVideoPlayer = dynamic(
+  () => import("./artifacts/FullscreenVideoPlayer").then(m => ({ default: m.FullscreenVideoPlayer })),
   { ssr: false }
 );
 
@@ -142,8 +148,8 @@ function CanvasEmptyState({ onPromptMode }: EmptyStateProps) {
           borderRadius: 4,
           background: "rgba(10, 12, 14, 0.7)",
           border: "1px solid rgba(184,115,51,0.15)",
-          backdropFilter: "blur(40px)",
-          WebkitBackdropFilter: "blur(40px)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
           marginBottom: 24,
         }}>
           <MiniWorkflowDiagram />
@@ -237,14 +243,91 @@ function CanvasEmptyState({ onPromptMode }: EmptyStateProps) {
   );
 }
 
+// ─── Fullscreen 3D Artifact Viewer ─────────────────────────────────────────
+
+function FullscreenArtifactViewer() {
+  const nodeId = useUIStore(s => s.artifactViewerNodeId);
+  const close = useUIStore(s => s.setArtifactViewerNodeId);
+  const artifact = useExecutionStore(s => nodeId ? s.artifacts.get(nodeId) : undefined);
+
+  if (!nodeId || !artifact) return null;
+
+  const d = artifact.data as Record<string, unknown>;
+  const floors = (d?.floors as number) ?? 5;
+  const height = (d?.height as number) ?? 21;
+  const footprint = (d?.footprint as number) ?? 500;
+  const gfa = (d?.gfa as number) ?? floors * footprint;
+  const buildingType = (d?.buildingType as string) ?? "Mixed-Use";
+  const style = d?.style as Record<string, unknown> | undefined;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{
+        position: "absolute", inset: 0, zIndex: 60,
+        background: "rgba(4,4,8,0.98)",
+        display: "flex", flexDirection: "column",
+      }}
+    >
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 20px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#F0F0F5" }}>
+          3D Architectural Walkthrough
+        </span>
+        <button
+          onClick={() => close(null)}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "6px 14px", borderRadius: 8,
+            background: "rgba(255,255,255,0.06)", border: "none",
+            color: "#8888A0", fontSize: 12, fontWeight: 500,
+            cursor: "pointer",
+          }}
+        >
+          <X size={12} /> Close
+        </button>
+      </div>
+      <div style={{ flex: 1 }}>
+        <ArchitecturalViewer
+          floors={floors}
+          height={height}
+          footprint={footprint}
+          gfa={gfa}
+          buildingType={buildingType}
+          style={style ? {
+            glassHeavy: !!style.glassHeavy,
+            hasRiver: !!style.hasRiver,
+            hasLake: !!style.hasLake,
+            isModern: !!style.isModern,
+            isTower: !!style.isTower,
+            exteriorMaterial: (style.exteriorMaterial as string) ?? "mixed",
+            environment: (style.environment as string) ?? "suburban",
+            usage: (style.usage as string) ?? "mixed",
+            promptText: (style.promptText as string) ?? "",
+            typology: (style.typology as string) ?? "generic",
+            facadePattern: (style.facadePattern as string) ?? "none",
+            floorHeightOverride: style.floorHeightOverride ? Number(style.floorHeightOverride) : undefined,
+            maxFloorCap: Number(style.maxFloorCap ?? 30),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any : undefined}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Inner Canvas ──────────────────────────────────────────────────────────
 
 interface WorkflowCanvasInnerProps {
   workflowId?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerProps) {
+function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerProps) {
   const { fitView, screenToFlowPosition, zoomIn, zoomOut } = useReactFlow();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -265,6 +348,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
     markDirty,
     setCreationMode,
     saveWorkflow,
+    loadWorkflow,
     undo,
     redo,
     isSaveModalOpen,
@@ -272,7 +356,110 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
     closeSaveModal,
   } = useWorkflowStore();
 
-  const { artifacts, executionProgress, clearArtifacts } = useExecutionStore();
+  const { artifacts, executionProgress, clearArtifacts, clearCurrentExecution, restoreArtifactsFromDB } = useExecutionStore();
+
+  // ─── Loading state: prevent empty-canvas flash while workflow loads from DB ──
+  const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(!!urlWorkflowId);
+
+  // ─── Auto-save debounce for persisted workflows ────────────────────
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  React.useEffect(() => {
+    // Only auto-save if: dirty, has a persisted DB id, not currently saving, not executing, not demo
+    const wfId = currentWorkflow?.id;
+    const isPersisted = wfId && wfId.length >= 20 && wfId.startsWith("c");
+    if (!isDirty || !isPersisted || isSaving) return;
+
+    // Clear previous timer
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      saveWorkflow().then((id) => {
+        if (id) {
+          console.info("[auto-save] Workflow saved:", id);
+          // Update URL with ?id= so page refresh can restore this workflow
+          if (!urlWorkflowId && typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.set("id", id);
+            window.history.replaceState({}, "", url.toString());
+          }
+        }
+      });
+    }, 3000); // 3-second debounce
+
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [isDirty, currentWorkflow?.id, isSaving, saveWorkflow]);
+
+  // ─── Restore execution artifacts from DB ─────────────────────────
+  const restoreExecutionArtifacts = useCallback((wfId: string) => {
+    // Small delay to ensure workflow nodes are populated in Zustand before we set statuses
+    setTimeout(() => {
+      fetch(`/api/executions?workflowId=${wfId}&limit=1`)
+        .then(res => res.ok ? res.json() : null)
+        .then((data: { executions?: Array<{
+          id: string; status: string; startedAt: string; completedAt?: string | null;
+          artifacts?: Array<{
+            tileInstanceId: string; nodeId: string; type: string;
+            data: Record<string, unknown>; nodeLabel?: string | null;
+            title?: string; createdAt?: string;
+          }>;
+        }> } | null) => {
+          if (!data?.executions?.length) return;
+          const latest = data.executions[0];
+          if (latest.artifacts && latest.artifacts.length > 0) {
+            restoreArtifactsFromDB(latest.artifacts, {
+              id: latest.id,
+              status: latest.status,
+              startedAt: latest.startedAt,
+              completedAt: latest.completedAt,
+            });
+          }
+        })
+        .catch(() => { /* Non-fatal — execution restore is best-effort */ });
+    }, 100);
+  }, [restoreArtifactsFromDB]);
+
+  // ─── Load workflow from URL ?id= param ────────────────────────────
+  const loadedUrlIdRef = useRef<string | null>(null);
+  const artifactsRestoredRef = useRef(false);
+  React.useEffect(() => {
+    if (!urlWorkflowId) {
+      // New/empty canvas — clear any stale execution results from a previous workflow
+      clearArtifacts();
+      clearCurrentExecution();
+      setIsLoadingWorkflow(false);
+      return;
+    }
+    // Don't re-load if already loaded this ID
+    if (loadedUrlIdRef.current === urlWorkflowId) return;
+    if (currentWorkflow?.id === urlWorkflowId) {
+      loadedUrlIdRef.current = urlWorkflowId;
+      setIsLoadingWorkflow(false);
+      // Workflow already in Zustand but artifacts may be lost on refresh — restore once
+      if (!artifactsRestoredRef.current) {
+        artifactsRestoredRef.current = true;
+        restoreExecutionArtifacts(urlWorkflowId);
+      }
+      return;
+    }
+    // Switching to a different workflow — clear old execution results first
+    clearArtifacts();
+    clearCurrentExecution();
+    setIsLoadingWorkflow(true);
+    loadedUrlIdRef.current = urlWorkflowId;
+    loadWorkflow(urlWorkflowId).then(() => {
+      setIsLoadingWorkflow(false);
+      // Fit view after workflow loads
+      setTimeout(() => fitView({ padding: 0.3, duration: 600 }), 300);
+
+      // Restore latest execution results from DB for THIS workflow
+      artifactsRestoredRef.current = true;
+      restoreExecutionArtifacts(urlWorkflowId);
+    }).catch(() => {
+      setIsLoadingWorkflow(false);
+    });
+  }, [urlWorkflowId, currentWorkflow?.id, loadWorkflow, fitView, restoreExecutionArtifacts, clearArtifacts, clearCurrentExecution]);
   const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary, isDemoMode, setShowExecutionCompleteModal, pendingNodeAdd, clearPendingNodeAdd } = useUIStore();
 
   // Execution timing for celebration modal
@@ -324,7 +511,6 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [showShowcase, setShowShowcase] = useState(false);
-  const [showPostExecution, setShowPostExecution] = useState(false);
   const prevExecutingRef = useRef(false);
 
   const addLogEntry = useCallback((entry: LogEntry) => {
@@ -348,68 +534,11 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
       // Show grand reveal showcase after a short delay
       const timer = setTimeout(() => setShowShowcase(true), 500);
-      // Show post-execution scene
-      const timer2 = setTimeout(() => setShowPostExecution(true), 700);
-      return () => { clearTimeout(timer); clearTimeout(timer2); };
+      return () => { clearTimeout(timer); };
     }
     prevExecutingRef.current = isExecuting;
   }, [isExecuting, artifacts, storeNodes, setEdgeFlowing]);
   const { t: tLocale } = useLocale();
-
-  // Extract data from artifacts for 3D scene
-  const postExecData = React.useMemo(() => {
-    if (!showPostExecution) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let rooms: any[] = [];
-    const kpis: { floors?: number; gfa?: number; height?: number; footprint?: number } = {};
-    let description = "";
-
-    for (const artifact of artifacts.values()) {
-      if (artifact.type === "3d" || artifact.type === "svg") {
-        const d = artifact.data as Record<string, unknown>;
-        rooms = (d?.roomList as typeof rooms) ?? [];
-      }
-      if (artifact.type === "kpi") {
-        const d = artifact.data as Record<string, unknown>;
-        const metrics = (d?.metrics as Array<{ label: string; value: string | number }>) ?? [];
-        for (const m of metrics) {
-          const lab = m.label.toLowerCase();
-          if (lab.includes("floor")) kpis.floors = Number(m.value);
-          if (lab.includes("gfa") || lab.includes("gross")) kpis.gfa = Number(m.value);
-          if (lab.includes("height")) kpis.height = Number(m.value);
-          if (lab.includes("footprint")) kpis.footprint = Number(m.value);
-        }
-      }
-      if (artifact.type === "text") {
-        const d = artifact.data as Record<string, unknown>;
-        description = (d?.content as string) ?? "";
-      }
-    }
-
-    return {
-      rooms,
-      kpis,
-      description,
-      buildingName: currentWorkflow?.name ?? "Building Design",
-    };
-  }, [showPostExecution, artifacts, currentWorkflow?.name]);
-
-  const handleClosePostExecution = useCallback(() => {
-    setShowPostExecution(false);
-    setTimeout(() => fitView({ padding: 0.3, duration: 800 }), 1100);
-  }, [fitView]);
-
-  const handleGeneratePDF = useCallback(async () => {
-    const { generatePDFReport } = await import("@/services/pdf-report");
-    const labels = new Map<string, string>();
-    storeNodes.forEach(n => labels.set(n.id, n.data.label));
-    await generatePDFReport({
-      workflowName: currentWorkflow?.name ?? "Workflow Results",
-      artifacts,
-      nodeLabels: labels,
-    });
-  }, [storeNodes, currentWorkflow?.name, artifacts]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes as unknown as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges as Edge[]);
@@ -589,15 +718,21 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
       toast.error(tLocale('toast.noNodesError'), { duration: 3000 });
       return;
     }
+
+    // #2: Auto-save unsaved workflow before execution (so execution can persist to DB)
+    const wfId = currentWorkflow?.id;
+    const isPersisted = wfId && wfId.length >= 20 && wfId.startsWith("c");
+    if (!isPersisted && !isDemoMode) {
+      const savedId = await saveWorkflow();
+      if (savedId) {
+        toast.success(tLocale('toast.workflowSaved'), { duration: 2000 });
+      }
+    }
+
     executionStartRef.current = Date.now();
     await runWorkflow();
-    // Show celebration modal on completion
-    const elapsed = executionStartRef.current ? Date.now() - executionStartRef.current : 0;
     executionStartRef.current = null;
-    if (elapsed > 0) {
-      setShowExecutionCompleteModal(true);
-    }
-  }, [runWorkflow, nodes, tLocale, setShowExecutionCompleteModal]);
+  }, [runWorkflow, nodes, tLocale, currentWorkflow?.id, isDemoMode, saveWorkflow]);
   const handleSave = useCallback(async () => {
     if (isDemoMode) {
       toast.info(tLocale('toast.demoSaveHint'), { duration: 3000 });
@@ -649,7 +784,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
         )}
       </AnimatePresence>
 
-      {/* Node Library moved to left sidebar — see NodeLibrarySidebar in Sidebar.tsx */}
+      {/* Right-side Node Library panel — canvas only */}
+      <RightNodePanel />
 
       {/* Canvas area */}
       <div
@@ -716,25 +852,19 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           )}
         </AnimatePresence>
 
-        {/* React Flow — slides left when post-execution scene is active */}
+        {/* React Flow canvas */}
         <div
           className="absolute inset-0"
-          style={{
-            transition: "opacity 0.8s ease, filter 0.8s ease",
-            opacity: showPostExecution ? 0.6 : 1,
-            filter: showPostExecution ? "brightness(0.7)" : "none",
-            pointerEvents: showPostExecution ? "none" : "auto",
-          }}
         >
           {/* Architectural grid — major lines every 100px, minor every 20px */}
           <div
             style={{
               position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
               backgroundImage: `
-                linear-gradient(rgba(184,115,51,0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(184,115,51,0.06) 1px, transparent 1px),
-                linear-gradient(rgba(184,115,51,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(184,115,51,0.03) 1px, transparent 1px)
+                linear-gradient(rgba(184,115,51,0.10) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(184,115,51,0.10) 1px, transparent 1px),
+                linear-gradient(rgba(184,115,51,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(184,115,51,0.05) 1px, transparent 1px)
               `,
               backgroundSize: '100px 100px, 100px 100px, 20px 20px, 20px 20px',
             }}
@@ -743,8 +873,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              zIndex: 0, opacity: 0.15,
-              backgroundImage: 'radial-gradient(circle, #B87333 0.8px, transparent 0.8px)',
+              zIndex: 0, opacity: 0.22,
+              backgroundImage: 'radial-gradient(circle, #B87333 0.7px, transparent 0.7px)',
               backgroundSize: '60px 60px',
             }}
           />
@@ -754,8 +884,8 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             style={{
               zIndex: 0,
               background: isExecuting
-                ? 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(184,115,51,0.10) 0%, transparent 70%)'
-                : 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(184,115,51,0.06) 0%, transparent 70%)',
+                ? 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(184,115,51,0.14) 0%, transparent 70%)'
+                : 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(184,115,51,0.08) 0%, transparent 70%)',
               animation: 'atelier-glow-pulse 8s ease-in-out infinite',
               transition: 'background 1s ease',
             }}
@@ -765,7 +895,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             className="absolute inset-0 pointer-events-none"
             style={{
               zIndex: 0,
-              background: 'radial-gradient(circle at 15% 80%, rgba(0,245,255,0.04) 0%, transparent 40%)',
+              background: 'radial-gradient(circle at 15% 80%, rgba(0,245,255,0.05) 0%, transparent 40%)',
             }}
           />
           {/* Edge vignette — darkens corners for cinematic depth */}
@@ -773,7 +903,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             className="absolute inset-0 pointer-events-none"
             style={{
               zIndex: 0,
-              background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%)',
+              background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
             }}
           />
 
@@ -809,48 +939,32 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             }}
           >
 
-            {/* Minimap — bottom-left, compact, low opacity */}
-            <MiniMap
-              position="bottom-left"
-              nodeStrokeWidth={0}
-              nodeColor={(n) => {
-                const d = n.data as WorkflowNodeData;
-                const cfg = CATEGORY_CONFIG[d?.category as NodeCategory];
-                return cfg?.color ?? "rgba(255,255,255,0.08)";
-              }}
-              maskColor="rgba(7,8,9,0.7)"
-              className="canvas-minimap"
-              style={{
-                width: 120,
-                height: 80,
-                backgroundColor: "rgba(10,12,14,0.85)",
-                border: "1px solid rgba(184,115,51,0.1)",
-                borderRadius: 8,
-                marginBottom: 16,
-                marginLeft: 16,
-                opacity: 0.4,
-                transition: "opacity 0.3s ease",
-              }}
-            />
+            {/* Minimap — bottom-left, compact, low opacity — hidden when canvas is empty */}
+            {nodes.length > 0 && (
+              <MiniMap
+                position="bottom-left"
+                nodeStrokeWidth={0}
+                nodeColor={(n) => {
+                  const d = n.data as WorkflowNodeData;
+                  const cfg = CATEGORY_CONFIG[d?.category as NodeCategory];
+                  return cfg?.color ?? "rgba(255,255,255,0.08)";
+                }}
+                maskColor="rgba(7,8,9,0.7)"
+                className="canvas-minimap"
+                style={{
+                  width: 120,
+                  height: 80,
+                  backgroundColor: "rgba(10,12,14,0.85)",
+                  border: "1px solid rgba(184,115,51,0.1)",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  marginLeft: 16,
+                  opacity: 0.5,
+                  transition: "opacity 0.3s ease",
+                }}
+              />
+            )}
           </ReactFlow>
-
-          {/* Atmospheric copper glow — enhanced */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 1,
-              background: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(184,115,51,0.04) 0%, transparent 70%)',
-            }}
-          />
-
-          {/* Vignette overlay — deeper */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 1,
-              background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%)',
-            }}
-          />
 
           {/* Context menu */}
           <AnimatePresence>
@@ -867,9 +981,29 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             )}
           </AnimatePresence>
 
-          {/* Empty state (outside ReactFlow for proper centering + AnimatePresence) */}
+          {/* Loading state — show while workflow is being restored from DB */}
           <AnimatePresence>
-            {nodes.length === 0 && (
+            {isLoadingWorkflow && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                style={{ zIndex: 5 }}
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#B87333]/20 border-t-[#B87333]" />
+                  <span style={{ fontSize: 11, color: "rgba(184,115,51,0.5)", fontFamily: "'Space Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>
+                    Restoring workflow...
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Empty state — only show if not loading a workflow from DB */}
+          <AnimatePresence>
+            {nodes.length === 0 && !isLoadingWorkflow && (
               <CanvasEmptyState onPromptMode={() => setPromptModeActive(true)} />
             )}
           </AnimatePresence>
@@ -892,11 +1026,68 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
             )}
           </AnimatePresence>
 
-          {/* ── Architectural title block — bottom right ── */}
+          {/* "View Results" floating button — visible when showcase is closed but artifacts exist */}
+          <AnimatePresence>
+            {!showShowcase && !isExecuting && artifacts.size > 0 && (
+              <motion.button
+                key="view-results-fab"
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                onClick={() => setShowShowcase(true)}
+                style={{
+                  position: "absolute",
+                  bottom: 20,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 20px",
+                  borderRadius: 12,
+                  background: "linear-gradient(135deg, rgba(0,245,255,0.12), rgba(184,115,51,0.08))",
+                  border: "1px solid rgba(0,245,255,0.25)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  color: "#00F5FF",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.4), 0 0 20px rgba(0,245,255,0.08)",
+                }}
+                whileHover={{ scale: 1.03, boxShadow: "0 4px 30px rgba(0,0,0,0.5), 0 0 30px rgba(0,245,255,0.15)" }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Sparkles size={14} />
+                {tLocale('showcase.viewResults') ?? "View Results"}
+                <span style={{
+                  padding: "2px 6px",
+                  borderRadius: 6,
+                  background: "rgba(0,245,255,0.12)",
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}>
+                  {artifacts.size}
+                </span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* Fullscreen 3D Architectural Viewer (opened from node "View 3D Model" button) */}
+          <FullscreenArtifactViewer />
+
+          {/* Fullscreen Video Player (opened from node video thumbnail or expand button) */}
+          <ErrorBoundary fallback={null} showHomeButton={false}>
+            <FullscreenVideoPlayer />
+          </ErrorBoundary>
+
+          {/* ── Architectural title block — bottom right, offset for NODE LIBRARY panel ── */}
           <div style={{
             position: 'absolute',
             bottom: 14,
-            right: 14,
+            right: 56,
             zIndex: 2,
             pointerEvents: 'none',
             display: 'flex',
@@ -941,36 +1132,6 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
         </div>
 
         {/* Post-execution 3D scene — overlays right 70% of canvas */}
-        <AnimatePresence>
-          {showPostExecution && !isExecuting && postExecData && (
-            <motion.div
-              key="post-exec-scene"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 40, transition: { duration: 0.5 } }}
-              transition={{ duration: 0.8, delay: 1.0 }}
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                bottom: 0,
-                width: "65%",
-                height: "100%",
-                zIndex: 40,
-              }}
-            >
-              <PostExecutionScene
-                rooms={postExecData.rooms}
-                kpis={postExecData.kpis}
-                buildingDescription={postExecData.description}
-                buildingName={postExecData.buildingName}
-                onClose={handleClosePostExecution}
-                onGeneratePDF={handleGeneratePDF}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* AI Chat Panel — floats on right edge */}
         <AIChatPanel
           messages={chatMessages}
@@ -982,16 +1143,7 @@ function WorkflowCanvasInner({ workflowId: _workflowId }: WorkflowCanvasInnerPro
 
         {/* Artifact results panel removed — results now display inside nodes */}
 
-        {/* Execution complete celebration modal */}
-        <ExecutionCompleteModal
-          workflowName={workflowName}
-          nodeCount={storeNodes.length}
-          artifactCount={artifacts.size}
-          durationText={durationText}
-          onViewResults={() => {
-            /* PostExecutionScene handles results display */
-          }}
-        />
+        {/* Execution complete modal removed — bottom status bar already shows completion */}
       </div>
 
       {/* Save workflow name modal */}

@@ -23,9 +23,9 @@ const CHIPS = [
   { label: "Compliance",       color: "#EF4444", prompt: "Check my IFC model for zoning compliance and generate a PDF report" },
 ];
 
-const CATEGORY_COLOR: Record<string, string> = {
-  input: "#00F5FF", transform: "#B87333", generate: "#FFBF00", export: "#4FC3F7",
-};
+import { CATEGORY_COLORS } from "@/lib/ui-constants";
+
+const CATEGORY_COLOR = CATEGORY_COLORS;
 
 const STEPS = ["thinking", "placing", "connecting"] as const;
 type GenerationStep = typeof STEPS[number];
@@ -63,13 +63,12 @@ function buildFromTemplate(template: WorkflowTemplate): {
 
 function matchTemplate(text: string): WorkflowTemplate {
   const q = text.toLowerCase();
-  if (q.includes("pdf") && q.includes("ifc"))                            return PREBUILT_WORKFLOWS.find(w => w.id === "wf-10") ?? PREBUILT_WORKFLOWS[0];
-  if (q.includes("pdf") && (q.includes("mass") || q.includes("brief"))) return PREBUILT_WORKFLOWS.find(w => w.id === "wf-02") ?? PREBUILT_WORKFLOWS[0];
+  if (q.includes("pdf") && (q.includes("mass") || q.includes("brief") || q.includes("ifc") || q.includes("concept"))) return PREBUILT_WORKFLOWS.find(w => w.id === "wf-14") ?? PREBUILT_WORKFLOWS[0];
   if (q.includes("ifc") && (q.includes("quantity") || q.includes("boq"))) return PREBUILT_WORKFLOWS.find(w => w.id === "wf-09") ?? PREBUILT_WORKFLOWS[0];
   if (q.includes("variant") || q.includes("options"))                    return PREBUILT_WORKFLOWS.find(w => w.id === "wf-04") ?? PREBUILT_WORKFLOWS[0];
   if (q.includes("image") && q.includes("concept"))                      return PREBUILT_WORKFLOWS.find(w => w.id === "wf-03") ?? PREBUILT_WORKFLOWS[0];
   if (q.includes("compliance") || q.includes("zoning"))                  return PREBUILT_WORKFLOWS.find(w => w.id === "wf-05") ?? PREBUILT_WORKFLOWS[0];
-  if (q.includes("full") || q.includes("pipeline"))                      return PREBUILT_WORKFLOWS.find(w => w.id === "wf-10") ?? PREBUILT_WORKFLOWS[0];
+  if (q.includes("full") || q.includes("pipeline"))                      return PREBUILT_WORKFLOWS.find(w => w.id === "wf-14") ?? PREBUILT_WORKFLOWS[0];
   return PREBUILT_WORKFLOWS.find(w => w.id === "wf-01") ?? PREBUILT_WORKFLOWS[0];
 }
 
