@@ -929,6 +929,27 @@ export function useExecution({ onLog }: UseExecutionOptions = {}) {
           break;
         }
 
+        // GN-009 (Video Walkthrough): do NOT fall back to mock — Kling is the only path.
+        // Show the error directly so the user knows what went wrong.
+        if (node.data.catalogueId === "GN-009") {
+          hasError = true;
+          updateNodeStatus(node.id, "error");
+          log("error", `${node.data.label} failed`, errMsg);
+          toast.error(errTitle, {
+            description: errMsg,
+            duration: 6000,
+          });
+          addTileResult({
+            tileInstanceId: node.id,
+            catalogueId: node.data.catalogueId,
+            status: "error",
+            startedAt: new Date(),
+            completedAt: new Date(),
+            errorMessage: errMsg,
+          });
+          continue;
+        }
+
         // Non-fatal error — fall back to mock execution and continue
         console.error(`[${node.data.catalogueId} FALLBACK] Real execution failed, falling back to mock.`, {
           catalogueId: node.data.catalogueId,

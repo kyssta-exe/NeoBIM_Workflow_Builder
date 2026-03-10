@@ -1390,78 +1390,70 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       console.log("[GN-009] KLING_ACCESS_KEY set:", !!process.env.KLING_ACCESS_KEY, "KLING_SECRET_KEY set:", !!process.env.KLING_SECRET_KEY);
 
       if (!process.env.KLING_ACCESS_KEY || !process.env.KLING_SECRET_KEY) {
-        // Fallback to client-side Three.js rendering when Kling keys are not configured
-        console.error("[GN-009] ❌ KLING KEYS MISSING — falling back to Three.js");
-        const buildingDesc = (inputData?.content as string) ?? (inputData?.description as string) ?? "Modern architectural building";
-        const upFloors = Number(inputData?.floors) || 5;
-        const upFloorHeight = Number(inputData?.height) / upFloors || 3.6;
-        const upFootprint = Number(inputData?.footprint) || 600;
-        const upBuildingType = String(inputData?.buildingType ?? "modern office building");
+        console.error("[GN-009] ❌ KLING KEYS MISSING — cannot generate video");
+        return NextResponse.json(
+          formatErrorResponse({
+            title: "Kling API keys required",
+            message: "KLING_ACCESS_KEY and KLING_SECRET_KEY must be configured to generate video walkthroughs. Add them to your .env.local file.",
+            code: "MISSING_API_KEY",
+          }),
+          { status: 400 }
+        );
+      }
 
-        artifact = {
-          id: generateId(),
-          executionId: executionId ?? "local",
-          tileInstanceId,
-          type: "video",
-          data: {
-            name: `walkthrough_${generateId()}.webm`,
-            videoUrl: "",
-            downloadUrl: "",
-            label: "AEC Cinematic Walkthrough — 15s Three.js Render",
-            content: `15s AEC walkthrough: drone pull-in → orbit → interior → section rise — ${buildingDesc.slice(0, 100)}`,
-            durationSeconds: 15,
-            shotCount: 4,
-            pipeline: "Three.js client-side → WebM video",
-            costUsd: 0,
-            videoGenerationStatus: "client-rendering",
-            _buildingConfig: {
-              floors: upFloors,
-              floorHeight: upFloorHeight,
-              footprint: upFootprint,
-              buildingType: upBuildingType,
-            },
-          },
-          metadata: { engine: "threejs-client", real: false },
-          createdAt: new Date(),
-        };
-
-      } else {
+      {
 
       // ── Resolve the SOURCE IMAGE for Kling (priority order) ──
       let renderImageUrl = "";
       let isFloorPlanInput = false;
       let roomInfo = "";
 
+      console.log("[KLING] Step 1: fileData present:", !!(inputData?.fileData), "size:", typeof inputData?.fileData === "string" ? inputData.fileData.length : 0);
+      console.log("[KLING] Step 1: url present:", !!(inputData?.url), "imageUrl present:", !!(inputData?.imageUrl), "svg present:", !!(inputData?.svg));
+
       // ── Priority 1: Direct image upload from IN-003 (original user file) ──
-      // This is the user's ORIGINAL uploaded floor plan / photo.
-      // Always prefer it over derived URLs from intermediate nodes (TR-004 etc.)
-      // so Kling receives the actual source image, not a re-hosted copy that
-      // might lose context or fail silently.
       if (inputData?.fileData && typeof inputData.fileData === "string") {
         const imgMime = (inputData.mimeType as string) ?? "image/jpeg";
         const raw = inputData.fileData as string;
         const cleanBase64 = raw.startsWith("data:") ? raw.split(",")[1] ?? raw : raw;
 
-        // Upload to R2 for a proper URL (Kling works best with URLs, not data URIs)
+        console.log("[KLING] Step 2: Clean base64 length:", cleanBase64.length, "mime:", imgMime);
+
+        // Strategy: R2 (cloud URL) → Redis-backed temp-image (self-hosted URL)
+        // Try R2 first (if configured)
         try {
           const { uploadToR2, isR2Configured } = await import("@/lib/r2");
           if (isR2Configured()) {
+            console.log("[KLING] Step 2a: R2 is configured, uploading...");
             const ext = imgMime.includes("png") ? "png" : "jpg";
             const imgBuffer = Buffer.from(cleanBase64, "base64");
             const uploadResult = await uploadToR2(imgBuffer, `floorplan-upload-${generateId()}.${ext}`, imgMime);
             if (uploadResult.success) {
               renderImageUrl = uploadResult.url;
-              console.log("[GN-009] Original uploaded image → R2 for Kling:", renderImageUrl);
+              console.log("[KLING] Step 2a: ✅ R2 upload succeeded:", renderImageUrl);
             }
+          } else {
+            console.log("[KLING] Step 2a: R2 not configured, skipping");
           }
         } catch (r2Err) {
-          console.warn("[GN-009] R2 upload of original image failed:", r2Err);
+          console.warn("[KLING] Step 2a: R2 upload failed:", r2Err);
         }
 
-        // Fallback to data URI if R2 unavailable
+        // Fallback: store in Upstash Redis, serve via /api/temp-image/[id]
         if (!renderImageUrl) {
-          renderImageUrl = raw.startsWith("data:") ? raw : `data:${imgMime};base64,${raw}`;
-          console.log("[GN-009] Using base64 data URI directly for Kling (size:", raw.length, "chars)");
+          console.log("[KLING] Step 2b: Storing image in Upstash Redis...");
+          try {
+            const { storeImage, getTempImageUrl, isLocalhost } = await import("@/lib/temp-image-store");
+            const id = await storeImage(cleanBase64, imgMime);
+            renderImageUrl = getTempImageUrl(id);
+            console.log("[KLING] Step 2b: ✅ Temp image URL:", renderImageUrl);
+            if (isLocalhost()) {
+              console.warn("[KLING] Step 2b: ⚠️  URL is localhost — Kling cannot reach it. Deploy or use ngrok.");
+            }
+          } catch (tmpErr) {
+            const msg = tmpErr instanceof Error ? tmpErr.message : String(tmpErr);
+            console.error("[KLING] Step 2b: ❌ Redis store failed:", msg);
+          }
         }
 
         isFloorPlanInput = true;
@@ -1469,7 +1461,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
 
       // ── Priority 2: Floor plan SVG from GN-004 ──
       if (!renderImageUrl && inputData?.svg && typeof inputData.svg === "string") {
-        console.log("[GN-009] Floor plan SVG detected, converting to PNG for Kling...");
+        console.log("[KLING] Step 2 (SVG): Floor plan SVG detected, converting to PNG...");
         try {
           const sharp = (await import("sharp")).default;
           const pngBuffer = await sharp(Buffer.from(inputData.svg))
@@ -1477,17 +1469,32 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
             .png({ quality: 90 })
             .toBuffer();
 
-          const { uploadToR2 } = await import("@/lib/r2");
-          const uploadResult = await uploadToR2(pngBuffer, `floorplan-${generateId()}.png`, "image/png");
-          if (uploadResult.success) {
-            renderImageUrl = uploadResult.url;
-            isFloorPlanInput = true;
-            console.log("[GN-009] Floor plan PNG uploaded to R2:", renderImageUrl);
-          } else {
-            console.warn("[GN-009] R2 upload failed:", uploadResult.error);
+          // Try R2 first
+          const { uploadToR2, isR2Configured } = await import("@/lib/r2");
+          if (isR2Configured()) {
+            const uploadResult = await uploadToR2(pngBuffer, `floorplan-${generateId()}.png`, "image/png");
+            if (uploadResult.success) {
+              renderImageUrl = uploadResult.url;
+              console.log("[KLING] Step 2 (SVG): ✅ R2 upload:", renderImageUrl);
+            } else {
+              console.warn("[KLING] Step 2 (SVG): R2 upload failed:", uploadResult.error);
+            }
           }
+
+          // Fallback: store in Redis
+          if (!renderImageUrl) {
+            console.log("[KLING] Step 2 (SVG): Storing PNG in Redis...");
+            const { storeImage, getTempImageUrl, isLocalhost } = await import("@/lib/temp-image-store");
+            const id = await storeImage(pngBuffer.toString("base64"), "image/png");
+            renderImageUrl = getTempImageUrl(id);
+            console.log("[KLING] Step 2 (SVG): ✅ Temp image URL:", renderImageUrl);
+            if (isLocalhost()) {
+              console.warn("[KLING] Step 2 (SVG): ⚠️  URL is localhost — Kling cannot reach it.");
+            }
+          }
+          isFloorPlanInput = true;
         } catch (svgErr) {
-          console.warn("[GN-009] SVG→PNG conversion failed:", svgErr);
+          console.warn("[KLING] Step 2 (SVG): ❌ SVG→PNG conversion failed:", svgErr);
         }
 
         // Extract room info for richer prompts
@@ -1504,6 +1511,9 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           (inputData?.images_out as string) ??
           (inputData?.imageUrl as string) ??
           "";
+        if (renderImageUrl) {
+          console.log("[KLING] Step 2 (Priority 3): Using upstream URL:", renderImageUrl.slice(0, 120));
+        }
       }
 
       // Build video from building description (from upstream TR-003 or fallback)
@@ -1513,73 +1523,52 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         (inputData?.prompt as string) ??
         "Modern architectural building";
 
-      let klingSucceeded = false;
+      console.log("[KLING] Step 3: renderImageUrl resolved:", renderImageUrl ? renderImageUrl.slice(0, 120) : "EMPTY");
+      console.log("[KLING] Step 3: isFloorPlan:", isFloorPlanInput, "buildingDesc length:", buildingDesc.length);
 
-      if (renderImageUrl) {
-        try {
-          // Submit single 10s video task to Kling API (non-blocking — returns task ID immediately)
-          const submitted = await submitDualWalkthrough(
-            renderImageUrl,
-            buildingDesc,
-            "pro",
-            isFloorPlanInput ? { isFloorPlan: true, roomInfo } : undefined,
-          );
-
-          const pipelineLabel = isFloorPlanInput
-            ? "floor plan image → Kling Official API (pro, dual) → ffmpeg concat → MP4"
-            : "concept render → Kling Official API (pro, dual) → ffmpeg concat → MP4";
-          const walkthroughLabel = isFloorPlanInput
-            ? "Floor Plan → Cinematic Walkthrough — 15s (generating...)"
-            : "AEC Cinematic Walkthrough — 15s (generating...)";
-
-          // Return a "generating" artifact with task IDs — frontend will poll for progress
-          artifact = {
-            id: generateId(),
-            executionId: executionId ?? "local",
-            tileInstanceId,
-            type: "video",
-            data: {
-              name: `walkthrough_${generateId()}.mp4`,
-              videoUrl: "",  // Will be filled when generation completes
-              downloadUrl: "",
-              label: walkthroughLabel,
-              content: `15s AEC walkthrough: 5s exterior + 10s interior stitched — ${buildingDesc.slice(0, 100)}`,
-              durationSeconds: 15,
-              shotCount: 1,
-              pipeline: pipelineLabel,
-              costUsd: 1.50,
-              // Video generation state — frontend uses these to poll
-              videoGenerationStatus: "processing",
-              exteriorTaskId: submitted.exteriorTaskId,
-              interiorTaskId: submitted.interiorTaskId,
-              generationProgress: 0,
-              isFloorPlanInput,
-            },
-            metadata: {
-              engine: "kling-official",
-              real: true,
-              exteriorTaskId: submitted.exteriorTaskId,
-              interiorTaskId: submitted.interiorTaskId,
-              submittedAt: submitted.submittedAt,
-              isFloorPlanInput,
-            },
-            createdAt: new Date(),
-          };
-          klingSucceeded = true;
-        } catch (klingErr) {
-          const errMsg = klingErr instanceof Error ? klingErr.message : String(klingErr);
-          console.error("[GN-009] Kling API failed, falling back to Three.js:", errMsg);
-          // Always fall through to Three.js so the user gets a video + progress loader
-        }
+      // ── Kling is the ONLY video generation path (no Three.js fallback) ──
+      if (!renderImageUrl) {
+        console.error("[KLING] ❌ No source image available — cannot call Kling");
+        return NextResponse.json(
+          formatErrorResponse({
+            title: "No source image for video",
+            message: "No image was found for video generation. Ensure an Image Upload (IN-003) node is connected and has a file uploaded.",
+            code: "NODE_001",
+          }),
+          { status: 400 }
+        );
       }
 
-      // Fallback to Three.js client-side rendering if Kling failed or no render image
-      if (!klingSucceeded) {
-        console.error("[GN-009] ❌ KLING FAILED — renderImageUrl:", renderImageUrl ? renderImageUrl.slice(0, 80) : "EMPTY", "isFloorPlan:", isFloorPlanInput);
-        const upFloors = Number(inputData?.floors) || 5;
-        const upFloorHeight = Number(inputData?.height) / upFloors || 3.6;
-        const upFootprint = Number(inputData?.footprint) || 600;
-        const upBuildingType = String(inputData?.buildingType ?? "modern office building");
+      // Warn if the image URL is localhost — Kling servers cannot reach it
+      if (renderImageUrl.includes("localhost") || renderImageUrl.includes("127.0.0.1")) {
+        console.warn("[KLING] ⚠️  Image URL is localhost — Kling API cannot access this.");
+        console.warn("[KLING]    To fix: deploy to a public URL, or use ngrok to tunnel localhost.");
+      }
+
+      console.log("[KLING] Step 4: Submitting to Kling API...");
+      console.log("[KLING] Step 4: Image URL:", renderImageUrl.slice(0, 150));
+      console.log("[KLING] Step 4: Mode: pro, Floor plan:", isFloorPlanInput);
+
+      // Submit dual video tasks (5s exterior + 10s interior) to Kling API
+      try {
+        const submitted = await submitDualWalkthrough(
+          renderImageUrl,
+          buildingDesc,
+          "pro",
+          isFloorPlanInput ? { isFloorPlan: true, roomInfo } : undefined,
+        );
+
+        console.log("[KLING] Step 5: ✅ Kling tasks submitted!", {
+          exteriorTaskId: submitted.exteriorTaskId,
+          interiorTaskId: submitted.interiorTaskId,
+        });
+
+        const pipelineLabel = isFloorPlanInput
+          ? "floor plan image → Kling Official API (pro, dual) → ffmpeg concat → MP4"
+          : "concept render → Kling Official API (pro, dual) → ffmpeg concat → MP4";
+        const walkthroughLabel = isFloorPlanInput
+          ? "Floor Plan → Cinematic Walkthrough — 15s (generating...)"
+          : "AEC Cinematic Walkthrough — 15s (generating...)";
 
         artifact = {
           id: generateId(),
@@ -1587,28 +1576,50 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           tileInstanceId,
           type: "video",
           data: {
-            name: `walkthrough_${generateId()}.webm`,
+            name: `walkthrough_${generateId()}.mp4`,
             videoUrl: "",
             downloadUrl: "",
-            label: "AEC Cinematic Walkthrough — 15s Three.js Render",
-            content: `15s AEC walkthrough: drone pull-in → orbit → interior → section rise — ${buildingDesc.slice(0, 100)}`,
+            label: walkthroughLabel,
+            content: `15s AEC walkthrough: 5s exterior + 10s interior stitched — ${buildingDesc.slice(0, 100)}`,
             durationSeconds: 15,
-            shotCount: 4,
-            pipeline: "Three.js client-side → WebM video",
-            costUsd: 0,
-            videoGenerationStatus: "client-rendering",
-            _buildingConfig: {
-              floors: upFloors,
-              floorHeight: upFloorHeight,
-              footprint: upFootprint,
-              buildingType: upBuildingType,
-            },
+            shotCount: 1,
+            pipeline: pipelineLabel,
+            costUsd: 1.50,
+            videoGenerationStatus: "processing",
+            exteriorTaskId: submitted.exteriorTaskId,
+            interiorTaskId: submitted.interiorTaskId,
+            generationProgress: 0,
+            isFloorPlanInput,
           },
-          metadata: { engine: "threejs-client", real: false },
+          metadata: {
+            engine: "kling-official",
+            real: true,
+            exteriorTaskId: submitted.exteriorTaskId,
+            interiorTaskId: submitted.interiorTaskId,
+            submittedAt: submitted.submittedAt,
+            isFloorPlanInput,
+          },
           createdAt: new Date(),
         };
+      } catch (klingErr) {
+        const errMsg = klingErr instanceof Error ? klingErr.message : String(klingErr);
+        console.error("[KLING] Step 5: ❌ Kling API failed:", errMsg);
+
+        const isLocal = renderImageUrl.includes("localhost") || renderImageUrl.includes("127.0.0.1");
+        const userMessage = isLocal
+          ? "Kling cannot access the image because the app is running on localhost. Deploy the app to a public URL, or use ngrok to tunnel localhost (e.g. ngrok http 3000)."
+          : `Kling video generation failed: ${errMsg}`;
+
+        return NextResponse.json(
+          formatErrorResponse({
+            title: "Video generation failed",
+            message: userMessage,
+            code: "OPENAI_001",
+          }),
+          { status: 502 }
+        );
       }
-      } // end else (Kling API path)
+      }
 
     } else if (catalogueId === "GN-010") {
       // ── Hi-Fi 3D Reconstructor ─────────────────────────────────────────
