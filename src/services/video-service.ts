@@ -139,53 +139,79 @@ function base64UrlEncode(str: string): string {
 
 // ─── API Helpers ────────────────────────────────────────────────────────────
 
+const KLING_1303_RETRY_DELAY_MS = 30_000;
+const KLING_1303_MAX_RETRIES = 3;
+
 async function klingFetch(
   path: string,
   options: { method: string; body?: unknown }
 ): Promise<KlingTaskResponse> {
-  const token = generateJwtToken();
-  const url = `${KLING_BASE_URL}${path}`;
+  for (let attempt = 0; attempt <= KLING_1303_MAX_RETRIES; attempt++) {
+    const token = generateJwtToken();
+    const url = `${KLING_BASE_URL}${path}`;
 
-  console.log(`[Video] ${options.method} ${path}`, options.body ? JSON.stringify(options.body).slice(0, 300) : "");
-
-  const res = await fetch(url, {
-    method: options.method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-
-  if (!res.ok) {
-    // Try parsing JSON body first (Kling returns JSON even on 429)
-    let errorMessage = `Kling API HTTP ${res.status}`;
-    try {
-      const errData = await res.json();
-      if (errData?.code === 1102) {
-        errorMessage = "Kling account balance is empty — please top up your Kling AI account at klingai.com to generate professional videos";
-      } else if (errData?.message) {
-        errorMessage = `Kling API error: ${errData.message} (code ${errData.code})`;
-      }
-    } catch {
-      const text = await res.text().catch(() => "Unknown error");
-      errorMessage = `Kling API HTTP ${res.status}: ${text.slice(0, 300)}`;
+    if (attempt === 0) {
+      console.log(`[Video] ${options.method} ${path}`, options.body ? JSON.stringify(options.body).slice(0, 300) : "");
     }
-    console.error("[Video] Kling HTTP error", { status: res.status, path, errorMessage });
-    throw new VideoServiceError(errorMessage, res.status, res.status >= 500);
+
+    const res = await fetch(url, {
+      method: options.method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+
+    if (!res.ok) {
+      let errorMessage = `Kling API HTTP ${res.status}`;
+      let errorCode: number | undefined;
+      try {
+        const errData = await res.json();
+        errorCode = errData?.code;
+        if (errData?.code === 1102) {
+          errorMessage = "Kling account balance is empty — please top up your Kling AI account at klingai.com to generate professional videos";
+        } else if (errData?.message) {
+          errorMessage = `Kling API error: ${errData.message} (code ${errData.code})`;
+        }
+      } catch {
+        const text = await res.text().catch(() => "Unknown error");
+        errorMessage = `Kling API HTTP ${res.status}: ${text.slice(0, 300)}`;
+      }
+
+      // Retry on 1303 (parallel task slot limit)
+      if (errorCode === 1303 && attempt < KLING_1303_MAX_RETRIES) {
+        console.warn(`[KLING] Rate limited (1303), waiting 30s before retry... (attempt ${attempt + 1}/${KLING_1303_MAX_RETRIES})`);
+        await new Promise(r => setTimeout(r, KLING_1303_RETRY_DELAY_MS));
+        continue;
+      }
+
+      console.error("[Video] Kling HTTP error", { status: res.status, path, errorMessage });
+      throw new VideoServiceError(errorMessage, res.status, res.status >= 500);
+    }
+
+    const data = (await res.json()) as KlingTaskResponse;
+
+    if (data.code !== 0) {
+      // Retry on 1303 (parallel task slot limit)
+      if (data.code === 1303 && attempt < KLING_1303_MAX_RETRIES) {
+        console.warn(`[KLING] Rate limited (1303), waiting 30s before retry... (attempt ${attempt + 1}/${KLING_1303_MAX_RETRIES})`);
+        await new Promise(r => setTimeout(r, KLING_1303_RETRY_DELAY_MS));
+        continue;
+      }
+
+      console.error("[Video] Kling API error", { code: data.code, message: data.message, requestId: data.request_id });
+      const msg = data.code === 1102
+        ? "Kling account balance is empty — please top up your Kling AI account at klingai.com"
+        : `Kling API error: ${data.message} (code ${data.code})`;
+      throw new VideoServiceError(msg, 400, false);
+    }
+
+    return data;
   }
 
-  const data = (await res.json()) as KlingTaskResponse;
-
-  if (data.code !== 0) {
-    console.error("[Video] Kling API error", { code: data.code, message: data.message, requestId: data.request_id });
-    const msg = data.code === 1102
-      ? "Kling account balance is empty — please top up your Kling AI account at klingai.com"
-      : `Kling API error: ${data.message} (code ${data.code})`;
-    throw new VideoServiceError(msg, 400, false);
-  }
-
-  return data;
+  // Should not reach here, but satisfy TypeScript
+  throw new VideoServiceError("Kling API: max retries exceeded", 429, true);
 }
 
 /**
