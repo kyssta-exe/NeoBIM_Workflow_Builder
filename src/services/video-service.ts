@@ -1046,6 +1046,9 @@ export async function submitFloorPlanWalkthrough(
     console.warn("[GN-009] Kling 3.0 Omni unavailable — falling back to v2.6 standard endpoint");
   }
 
+  // ── Rate-limit guard: wait 2s before hitting the same API again ──
+  await new Promise(r => setTimeout(r, 2000));
+
   // ── Attempt 2: Fallback to v2.6 on /v1/videos/image2video (10s) ──
   console.log("[GN-009] ═══ Fallback: v2.6 via /v1/videos/image2video ═══");
   const result = await createTask(imageUrl, prompt, negativePrompt, "10", "16:9", mode);
