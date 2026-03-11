@@ -927,6 +927,28 @@ export async function submitSingleWalkthrough(
  *   - Duration: "5"–"15" (flexible, not just 5 or 10)
  *   - Same JWT auth
  */
+/** Upload base64 image to imgbb for a short-lived public URL (auto-deletes after 10 min) */
+async function uploadToImgbb(base64Image: string): Promise<string> {
+  const apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) throw new Error("IMGBB_API_KEY not set");
+
+  const formData = new URLSearchParams();
+  formData.append("key", apiKey);
+  formData.append("image", base64Image);
+  formData.append("expiration", "600");
+
+  const res = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!data.success) throw new Error(`imgbb upload failed: ${data.error?.message || "unknown"}`);
+
+  console.log("[OMNI] imgbb upload success:", data.data.url);
+  return data.data.url;
+}
+
 async function createOmniTask(
   imageUrl: string,
   prompt: string,
@@ -935,15 +957,20 @@ async function createOmniTask(
   aspectRatio: string,
   mode: string,
 ): Promise<KlingTaskResponse> {
-  console.log("[OMNI] createOmniTask: duration=%s mode=%s imageUrl-prefix=%s", duration, mode, imageUrl.slice(0, 30));
+  console.log("[OMNI] createOmniTask: duration=%s mode=%s", duration, mode);
 
-  // Pass image directly — raw base64 string or URL, let Kling handle it
+  // Kling Omni needs a public URL — upload base64 to imgbb
+  let finalImageUrl = imageUrl;
+  if (!imageUrl.startsWith("http")) {
+    finalImageUrl = await uploadToImgbb(imageUrl);
+  }
+
   const body = {
     model_name: "kling-v3-omni",
     prompt: `${prompt.slice(0, 2450)} @image_1`,
     negative_prompt: negativePrompt.slice(0, 2500),
     image_list: [
-      { image_url: imageUrl },
+      { image_url: finalImageUrl },
     ],
     aspect_ratio: aspectRatio,
     mode,
@@ -970,14 +997,21 @@ export async function submitFloorPlanWalkthrough(
 ): Promise<SubmittedSingleVideoTask & { usedOmni: boolean; durationSeconds: number }> {
   const negativePrompt = "blur, distortion, low quality, warped geometry, melting walls, deformed architecture, shaky camera, noise, artifacts, morphing surfaces, bent lines, wobbly structure, jittery motion, flickering textures, plastic appearance, fisheye distortion, floating objects, wireframe, cartoon, sketch, watermark";
 
-  // ── Attempt 1: Kling 3.0 Omni (12s) with raw base64 in image_url ──
-  try {
-    const result = await createOmniTask(imageUrl, prompt, negativePrompt, "12", "16:9", mode);
-    return { taskId: result.data.task_id, submittedAt: Date.now(), usedOmni: true, durationSeconds: 12 };
-  } catch (err) {
-    const msg = (err as Error).message;
-    console.error("[KLING-MODEL] FAILED: omni-v3 (Kling 3.0)", "error:", msg.slice(0, 200));
-    console.warn("[GN-009] Omni failed, falling back to v2.6");
+  // ── Attempt 1: Kling 3.0 Omni (12s) — skip on localhost (imgbb works but no point wasting quota) ──
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const isLocalhost = appUrl.includes("localhost") || appUrl.includes("127.0.0.1") || !appUrl;
+
+  if (isLocalhost) {
+    console.log("[OMNI] Skipping on localhost — using v2.6 directly");
+  } else {
+    try {
+      const result = await createOmniTask(imageUrl, prompt, negativePrompt, "12", "16:9", mode);
+      return { taskId: result.data.task_id, submittedAt: Date.now(), usedOmni: true, durationSeconds: 12 };
+    } catch (err) {
+      const msg = (err as Error).message;
+      console.error("[KLING-MODEL] FAILED: omni-v3 (Kling 3.0)", "error:", msg.slice(0, 200));
+      console.warn("[GN-009] Omni failed, falling back to v2.6");
+    }
   }
 
   // ── Fallback: Kling v2.6 via /v1/videos/image2video (10s) — proven working ──
