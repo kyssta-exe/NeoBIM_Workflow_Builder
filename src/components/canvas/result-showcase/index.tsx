@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useUIStore } from "@/stores/ui-store";
@@ -139,6 +139,44 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
       });
     }
   }, [data.videoData?.nodeId]);
+
+  // ── Persist completed video artifact to DB so it survives page refresh ──
+  const artifacts = useExecutionStore(s => s.artifacts);
+  const currentExecution = useExecutionStore(s => s.currentExecution);
+  const persistedVideoRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!currentExecution?.id) return;
+    const execId = currentExecution.id;
+    // Only persist for real DB executions (CUID IDs start with 'c', 25+ chars)
+    if (execId.length < 20 || !execId.startsWith("c")) return;
+
+    for (const [nodeId, art] of artifacts) {
+      if (art.type !== "video") continue;
+      const d = art.data as Record<string, unknown>;
+      const videoUrl = (d.videoUrl as string) ?? "";
+      const status = d.videoGenerationStatus as string | undefined;
+      if (!videoUrl || status !== "complete") continue;
+
+      // Build a unique key so we only persist once per video URL
+      const key = `${execId}:${nodeId}:${videoUrl}`;
+      if (persistedVideoRef.current === key) continue;
+      persistedVideoRef.current = key;
+
+      // Fire-and-forget: append the completed video artifact to the execution's tileResults
+      fetch(`/api/executions/${execId}/artifacts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nodeId,
+          nodeLabel: "Video Walkthrough",
+          type: "video",
+          title: "video",
+          data: d,
+        }),
+      }).catch(() => { /* best-effort */ });
+    }
+  }, [artifacts, currentExecution?.id]);
 
   // Ensure active tab is valid
   const resolvedTab = data.availableTabs.includes(activeTab) ? activeTab : "overview";
