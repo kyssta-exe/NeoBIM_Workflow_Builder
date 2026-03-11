@@ -26,6 +26,8 @@ export interface FileDownload {
   type: string;
   size: number;
   downloadUrl?: string;
+  /** Raw file content for client-side blob download (used when R2 is unavailable) */
+  _rawContent?: string;
 }
 
 export interface VideoSegmentInfo {
@@ -272,6 +274,7 @@ export function useShowcaseData(): ShowcaseData {
         type: (d.type as string) ?? "",
         size: (d.size as number) ?? 0,
         downloadUrl: d.downloadUrl as string | undefined,
+        _rawContent: (d._ifcContent as string | undefined) ?? (d._rawContent as string | undefined),
       };
     });
 
