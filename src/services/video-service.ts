@@ -953,68 +953,8 @@ export async function submitSingleWalkthrough(
  *   - Duration: "5"–"15" (flexible, not just 5 or 10)
  *   - Same JWT auth
  */
-/** Upload base64 image to imgbb for a short-lived public URL (auto-deletes after 10 min) */
-async function uploadToImgbb(base64Image: string): Promise<string> {
-  const apiKey = process.env.IMGBB_API_KEY;
-  if (!apiKey) throw new Error("IMGBB_API_KEY not set");
-
-  const formData = new URLSearchParams();
-  formData.append("key", apiKey);
-  formData.append("image", base64Image);
-  formData.append("expiration", "600");
-
-  const res = await fetch("https://api.imgbb.com/1/upload", {
-    method: "POST",
-    body: formData,
-  });
-
-  const data = await res.json();
-  if (!data.success) throw new Error(`imgbb upload failed: ${data.error?.message || "unknown"}`);
-
-  console.log("[OMNI] imgbb upload success:", data.data.url);
-  return data.data.url;
-}
-
-async function createOmniTask(
-  imageUrl: string,
-  prompt: string,
-  negativePrompt: string,
-  duration: string,
-  aspectRatio: string,
-  mode: string,
-): Promise<KlingTaskResponse> {
-  console.log("[OMNI] createOmniTask: duration=%s mode=%s", duration, mode);
-
-  // Kling Omni needs a public URL — upload base64 to imgbb
-  let finalImageUrl = imageUrl;
-  if (!imageUrl.startsWith("http")) {
-    finalImageUrl = await uploadToImgbb(imageUrl);
-  }
-
-  const body = {
-    model_name: "kling-v3-omni",
-    prompt: `${prompt.slice(0, 2450)} @image_1`,
-    negative_prompt: negativePrompt.slice(0, 2500),
-    image_list: [
-      { image_url: finalImageUrl },
-    ],
-    aspect_ratio: aspectRatio,
-    mode,
-    duration,
-    callback_url: "",
-    external_task_id: "",
-  };
-
-  const result = await klingFetch(KLING_OMNI_PATH, { method: "POST", body });
-
-  console.error("[KLING-MODEL] SUCCESS: kling-v3-omni (Kling 3.0 Omni)", "duration:", duration, "mode:", mode);
-  console.log("[OMNI] Task created: taskId=%s", result.data.task_id);
-  return result;
-}
-
 /**
- * Submit a floor plan video via Kling 3.0 Omni endpoint (12s), falling back
- * to v2.6 on the standard image2video endpoint (10s) if Omni is unavailable.
+ * Submit a floor plan video via Kling v2.6 (10s, proven working).
  */
 export async function submitFloorPlanWalkthrough(
   imageUrl: string,
@@ -1023,24 +963,6 @@ export async function submitFloorPlanWalkthrough(
 ): Promise<SubmittedSingleVideoTask & { usedOmni: boolean; durationSeconds: number }> {
   const negativePrompt = "blur, distortion, low quality, warped geometry, melting walls, deformed architecture, shaky camera, noise, artifacts, morphing surfaces, bent lines, wobbly structure, jittery motion, flickering textures, plastic appearance, fisheye distortion, floating objects, wireframe, cartoon, sketch, watermark";
 
-  // ── Attempt 1: Kling 3.0 Omni (12s) — skip on localhost (imgbb works but no point wasting quota) ──
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-  const isLocalhost = appUrl.includes("localhost") || appUrl.includes("127.0.0.1") || !appUrl;
-
-  if (isLocalhost) {
-    console.log("[OMNI] Skipping on localhost — using v2.6 directly");
-  } else {
-    try {
-      const result = await createOmniTask(imageUrl, prompt, negativePrompt, "12", "16:9", mode);
-      return { taskId: result.data.task_id, submittedAt: Date.now(), usedOmni: true, durationSeconds: 12 };
-    } catch (err) {
-      const msg = (err as Error).message;
-      console.error("[KLING-MODEL] FAILED: omni-v3 (Kling 3.0)", "error:", msg.slice(0, 200));
-      console.warn("[GN-009] Omni failed, falling back to v2.6");
-    }
-  }
-
-  // ── Fallback: Kling v2.6 via /v1/videos/image2video (10s) — proven working ──
   const result = await createTask(imageUrl, prompt, negativePrompt, "10", "16:9", mode);
   return { taskId: result.data.task_id, submittedAt: Date.now(), usedOmni: false, durationSeconds: 10 };
 }
@@ -1057,25 +979,10 @@ export async function checkSingleVideoStatus(taskId: string, _useOmniPolling = f
   hasFailed: boolean;
   failureMessage: string | null;
 }> {
-  // Try Omni endpoint first, fall back to image2video — no flag needed
-  let result: KlingTaskResponse;
-  let isOmniResult = false;
-  try {
-    result = await klingFetch(`${KLING_OMNI_PATH}/${taskId}`, { method: "GET" });
-    isOmniResult = true;
-    console.log("[POLL-RAW] Full Omni response:", JSON.stringify(result, null, 2));
-  } catch {
-    console.log("[Video] Omni endpoint failed for taskId:", taskId, "— falling back to image2video");
-    result = await klingFetch(`${KLING_IMAGE2VIDEO_PATH}/${taskId}`, { method: "GET" });
-  }
+  const result = await klingFetch(`${KLING_IMAGE2VIDEO_PATH}/${taskId}`, { method: "GET" });
 
   const taskStatus = result.data.task_status as "submitted" | "processing" | "succeed" | "failed";
-  // Omni uses works[].resource.resource, image2video uses videos[].url
-  const videoUrl = isOmniResult
-    ? (result.data.task_result?.works?.[0]?.resource?.resource
-      ?? result.data.task_result?.videos?.[0]?.url
-      ?? null)
-    : (result.data.task_result?.videos?.[0]?.url ?? null);
+  const videoUrl = result.data.task_result?.videos?.[0]?.url ?? null;
 
   const progress = taskStatus === "succeed" ? 100 : taskStatus === "processing" ? 50 : taskStatus === "submitted" ? 10 : 0;
   const hasFailed = taskStatus === "failed";
