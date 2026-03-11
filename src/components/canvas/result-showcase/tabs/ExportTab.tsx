@@ -203,13 +203,45 @@ export function ExportTab({ data }: ExportTabProps) {
 
   // 8. File artifacts
   data.fileDownloads.forEach((file, i) => {
+    // Ensure proper filename with correct extension
+    const fileName = ensureDownloadName(file.name, file.type);
+    // For files with raw content or data: URIs, use blob download
+    const needsBlobDownload = file._rawContent || (file.downloadUrl?.startsWith("data:"));
+    const blobAction = needsBlobDownload ? () => {
+      let blob: Blob;
+      if (file._rawContent) {
+        blob = new Blob([file._rawContent], { type: "application/x-step" });
+      } else {
+        const dataUri = file.downloadUrl ?? "";
+        const [header, b64] = dataUri.split(",");
+        const mime = header.split(":")[1]?.split(";")[0] ?? "application/octet-stream";
+        const binary = atob(b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+        blob = new Blob([bytes], { type: mime });
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      setTimeout(() => {
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }, 0);
+    } : undefined;
+
     downloadCards.push({
       id: `file-${i}`,
       icon: <File size={20} />,
-      title: file.name,
+      title: fileName,
       subtitle: file.size > 0 ? formatBytes(file.size) : file.type || "File",
       color: "#64748B",
-      action: file.downloadUrl ?? "#",
+      action: blobAction ?? file.downloadUrl ?? "#",
     });
   });
 
@@ -618,8 +650,34 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  a.style.display = "none";
   document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }, 0);
+}
+
+// ─── Utility: Ensure proper file extension ──────────────────────────────────
+
+function ensureDownloadName(name: string, fileType: string): string {
+  const typeExtMap: Record<string, string> = {
+    "IFC 4": ".ifc",
+    "IFC4": ".ifc",
+    "IFC 2x3": ".ifc",
+    "CSV Spreadsheet": ".csv",
+    "Text Report": ".txt",
+    "PNG Image": ".png",
+    "PDF Report": ".pdf",
+  };
+  const expectedExt = typeExtMap[fileType] ?? "";
+  if (expectedExt && !name.toLowerCase().endsWith(expectedExt)) {
+    const dotIdx = name.lastIndexOf(".");
+    const base = dotIdx > 0 ? name.slice(0, dotIdx) : name;
+    return base + expectedExt;
+  }
+  return name;
 }
