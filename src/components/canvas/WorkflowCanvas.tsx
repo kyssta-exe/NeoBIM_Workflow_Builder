@@ -1076,15 +1076,6 @@ function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerP
               >
                 <Sparkles size={14} />
                 {tLocale('showcase.viewResults') ?? "View Results"}
-                <span style={{
-                  padding: "2px 6px",
-                  borderRadius: 6,
-                  background: "rgba(0,245,255,0.12)",
-                  fontSize: 10,
-                  fontWeight: 700,
-                }}>
-                  {artifacts.size}
-                </span>
               </motion.button>
             )}
           </AnimatePresence>
