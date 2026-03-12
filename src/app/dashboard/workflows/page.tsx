@@ -9,6 +9,8 @@ import { Header } from "@/components/dashboard/Header";
 import { api, type WorkflowSummary } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import { STRIPE_PLANS } from "@/lib/stripe";
 
 // ─── Workflow type detection ─────────────────────────────────────────────────
 type WfType = { key: string; color: string; icon: React.ReactNode; label: string };
@@ -50,9 +52,28 @@ function groupWorkflows(wfs: WorkflowSummary[]): { grouped: { type: WfType; item
 
 export default function WorkflowsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const userRole = (session?.user as { role?: string })?.role || "FREE";
+  const maxWorkflows = STRIPE_PLANS.FREE.limits.maxWorkflows;
+  const isAtLimit = userRole === "FREE" && workflows.length >= maxWorkflows;
+
+  const handleNewWorkflow = useCallback(() => {
+    if (isAtLimit) {
+      toast.error(`Free plan allows up to ${maxWorkflows} workflows. Upgrade to Pro for unlimited workflows.`, {
+        action: {
+          label: "Upgrade",
+          onClick: () => router.push("/dashboard/billing"),
+        },
+        duration: 6000,
+      });
+      return;
+    }
+    router.push("/dashboard/workflows/new");
+  }, [isAtLimit, maxWorkflows, router]);
 
   const load = useCallback(async () => {
     try {
@@ -247,14 +268,14 @@ export default function WorkflowsPage() {
               Start with a template below, or build your own from scratch. Each workflow runs in under 2 minutes.
             </p>
             <div className="flex items-center gap-3 mb-8">
-              <Link
-                href="/dashboard/workflows/new"
+              <button
+                onClick={handleNewWorkflow}
                 style={{
                   display: "flex", alignItems: "center", gap: 7,
                   padding: "9px 20px", borderRadius: 10,
                   background: "linear-gradient(135deg, #00F5FF 0%, #0EA5E9 100%)",
                   color: "#0a0c10", fontSize: 13, fontWeight: 700,
-                  textDecoration: "none",
+                  border: "none", cursor: "pointer",
                   boxShadow: "0 0 16px rgba(0,245,255,0.15)",
                   transition: "all 0.2s ease",
                 }}
@@ -263,7 +284,7 @@ export default function WorkflowsPage() {
               >
                 <Plus size={14} strokeWidth={2.5} />
                 New Workflow
-              </Link>
+              </button>
               <Link
                 href="/dashboard/templates"
                 className="flex items-center gap-2 rounded-lg border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-4 py-2.5 text-sm font-medium text-[#F0F0F5] hover:border-[rgba(0,245,255,0.15)] hover:bg-[rgba(0,245,255,0.03)] transition-all"
@@ -346,14 +367,14 @@ export default function WorkflowsPage() {
                 <span style={{ fontSize: 12, color: "#5C5C78", whiteSpace: "nowrap" }}>
                   {filteredWorkflows.length} workflow{filteredWorkflows.length !== 1 ? "s" : ""}
                 </span>
-                <Link
-                  href="/dashboard/workflows/new"
+                <button
+                  onClick={handleNewWorkflow}
                   style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "7px 14px", borderRadius: 8,
                     background: "linear-gradient(135deg, #00F5FF 0%, #0EA5E9 100%)",
                     color: "#0a0c10", fontSize: 12, fontWeight: 700,
-                    textDecoration: "none",
+                    border: "none", cursor: "pointer",
                     boxShadow: "0 0 12px rgba(0,245,255,0.12)",
                     transition: "all 0.2s ease",
                   }}
@@ -362,7 +383,7 @@ export default function WorkflowsPage() {
                 >
                   <Plus size={12} strokeWidth={2.5} />
                   New Workflow
-                </Link>
+                </button>
               </div>
             </motion.div>
 

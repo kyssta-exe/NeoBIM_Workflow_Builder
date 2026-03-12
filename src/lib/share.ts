@@ -32,12 +32,22 @@ export function shareWorkflowToTwitter(workflowName: string) {
 
 // ── Template share ───────────────────────────────────────────────────────────
 
-export function shareTemplateToTwitter(templateName: string) {
-  const text = encodeURIComponent(
-    `Found this amazing AEC workflow template on ${HANDLE}:\n\n` +
-    `"${templateName}"\n\n` +
-    `AI-powered concept design for architects — try it free: ${SITE_URL}/dashboard/templates`
-  );
+export async function shareTemplateToTwitter(templateName: string) {
+  const shareText = `Found this amazing AEC workflow template on ${HANDLE}:\n\n"${templateName}"\n\nAI-powered concept design for architects — try it free:`;
+  const shareUrl = `${SITE_URL}/dashboard/templates`;
+
+  // Use native share on mobile/tablets if available
+  if (typeof navigator !== "undefined" && navigator.share) {
+    try {
+      await navigator.share({ title: templateName, text: shareText, url: shareUrl });
+      return;
+    } catch {
+      // User cancelled or share failed — fall through to Twitter
+    }
+  }
+
+  // Fallback: Twitter popup on desktop
+  const text = encodeURIComponent(`${shareText} ${shareUrl}`);
   openPopup(`https://twitter.com/intent/tweet?text=${text}`);
 }
 

@@ -5,8 +5,9 @@ import { subscribeWithSelector } from "zustand/middleware";
 import type { WorkflowNode, WorkflowEdge, NodeStatus } from "@/types/nodes";
 import type { Workflow, WorkflowTemplate, CreationMode } from "@/types/workflow";
 import { generateId } from "@/lib/utils";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { awardXP } from "@/lib/award-xp";
+import { toast } from "sonner";
 
 /** Returns true if the workflow name is empty, whitespace, or the default "Untitled Workflow" */
 export function isUntitledWorkflow(name: string | null | undefined): boolean {
@@ -333,6 +334,16 @@ export const useWorkflowStore = create<WorkflowState>()(
         }
       } catch (err) {
         console.error("Save failed:", err);
+        // Detect workflow limit error (403) and show upgrade prompt
+        if (err instanceof ApiError && err.status === 403) {
+          toast.error("Workflow limit reached — upgrade to Pro for unlimited workflows.", {
+            action: {
+              label: "Upgrade",
+              onClick: () => { window.location.href = "/dashboard/billing"; },
+            },
+            duration: 6000,
+          });
+        }
         return null;
       } finally {
         set({ isSaving: false });

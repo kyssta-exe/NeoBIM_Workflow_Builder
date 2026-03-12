@@ -2091,6 +2091,16 @@
   }
 }
 
+/* ── Share button: visible on touch, hover-controlled on desktop ── */
+.workflow-card-share-visible {
+  opacity: 0;
+}
+@media (hover: none), (pointer: coarse) {
+  .workflow-card-share-visible {
+    opacity: 1 !important;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    MOBILE RESPONSIVE STYLES (imported at top of file — see line 1)
    ═══════════════════════════════════════════════════════════════════ */

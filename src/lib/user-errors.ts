@@ -122,6 +122,15 @@ export const UserErrors = {
     code: "NODE_003",
   },
 
+  // Workflow limits
+  WORKFLOW_LIMIT_REACHED: (limit: number): UserError => ({
+    title: "Workflow limit reached",
+    message: `Free plan allows up to ${limit} workflows. Upgrade to Pro for unlimited workflows.`,
+    action: "Upgrade to Pro",
+    actionUrl: "/dashboard/billing",
+    code: "BILL_004",
+  }),
+
   // Generic
   INTERNAL_ERROR: {
     title: "Something went wrong",

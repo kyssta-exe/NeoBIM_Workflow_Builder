@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Building2, Ruler, Compass, HardHat, Layers, PenTool, Triangle } from "lucide-react";
 import { Header } from "@/components/dashboard/Header";
@@ -273,6 +273,18 @@ export default function TemplatesPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [sortBy, setSortBy]       = useState("default");
   const [showSort, setShowSort]   = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSort) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setShowSort(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSort]);
 
   const { loadFromTemplate } = useWorkflowStore();
   const router = useRouter();
@@ -494,7 +506,7 @@ export default function TemplatesPage() {
             <div style={{ flex: 1 }} />
 
             {/* Sort dropdown */}
-            <div style={{ position: "relative" }}>
+            <div ref={sortRef} style={{ position: "relative" }}>
               <button
                 onClick={() => setShowSort(v => !v)}
                 style={{

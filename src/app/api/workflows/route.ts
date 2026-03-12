@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { trackFirstWorkflow } from "@/lib/analytics";
-import { checkEndpointRateLimit } from "@/lib/rate-limit";
+import { checkEndpointRateLimit, isAdminUser } from "@/lib/rate-limit";
+import { STRIPE_PLANS } from "@/lib/stripe";
 import {
   formatErrorResponse,
   UserErrors,
@@ -59,6 +60,26 @@ export async function POST(req: NextRequest) {
     const rateLimit = await checkEndpointRateLimit(session.user.id, "workflows-create", 10, "1 m");
     if (!rateLimit.success) {
       return NextResponse.json(formatErrorResponse({ title: "Too many requests", message: "Please wait before creating more workflows.", code: "RATE_LIMITED" }), { status: 429 });
+    }
+
+    // ── Enforce maxWorkflows limit for FREE users ──────────────────
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true, email: true },
+    });
+
+    const userRole = user?.role ?? "FREE";
+    if (userRole === "FREE" && !isAdminUser(user?.email ?? undefined)) {
+      const maxWorkflows = STRIPE_PLANS.FREE.limits.maxWorkflows;
+      const currentCount = await prisma.workflow.count({
+        where: { ownerId: session.user.id },
+      });
+      if (currentCount >= maxWorkflows) {
+        return NextResponse.json(
+          formatErrorResponse(UserErrors.WORKFLOW_LIMIT_REACHED(maxWorkflows)),
+          { status: 403 }
+        );
+      }
     }
 
     const body = await req.json();

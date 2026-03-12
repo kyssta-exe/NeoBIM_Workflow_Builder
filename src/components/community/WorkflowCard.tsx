@@ -222,7 +222,7 @@ export function WorkflowCard({
 
         <MiniWorkflowDiagram nodes={diagramNodes} size="md" animated />
 
-        {/* Share button — top-right, visible on card hover */}
+        {/* Share button — top-right, always visible on mobile, hover on desktop */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -235,10 +235,10 @@ export function WorkflowCard({
             display: "flex", alignItems: "center", justifyContent: "center",
             background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.08)",
             color: "#6B6B85", cursor: "pointer",
-            opacity: 0, transition: "opacity 0.15s, color 0.15s",
+            transition: "opacity 0.15s, color 0.15s",
             backdropFilter: "blur(8px)",
           }}
-          className="workflow-card-share"
+          className="workflow-card-share workflow-card-share-visible"
           onMouseEnter={e => { e.currentTarget.style.color = "#4F8AFF"; }}
           onMouseLeave={e => { e.currentTarget.style.color = "#6B6B85"; }}
         >

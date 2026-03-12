@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, User, Command } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   title?: string;
@@ -8,6 +9,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const router = useRouter();
   return (
     <header
       className="flex items-center justify-between px-6 dashboard-header"
@@ -113,9 +115,10 @@ export function Header({ title, subtitle }: HeaderProps) {
           </div>
         </button>
 
-        {/* Avatar */}
+        {/* Avatar — navigates to settings */}
         <button
-          className="h-[34px] w-[34px] flex items-center justify-center transition-all"
+          onClick={() => router.push("/dashboard/settings")}
+          className="h-[34px] w-[34px] flex items-center justify-center transition-all cursor-pointer"
           style={{
             borderRadius: 10,
             border: "1px solid rgba(79,138,255,0.15)",

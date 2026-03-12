@@ -1062,6 +1062,30 @@ export default function LandingPage() {
               <Link href="/demo" style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "10px 20px", borderRadius: 10,
+                border: "1px solid rgba(0,245,255,0.2)", background: "rgba(0,245,255,0.05)",
+                color: "#00F5FF", fontSize: 14, fontWeight: 600,
+                textDecoration: "none", transition: "all 0.25s",
+              }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = "rgba(0,245,255,0.12)";
+                  el.style.borderColor = "rgba(0,245,255,0.35)";
+                  el.style.boxShadow = "0 0 24px rgba(0,245,255,0.12)";
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = "rgba(0,245,255,0.05)";
+                  el.style.borderColor = "rgba(0,245,255,0.2)";
+                  el.style.boxShadow = "none";
+                }}
+              >
+                <Play size={15} />
+                {t('landing.tryDemo')}
+              </Link>
+
+              <Link href="/book-demo" style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "10px 20px", borderRadius: 10,
                 border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)",
                 color: "#F0F0F5", fontSize: 14, fontWeight: 600,
                 textDecoration: "none", transition: "all 0.15s",
