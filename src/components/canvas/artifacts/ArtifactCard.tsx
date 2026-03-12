@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Download, ChevronDown, X, FileText, Image as ImageIcon, Database, BarChart2, Table2, File, LayoutGrid, Box, RefreshCw, Loader2, Video } from "lucide-react";
 import DOMPurify from "dompurify";
@@ -836,8 +836,89 @@ function HtmlBody({ data }: { data: HtmlArtifactData }) {
   );
 }
 
+/** Ensure a filename has the correct extension based on file type */
+function ensureFileExtension(name: string, fileType?: string): string {
+  const typeExtMap: Record<string, string> = {
+    "IFC 4": ".ifc",
+    "IFC4": ".ifc",
+    "IFC 2x3": ".ifc",
+    "CSV Spreadsheet": ".csv",
+    "Text Report": ".txt",
+    "PNG Image": ".png",
+    "PDF Report": ".pdf",
+  };
+  const expectedExt = (fileType && typeExtMap[fileType]) ?? "";
+  if (expectedExt && !name.toLowerCase().endsWith(expectedExt)) {
+    // Remove any wrong extension and add the correct one
+    const dotIdx = name.lastIndexOf(".");
+    const base = dotIdx > 0 ? name.slice(0, dotIdx) : name;
+    return base + expectedExt;
+  }
+  return name;
+}
+
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  // Use setTimeout to ensure the element is in the DOM before clicking
+  setTimeout(() => {
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }, 0);
+}
+
 function FileBody({ data }: { data: FileArtifactData }) {
   const { t } = useLocale();
+
+  const handleDownload = useCallback(() => {
+    const extData = data as FileArtifactData & { _ifcContent?: string };
+    // Ensure filename always has proper extension
+    const filename = ensureFileExtension(data?.name ?? "export", data?.type);
+
+    // If we have raw IFC content, create a blob download
+    if (extData._ifcContent) {
+      const blob = new Blob([extData._ifcContent], { type: "application/x-step" });
+      triggerBlobDownload(blob, filename);
+      return;
+    }
+
+    // If downloadUrl is a data: URI, convert to blob for reliable download
+    const downloadUrl = data?.downloadUrl ?? "";
+    if (downloadUrl.startsWith("data:")) {
+      try {
+        const [header, b64] = downloadUrl.split(",");
+        const mime = header.split(":")[1]?.split(";")[0] ?? "application/octet-stream";
+        const binary = atob(b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes], { type: mime });
+        triggerBlobDownload(blob, filename);
+        return;
+      } catch {
+        // Fall through to normal link
+      }
+    }
+
+    // Normal HTTP URL — use standard link behavior
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => document.body.removeChild(a), 100);
+  }, [data]);
+
+  // Display a clean filename with proper extension
+  const displayName = ensureFileExtension(data?.name ?? "export", data?.type);
+
   return (
     <div style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -848,36 +929,35 @@ function FileBody({ data }: { data: FileArtifactData }) {
           fontSize: 11, fontWeight: 500, color: "#F0F0F5",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
-          {data?.name}
+          {displayName}
         </div>
         <div style={{ fontSize: 10, color: "#5C5C78", marginTop: 2 }}>
           {data?.type} · {formatBytes(data?.size ?? 0)}
         </div>
       </div>
-      <a
-        href={data?.downloadUrl}
-        download={data?.name}
+      <button
+        onClick={handleDownload}
         style={{
           display: "flex", alignItems: "center", gap: 5,
           padding: "5px 10px", borderRadius: 6,
           background: "rgba(0,245,255,0.08)",
           border: "1px solid rgba(0,245,255,0.2)",
           fontSize: 10, fontWeight: 500, color: "#00F5FF",
-          textDecoration: "none", flexShrink: 0,
+          cursor: "pointer", flexShrink: 0,
           transition: "all 0.15s ease",
         }}
         onMouseEnter={e => {
-          (e.currentTarget as HTMLAnchorElement).style.background = "rgba(0,245,255,0.15)";
-          (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(0,245,255,0.4)";
+          e.currentTarget.style.background = "rgba(0,245,255,0.15)";
+          e.currentTarget.style.borderColor = "rgba(0,245,255,0.4)";
         }}
         onMouseLeave={e => {
-          (e.currentTarget as HTMLAnchorElement).style.background = "rgba(0,245,255,0.08)";
-          (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(0,245,255,0.2)";
+          e.currentTarget.style.background = "rgba(0,245,255,0.08)";
+          e.currentTarget.style.borderColor = "rgba(0,245,255,0.2)";
         }}
       >
         <Download size={10} />
         {t('artifact.download')}
-      </a>
+      </button>
     </div>
   );
 }

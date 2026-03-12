@@ -455,8 +455,8 @@ export const NODE_CATALOGUE: NodeCatalogueItem[] = [
   // ============================================================
   {
     id: "EX-001",
-    name: "IFC Exporter (Coming Soon)",
-    description: "Export BIM-compatible massing as IFC file (Coming Soon - Basic conceptual export only)",
+    name: "IFC Exporter",
+    description: "Export BIM-compatible massing as a downloadable IFC4 file with walls, slabs, and storeys",
     category: "export",
     icon: "Download",
     inputs: [
@@ -576,7 +576,7 @@ export const CATEGORY_CONFIG = {
 } as const;
 
 /** Nodes that use real API calls (not mock/sample data) */
-export const LIVE_NODES = new Set(['TR-003', 'TR-007', 'TR-008', 'GN-003', 'GN-007', 'GN-008', 'GN-009', 'GN-010', 'EX-002']);
+export const LIVE_NODES = new Set(['TR-003', 'TR-007', 'TR-008', 'GN-001', 'GN-003', 'GN-007', 'GN-008', 'GN-009', 'GN-010', 'EX-001', 'EX-002']);
 
 // Mark isLive on catalogue items at module init
 for (const node of NODE_CATALOGUE) {

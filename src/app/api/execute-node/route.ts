@@ -22,6 +22,8 @@ import { APIError, UserErrors, formatErrorResponse } from "@/lib/user-errors";
 import { generatePDFBase64 } from "@/services/pdf-report-server";
 import { uploadBase64ToR2 } from "@/lib/r2";
 import { reconstructHiFi3D, isMeshyConfigured } from "@/services/meshy-service";
+import { generateMassingGeometry } from "@/services/massing-generator";
+import { generateIFCFile } from "@/services/ifc-exporter";
 import { submitDualWalkthrough, submitDualTextToVideo, submitSingleWalkthrough, submitFloorPlanWalkthrough, buildFloorPlanCombinedPrompt } from "@/services/video-service";
 import {
   logWorkflowStart, logRateLimit, logNodeStart, logNodeSuccess,
@@ -65,8 +67,28 @@ function detectRegionFromText(text: string): string | null {
   return null;
 }
 
+/** Extract building type from free-form text content */
+function extractBuildingTypeFromText(text: string): string | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  const types = [
+    "office tower", "office building", "residential tower", "residential apartment",
+    "mixed-use complex", "mixed-use building", "mixed-use tower", "mixed use",
+    "warehouse", "industrial", "retail", "commercial", "hospital", "hotel",
+    "school", "university", "museum", "gallery", "cultural center",
+    "shopping mall", "data center", "parking garage",
+  ];
+  for (const t of types) {
+    if (lower.includes(t)) return t.split(" ").map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+  }
+  // Fallback: look for common single-word types
+  const singleMatch = lower.match(/\b(office|residential|commercial|industrial|retail|hotel|hospital)\b/);
+  if (singleMatch) return singleMatch[1][0].toUpperCase() + singleMatch[1].slice(1) + " Building";
+  return null;
+}
+
 // Node IDs that have real implementations
-const REAL_NODE_IDS = new Set(["TR-001", "TR-003", "TR-004", "TR-005", "TR-012", "GN-003", "GN-004", "GN-007", "GN-008", "GN-009", "GN-010", "GN-011", "TR-007", "TR-008", "EX-002", "EX-003"]);
+const REAL_NODE_IDS = new Set(["TR-001", "TR-003", "TR-004", "TR-005", "TR-012", "GN-001", "GN-003", "GN-004", "GN-007", "GN-008", "GN-009", "GN-010", "GN-011", "TR-007", "TR-008", "EX-001", "EX-002", "EX-003"]);
 
 // Nodes that require OpenAI API calls
 const OPENAI_NODES = new Set(["TR-003", "TR-004", "TR-005", "TR-012", "GN-003", "GN-004", "GN-008"]);
@@ -1741,8 +1763,11 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       // ── Priority 1: Direct image upload from IN-003 (original user file) ──
       // FIX F: Send base64 directly to Kling API — no temp-image URL needed.
       // Kling's image field accepts both URLs and base64 encoded strings.
-      if (inputData?.fileData && typeof inputData.fileData === "string") {
-        const imgMime = (inputData.mimeType as string) ?? "image/jpeg";
+      // Skip non-image files (PDFs, docs) — they should use text2video path instead.
+      const inputMimeType = (inputData?.mimeType as string) ?? "";
+      const isImageFile = inputMimeType.startsWith("image/") || !inputMimeType;
+      if (inputData?.fileData && typeof inputData.fileData === "string" && isImageFile) {
+        const imgMime = inputMimeType || "image/jpeg";
         const raw = inputData.fileData as string;
         const cleanBase64 = raw.startsWith("data:") ? raw.split(",")[1] ?? raw : raw;
 
@@ -2441,6 +2466,274 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           sourceImageUrl: inputData?.imageUrl ?? inputData?.url ?? undefined,
         },
         metadata: { engine: "threejs-r128", real: true },
+        createdAt: new Date(),
+      };
+
+    } else if (catalogueId === "GN-001") {
+      // ── Massing Generator ──────────────────────────────────────────────
+      // Takes building description from TR-003 and generates real 3D geometry.
+      // TR-003 outputs: { content: "formatted text", _raw: BuildingDescription }
+      // BuildingDescription has: floors, totalArea, footprint?, totalGFA?, height?, buildingType, projectName
+      const rawData = (inputData?._raw ?? inputData) as Record<string, unknown>;
+      const textContent = String(inputData?.content ?? inputData?.prompt ?? "");
+
+      // Helper: extract a number from text using regex patterns
+      const extractFromText = (patterns: RegExp[], fallback: number): number => {
+        for (const pat of patterns) {
+          const m = textContent.match(pat);
+          if (m) {
+            const v = parseFloat(m[1].replace(/,/g, ""));
+            if (!isNaN(v) && v > 0) return v;
+          }
+        }
+        return fallback;
+      };
+
+      // Extract floors: from _raw (BuildingDescription.floors) or text
+      const rawFloors = Number(rawData?.floors ?? rawData?.number_of_floors ?? 0);
+      const floors = rawFloors > 0 ? rawFloors : extractFromText([
+        /(\d+)\s*(?:floors?|stor(?:ey|ies)|levels?)/i,
+        /(\d+)[-\s]?stor(?:ey|y)/i,
+      ], 5);
+
+      // Extract footprint: BuildingDescription uses "footprint" (optional), "totalArea" (always present)
+      const rawFootprint = Number(rawData?.footprint_m2 ?? rawData?.footprint ?? 0);
+      const rawTotalArea = Number(rawData?.totalArea ?? rawData?.total_area ?? 0);
+      const computedFootprint = rawFootprint > 0
+        ? rawFootprint
+        : (rawTotalArea > 0 && floors > 0)
+          ? Math.round(rawTotalArea / floors)
+          : extractFromText([
+              /footprint[:\s]*(?:approx\.?\s*)?(\d[\d,]*)\s*m/i,
+              /(\d[\d,]*)\s*m²?\s*(?:per\s+floor|footprint)/i,
+              /floor\s*(?:area|plate)[:\s]*(\d[\d,]*)/i,
+            ], 500);
+
+      // Extract building type
+      const buildingType = String(
+        rawData?.buildingType ?? rawData?.building_type ?? rawData?.projectType
+        ?? extractBuildingTypeFromText(textContent)
+        ?? "Mixed-Use Building"
+      );
+
+      // Extract GFA
+      const rawGFA = Number(rawData?.totalGFA ?? rawData?.total_gfa_m2 ?? rawData?.gfa ?? 0);
+      const gfa = rawGFA > 0 ? rawGFA : (rawTotalArea > 0 ? rawTotalArea : undefined);
+
+      // Extract height
+      const rawHeight = Number(rawData?.height ?? 0);
+      const height = rawHeight > 0 ? rawHeight : undefined;
+
+      const massingInput = {
+        floors,
+        footprint_m2: computedFootprint,
+        building_type: buildingType,
+        total_gfa_m2: gfa,
+        height,
+        content: textContent,
+        prompt: String(inputData?.prompt ?? textContent),
+      };
+
+      console.log("[GN-001] rawData keys:", Object.keys(rawData ?? {}));
+      console.log("[GN-001] massingInput:", JSON.stringify(massingInput, null, 2));
+
+      const geometry = generateMassingGeometry(massingInput);
+
+      console.log("[GN-001] geometry result:", { floors: geometry.floors, height: geometry.totalHeight, footprint: geometry.footprintArea, gfa: geometry.gfa, buildingType: geometry.buildingType });
+
+      artifact = {
+        id: generateId(),
+        executionId: executionId ?? "local",
+        tileInstanceId,
+        type: "3d",
+        data: {
+          floors: geometry.floors,
+          height: geometry.totalHeight,
+          footprint: geometry.footprintArea,
+          gfa: geometry.gfa,
+          buildingType: geometry.buildingType,
+          metrics: geometry.metrics,
+          content: massingInput.content || `${geometry.floors}-storey ${geometry.buildingType}, ${geometry.gfa.toLocaleString()} m² GFA`,
+          prompt: massingInput.prompt || massingInput.content,
+          _geometry: geometry,
+          _raw: rawData,
+          style: {
+            glassHeavy: false,
+            hasRiver: false,
+            hasLake: false,
+            isModern: true,
+            isTower: geometry.floors >= 10,
+            exteriorMaterial: "mixed" as const,
+            environment: "urban" as const,
+            usage: "mixed" as const,
+            typology: geometry.floors >= 15 ? "tower" as const : "generic" as const,
+            facadePattern: "none" as const,
+            floorHeightOverride: geometry.totalHeight / geometry.floors,
+            maxFloorCap: 30,
+          },
+        },
+        metadata: { engine: "massing-generator", real: true },
+        createdAt: new Date(),
+      };
+
+    } else if (catalogueId === "EX-001") {
+      // ── IFC Exporter ──────────────────────────────────────────────────
+      // Generates a downloadable .ifc file from upstream data.
+      // Path A: Real geometry from GN-001 (_geometry with storeys + footprint)
+      // Path B: Structured data from TR-001/TR-003 (_raw with ParsedBrief or BuildingDescription)
+      // Path C: Basic numeric fields (floors, footprint, buildingType) from any upstream node
+      const upstreamGeometry = inputData?._geometry as Record<string, unknown> | undefined;
+
+      let ifcContent: string;
+      let resolvedBuildingType = "Mixed-Use Building";
+      let resolvedProjectName = "BuildFlow Export";
+
+      if (upstreamGeometry?.storeys && upstreamGeometry?.footprint) {
+        // ── Path A: Real geometry from GN-001 ──
+        const { generateIFCFile: genIFC } = await import("@/services/ifc-exporter");
+        const upstreamRaw = (inputData?._raw ?? {}) as Record<string, unknown>;
+        resolvedProjectName = String(upstreamRaw?.projectName ?? inputData?.buildingType ?? inputData?.content ?? "BuildFlow Export");
+        resolvedBuildingType = String(upstreamRaw?.projectName ?? inputData?.buildingType ?? "Generated Building");
+        ifcContent = genIFC(
+          upstreamGeometry as unknown as import("@/types/geometry").MassingGeometry,
+          { projectName: resolvedProjectName, buildingName: resolvedBuildingType }
+        );
+      } else {
+        // ── Path B/C: Extract building parameters from upstream data ──
+        // This handles TR-001 (ParsedBrief), TR-003 (BuildingDescription),
+        // or any node that passes numeric fields directly.
+        const rawData = (inputData?._raw ?? {}) as Record<string, unknown>;
+        const textContent = String(inputData?.content ?? inputData?.prompt ?? "");
+
+        // Helper: extract a number from text using regex patterns (same as GN-001)
+        const extractFromText = (patterns: RegExp[], fallback: number): number => {
+          for (const pat of patterns) {
+            const m = textContent.match(pat);
+            if (m) {
+              const v = parseFloat(m[1].replace(/,/g, ""));
+              if (!isNaN(v) && v > 0) return v;
+            }
+          }
+          return fallback;
+        };
+
+        // ── Extract floors ──
+        // Sources: inputData.floors → _raw.floors → _raw.number_of_floors → text regex → default 5
+        const rawFloors = Number(inputData?.floors ?? rawData?.floors ?? rawData?.number_of_floors ?? 0);
+        const floors = rawFloors > 0 ? rawFloors : extractFromText([
+          /(\d+)\s*(?:floors?|stor(?:ey|ies)|levels?)/i,
+          /(\d+)[-\s]?stor(?:ey|y)/i,
+        ], 5);
+
+        // ── Extract footprint ──
+        // Sources: inputData.footprint → _raw.footprint → compute from totalArea/floors → text regex → default 500
+        const rawFootprint = Number(inputData?.footprint ?? rawData?.footprint_m2 ?? rawData?.footprint ?? 0);
+        const rawTotalArea = Number(rawData?.totalArea ?? rawData?.total_area ?? 0);
+        // For ParsedBrief from TR-001: sum programme areas if available
+        const programme = rawData?.programme as Array<{ space?: string; area_m2?: number }> | undefined;
+        const programmeTotal = programme?.reduce((sum, p) => sum + (p.area_m2 ?? 0), 0) ?? 0;
+        const effectiveTotalArea = rawTotalArea > 0 ? rawTotalArea : (programmeTotal > 0 ? programmeTotal : 0);
+
+        const computedFootprint = rawFootprint > 0
+          ? rawFootprint
+          : (effectiveTotalArea > 0 && floors > 0)
+            ? Math.round(effectiveTotalArea / floors)
+            : extractFromText([
+                /footprint[:\s]*(?:approx\.?\s*)?(\d[\d,]*)\s*m/i,
+                /(\d[\d,]*)\s*m²?\s*(?:per\s+floor|footprint)/i,
+                /floor\s*(?:area|plate)[:\s]*(\d[\d,]*)/i,
+              ], 500);
+
+        // ── Extract building type ──
+        // Sources: inputData.buildingType → _raw.buildingType → _raw.projectType → text extraction → default
+        resolvedBuildingType = String(
+          inputData?.buildingType ?? rawData?.buildingType ?? rawData?.building_type ?? rawData?.projectType
+          ?? extractBuildingTypeFromText(textContent)
+          ?? "Mixed-Use Building"
+        );
+
+        // ── Extract GFA ──
+        const rawGFA = Number(inputData?.gfa ?? rawData?.totalGFA ?? rawData?.total_gfa_m2 ?? rawData?.gfa ?? 0);
+        const gfa = rawGFA > 0 ? rawGFA : (effectiveTotalArea > 0 ? effectiveTotalArea : undefined);
+
+        // ── Extract height ──
+        // Sources: inputData.height → _raw.height → _raw.constraints.maxHeight (parse number) → undefined
+        let height: number | undefined;
+        const rawHeight = Number(inputData?.height ?? rawData?.height ?? 0);
+        if (rawHeight > 0) {
+          height = rawHeight;
+        } else {
+          // Try to parse height from constraints (TR-001 puts "40m" in constraints.maxHeight)
+          const constraints = rawData?.constraints as Record<string, unknown> | undefined;
+          const maxHeightStr = String(constraints?.maxHeight ?? "");
+          const heightMatch = maxHeightStr.match(/(\d+(?:\.\d+)?)\s*m/i);
+          if (heightMatch) {
+            height = parseFloat(heightMatch[1]);
+          } else {
+            // Try text content
+            const textHeightMatch = textContent.match(/(?:max(?:imum)?\s*)?height[:\s]*(\d+(?:\.\d+)?)\s*m/i);
+            if (textHeightMatch) height = parseFloat(textHeightMatch[1]);
+          }
+        }
+
+        // ── Resolve project name ──
+        resolvedProjectName = String(
+          rawData?.projectTitle ?? rawData?.projectName ?? inputData?.buildingType ?? resolvedBuildingType
+        );
+
+        console.log("[EX-001] Extracted params:", { floors, footprint: computedFootprint, buildingType: resolvedBuildingType, gfa, height, projectName: resolvedProjectName, programmeTotal });
+
+        const fallbackGeometry = generateMassingGeometry({
+          floors,
+          footprint_m2: computedFootprint,
+          building_type: resolvedBuildingType,
+          total_gfa_m2: gfa,
+          height,
+          content: textContent,
+          programme: programme as import("@/types/geometry").ProgrammeEntry[] | undefined,
+        });
+        ifcContent = generateIFCFile(fallbackGeometry, {
+          projectName: resolvedProjectName,
+          buildingName: resolvedBuildingType,
+        });
+      }
+
+      const bldgNameSlug = String(resolvedBuildingType ?? "building").replace(/\s+/g, "_").toLowerCase();
+      const fileName = `${bldgNameSlug}_${new Date().toISOString().split("T")[0]}.ifc`;
+      const ifcBase64 = Buffer.from(ifcContent).toString("base64");
+
+      // Try to upload to R2 for persistent storage
+      let downloadUrl: string | null = null;
+      try {
+        const r2Url = await uploadBase64ToR2(ifcBase64, fileName, "application/x-step");
+        // uploadBase64ToR2 returns the input unchanged if R2 is not configured
+        if (r2Url && r2Url !== ifcBase64 && r2Url.startsWith("http")) {
+          downloadUrl = r2Url;
+        }
+      } catch {
+        // R2 not available — fall through to inline approach
+      }
+
+      // Fallback: store content inline as _ifcContent so the client can create a blob URL
+      // data: URIs fail for large files in most browsers
+      if (!downloadUrl) {
+        downloadUrl = `data:application/x-step;base64,${ifcBase64}`;
+      }
+
+      artifact = {
+        id: generateId(),
+        executionId: executionId ?? "local",
+        tileInstanceId,
+        type: "file",
+        data: {
+          name: fileName,
+          type: "IFC 4",
+          size: ifcContent.length,
+          downloadUrl,
+          label: "IFC Export",
+          _ifcContent: ifcContent,
+        },
+        metadata: { engine: "ifc-exporter", real: true, schema: "IFC4" },
         createdAt: new Date(),
       };
 
