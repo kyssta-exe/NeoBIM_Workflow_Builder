@@ -25,7 +25,6 @@ export function buildFloorPlan3D(data: FloorPlanGeometry, sourceImage?: string, 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' blob: data:; connect-src * blob: data:; img-src * blob: data:; script-src * 'unsafe-inline' 'unsafe-eval' blob: data:; style-src * 'unsafe-inline'; worker-src * blob:;">
 <title>BuildFlow \u2014 3D Floor Plan</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -397,7 +396,14 @@ var MODEL_TARGET_H={
   'office-desk':0.75,'office-chair':1.1
 };
 
-function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
+var __procRemoved={};
+function removeProcFurniture(roomName){
+  if(!roomName||__procRemoved[roomName])return;
+  var pg=scene.getObjectByName('proc_'+roomName);
+  if(pg){scene.remove(pg);__procRemoved[roomName]=true;console.log('[GLTF] Removed procedural furniture for: '+roomName)}
+}
+
+function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY,roomName){
   var id=filename.replace('.glb','');
   if(!gltfLoader){console.warn('[GLTF] GLTFLoader not available');return}
   var url=MODEL_CDN+'/'+filename;
@@ -418,6 +424,7 @@ function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
       }
     });
     scene.add(m);
+    removeProcFurniture(roomName);
   }
 
   // Clone from cache if available
@@ -944,103 +951,100 @@ D.rooms.forEach(function(r){
 
   // Try GLTF models for this room type (loads async from R2 CDN)
   var rModels=ROOM_MODELS[r.type];
-  console.log('[FURNITURE] Room "'+r.name+'" type='+r.type+' models='+(rModels?rModels.length:0)+' gltfLoader='+(!!gltfLoader));
+  var roomKey=r.name||('room'+i);
+  console.log('[FURNITURE] Room "'+roomKey+'" type='+r.type+' models='+(rModels?rModels.length:0)+' gltfLoader='+(!!gltfLoader));
   if(rModels&&gltfLoader){
     rModels.forEach(function(md){
-      loadGLTF(md.file,rx+w*md.rx,ry+d*md.rz,w*md.wF,d*md.dF,md.rot);
+      loadGLTF(md.file,rx+w*md.rx,ry+d*md.rz,w*md.wF,d*md.dF,md.rot,roomKey);
     });
   }
 
-  // Always add procedural furniture as well — GLTF loading is async,
-  // and if models aren't available the scene still looks furnished.
-  // When GLTF models DO load, they overlay (slight duplication is OK
-  // since real models obscure the simpler procedural ones underneath).
+  // Procedural furniture as instant placeholders — removed when GLTF models load
+  var procGrp=new THREE.Group();
+  procGrp.name='proc_'+roomKey;
+  function procAdd(m){procGrp.add(m);return m}
+  function procAddAt(m,x,y,z){m.position.set(x,y,z);procGrp.add(m);return m}
+  function procAddGrp(g,x,y,z){g.position.set(x,y,z);procGrp.add(g);return g}
 
   if(r.type==="living"||r.type==="studio"){
     var sofaW=Math.min(1.8,w*.45);
     var sofa=createSofa(sofaW,.7);
-    addGrp(sofa,cx,0,cz-d*.22);
+    procAddGrp(sofa,cx,0,cz-d*.22);
     var ct=createCoffeeTable(Math.min(.7,w*.25),Math.min(.45,d*.15));
-    addGrp(ct,cx,0,cz+.15);
-    addAt(box(Math.min(w*.4,1.2),.3,.28,MAT.darkWood),cx,.15,cz+d*.3);
+    procAddGrp(ct,cx,0,cz+.15);
+    procAddAt(box(Math.min(w*.4,1.2),.3,.28,MAT.darkWood),cx,.15,cz+d*.3);
     var rugW=Math.min(w*.55,2.0),rugD=Math.min(d*.35,1.4);
     var rug=createRug(rugW,rugD,"persian");
-    rug.position.set(cx,.007,cz);scene.add(rug);
+    rug.position.set(cx,.007,cz);procAdd(rug);
     if(w>2.2){
-      var pot=cyl(.1,.08,.18,8,MAT.potBrown);pot.position.set(cx+w*.35,.09,cz-d*.35);scene.add(pot);
+      var pot=cyl(.1,.08,.18,8,MAT.potBrown);pot.position.set(cx+w*.35,.09,cz-d*.35);procAdd(pot);
       var leaves=new THREE.Mesh(new THREE.SphereGeometry(.18,8,8),MAT.plantGreen);
-      leaves.position.set(cx+w*.35,.32,cz-d*.35);leaves.castShadow=true;scene.add(leaves);
+      leaves.position.set(cx+w*.35,.32,cz-d*.35);leaves.castShadow=true;procAdd(leaves);
     }
   }
   if(r.type==="bedroom"){
     var bedW=Math.min(1.5,w*.45),bedD=Math.min(1.9,d*.5);
     var bed=createBed(bedW,bedD);
-    addGrp(bed,cx,0,cz);
+    procAddGrp(bed,cx,0,cz);
     if(w>2.5){
-      var ns=createNightstand();addGrp(ns,cx+bedW/2+.3,0,cz-bedD/2+.25);
+      var ns=createNightstand();procAddGrp(ns,cx+bedW/2+.3,0,cz-bedD/2+.25);
     }
     if(w>3.2){
-      var ns2=createNightstand();addGrp(ns2,cx-bedW/2-.3,0,cz-bedD/2+.25);
+      var ns2=createNightstand();procAddGrp(ns2,cx-bedW/2-.3,0,cz-bedD/2+.25);
     }
     var bRug=createRug(Math.min(w*.5,1.8),Math.min(d*.3,1.0),"minimal");
-    bRug.position.set(cx,.007,cz+bedD/2+.2);scene.add(bRug);
+    bRug.position.set(cx,.007,cz+bedD/2+.2);procAdd(bRug);
     var artFrame=box(.5,.4,.02,new THREE.MeshStandardMaterial({color:0x1A1A1A,roughness:.3}));
-    artFrame.position.set(cx,1.6,cz-bedD/2+.02);scene.add(artFrame);
+    artFrame.position.set(cx,1.6,cz-bedD/2+.02);procAdd(artFrame);
     var artCanvas=box(.44,.34,.01,new THREE.MeshStandardMaterial({color:0x3498DB,roughness:.85}));
-    artCanvas.position.set(cx,1.6,cz-bedD/2+.035);scene.add(artCanvas);
+    artCanvas.position.set(cx,1.6,cz-bedD/2+.035);procAdd(artCanvas);
   }
   if(r.type==="dining"){
     var tW2=Math.min(1.2,w*.4),tD2=Math.min(.8,d*.3);
     var table=createDiningTable(tW2,tD2);
-    addGrp(table,cx,0,cz);
+    procAddGrp(table,cx,0,cz);
     var chairOff=.45;
-    var c1=createChair(0);addGrp(c1,cx-tW2*.35,0,cz-tD2/2-chairOff);
-    var c2=createChair(0);addGrp(c2,cx+tW2*.35,0,cz-tD2/2-chairOff);
-    var c3=createChair(Math.PI);addGrp(c3,cx-tW2*.35,0,cz+tD2/2+chairOff);
-    var c4=createChair(Math.PI);addGrp(c4,cx+tW2*.35,0,cz+tD2/2+chairOff);
+    var c1=createChair(0);procAddGrp(c1,cx-tW2*.35,0,cz-tD2/2-chairOff);
+    var c2=createChair(0);procAddGrp(c2,cx+tW2*.35,0,cz-tD2/2-chairOff);
+    var c3=createChair(Math.PI);procAddGrp(c3,cx-tW2*.35,0,cz+tD2/2+chairOff);
+    var c4=createChair(Math.PI);procAddGrp(c4,cx+tW2*.35,0,cz+tD2/2+chairOff);
   }
   if(r.type==="kitchen"){
     var kW=Math.min(w*.6,2.2),kD=.52;
     var counter=createKitchenCounter(kW,kD);
-    addGrp(counter,cx,0,cz-d*.3);
+    procAddGrp(counter,cx,0,cz-d*.3);
     if(w>2.2){
       var fridge=createFridge();
-      addGrp(fridge,cx+kW/2+.5,0,cz-d*.3);
+      procAddGrp(fridge,cx+kW/2+.5,0,cz-d*.3);
     }
   }
   if(r.type==="bathroom"){
     var toilet=createToilet();
-    addGrp(toilet,cx+w*.2,0,cz-d*.25);
+    procAddGrp(toilet,cx+w*.2,0,cz-d*.25);
     var vanity=createVanity(Math.min(.55,w*.3));
-    addGrp(vanity,cx-w*.15,0,cz+d*.2);
+    procAddGrp(vanity,cx-w*.15,0,cz+d*.2);
     if(d>1.8){
-      addAt(box(Math.min(.55,w*.3),.45,.02,MAT.mirror),cx-w*.15,1.35,cz+d*.35);
+      procAddAt(box(Math.min(.55,w*.3),.45,.02,MAT.mirror),cx-w*.15,1.35,cz+d*.35);
     }
   }
   if(r.type==="veranda"||r.type==="balcony"||r.type==="patio"){
-    // Railing with posts and top rail
     var rlM=MAT.steel;
     var nP=Math.min(8,Math.max(2,Math.floor(w/.4)));
     for(var pi=0;pi<nP;pi++){
       var post=cyl(.015,.015,.9,6,rlM);
-      post.position.set(cx-w*.4+pi*(w*.8/Math.max(1,nP-1)),.45,cz+d*.38);scene.add(post);
+      post.position.set(cx-w*.4+pi*(w*.8/Math.max(1,nP-1)),.45,cz+d*.38);procAdd(post);
     }
-    addAt(box(w*.82,.025,.025,rlM),cx,.9,cz+d*.38);
-    // Second rail at mid-height
-    addAt(box(w*.82,.02,.02,rlM),cx,.45,cz+d*.38);
+    procAddAt(box(w*.82,.025,.025,rlM),cx,.9,cz+d*.38);
+    procAddAt(box(w*.82,.02,.02,rlM),cx,.45,cz+d*.38);
   }
   if(r.type==="office"){
-    // Desk with metal frame
     var desk=createOfficeDesk(Math.min(1.2,w*.45),Math.min(.6,d*.25));
-    addGrp(desk,cx,0,cz-.1);
-    // Office chair
+    procAddGrp(desk,cx,0,cz-.1);
     var oChair=createOfficeChair();
-    addGrp(oChair,cx,0,cz+d*.15);
-    // Monitor
+    procAddGrp(oChair,cx,0,cz+d*.15);
     if(w>2.2){
-      addAt(box(.5,.3,.02,new THREE.MeshStandardMaterial({color:0x0A0A12,roughness:.3})),cx,.95,cz-.28);
-      // Monitor stand
-      addAt(box(.08,.12,.08,MAT.steel),cx,.78,cz-.26);
+      procAddAt(box(.5,.3,.02,new THREE.MeshStandardMaterial({color:0x0A0A12,roughness:.3})),cx,.95,cz-.28);
+      procAddAt(box(.08,.12,.08,MAT.steel),cx,.78,cz-.26);
     }
   }
   if(r.type==="staircase"){
@@ -1049,26 +1053,26 @@ D.rooms.forEach(function(r){
     var stpM=MAT.oak;
     for(var si2=0;si2<nSteps;si2++){
       var sh2=(si2+1)*WH/nSteps;
-      addAt(box(stepW,sh2,stepD-.02,stpM),cx,sh2/2,cz-d/2+stepD*si2+stepD/2);
+      procAddAt(box(stepW,sh2,stepD-.02,stpM),cx,sh2/2,cz-d/2+stepD*si2+stepD/2);
     }
-    // Stair railing
-    addAt(box(.03,WH,.03,MAT.steel),cx-stepW/2-.05,WH/2,cz-d/2);
-    addAt(box(.03,WH,.03,MAT.steel),cx-stepW/2-.05,WH/2,cz+d/2);
-    addAt(box(.03,.03,d,MAT.oak),cx-stepW/2-.05,WH-.03,cz);
+    procAddAt(box(.03,WH,.03,MAT.steel),cx-stepW/2-.05,WH/2,cz-d/2);
+    procAddAt(box(.03,WH,.03,MAT.steel),cx-stepW/2-.05,WH/2,cz+d/2);
+    procAddAt(box(.03,.03,d,MAT.oak),cx-stepW/2-.05,WH-.03,cz);
   }
   // ─── Plants in every room > 6m² ─────────────────────────────────────────────
   if(area>6&&r.type!=="staircase"&&r.type!=="bathroom"){
     var ptPot=cyl(.09,.07,.16,8,MAT.potBrown);
-    ptPot.position.set(cx+w*.38,.08,cz+d*.38);scene.add(ptPot);
+    ptPot.position.set(cx+w*.38,.08,cz+d*.38);procAdd(ptPot);
     var ptLeaves=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),MAT.plantGreen);
-    ptLeaves.position.set(cx+w*.38,.28,cz+d*.38);ptLeaves.castShadow=true;scene.add(ptLeaves);
+    ptLeaves.position.set(cx+w*.38,.28,cz+d*.38);ptLeaves.castShadow=true;procAdd(ptLeaves);
     if(area>12){
       var ptPot2=cyl(.07,.055,.13,8,MAT.potBrown);
-      ptPot2.position.set(cx-w*.36,.065,cz-d*.36);scene.add(ptPot2);
+      ptPot2.position.set(cx-w*.36,.065,cz-d*.36);procAdd(ptPot2);
       var ptLeaves2=new THREE.Mesh(new THREE.SphereGeometry(.12,6,6),MAT.plantGreen);
-      ptLeaves2.position.set(cx-w*.36,.22,cz-d*.36);ptLeaves2.castShadow=true;scene.add(ptLeaves2);
+      ptLeaves2.position.set(cx-w*.36,.22,cz-d*.36);ptLeaves2.castShadow=true;procAdd(ptLeaves2);
     }
   }
+  scene.add(procGrp);
 });
 
 // ─── WALLS ──────────────────────────────────────────────────────────────────
@@ -1621,98 +1625,6 @@ addEventListener("resize",function(){
   if(fxaaPass)fxaaPass.uniforms['resolution'].value.set(1/w2,1/h2);
 });
 
-// ─── DIRECT GLTF DIAGNOSTIC TEST ─────────────────────────────────────────────
-// Bypasses all room mapping. Loads ONE sofa model directly into the scene center.
-setTimeout(function(){
-  console.log('[GLTF-TEST] ====== DIRECT GLTF DIAGNOSTIC ======');
-  console.log('[GLTF-TEST] THREE version: '+(typeof THREE!=='undefined'?THREE.REVISION:'NOT LOADED'));
-  console.log('[GLTF-TEST] GLTFLoader exists: '+(typeof THREE!=='undefined'&&typeof THREE.GLTFLoader!=='undefined'));
-  console.log('[GLTF-TEST] gltfLoader instance: '+(gltfLoader?'YES':'NULL'));
-  console.log('[GLTF-TEST] MODEL_CDN: '+MODEL_CDN);
-  console.log('[GLTF-TEST] __parentOrigin: '+__parentOrigin);
-  console.log('[GLTF-TEST] window.location.origin: '+window.location.origin);
-  console.log('[GLTF-TEST] window.location.href: '+window.location.href.substring(0,80));
-
-  if(!gltfLoader){
-    console.error('[GLTF-TEST] ABORT: No GLTFLoader. Trying to create one...');
-    if(typeof THREE!=='undefined'&&typeof THREE.GLTFLoader!=='undefined'){
-      gltfLoader=new THREE.GLTFLoader();
-      console.log('[GLTF-TEST] Created new GLTFLoader instance');
-    }else{
-      console.error('[GLTF-TEST] ABORT: THREE.GLTFLoader class not available');
-      return;
-    }
-  }
-
-  var proxyUrl=MODEL_CDN+'/sofa.glb';
-  var directUrl='https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models/sofa.glb';
-  console.log('[GLTF-TEST] Proxy URL: '+proxyUrl);
-  console.log('[GLTF-TEST] Direct URL: '+directUrl);
-
-  // First try: fetch() to test if URL is reachable before GLTFLoader
-  console.log('[GLTF-TEST] Step 1: Testing fetch() to proxy URL...');
-  fetch(proxyUrl,{method:'GET'}).then(function(resp){
-    console.log('[GLTF-TEST] fetch proxy: status='+resp.status+' ok='+resp.ok+' type='+resp.type+' contentType='+resp.headers.get('content-type'));
-    return resp.arrayBuffer();
-  }).then(function(buf){
-    console.log('[GLTF-TEST] fetch proxy: received '+buf.byteLength+' bytes ('+Math.round(buf.byteLength/1024)+'KB)');
-  }).catch(function(err){
-    console.error('[GLTF-TEST] fetch proxy FAILED: '+err.message);
-    console.log('[GLTF-TEST] Trying fetch() to direct R2 URL...');
-    return fetch(directUrl,{method:'GET'}).then(function(resp){
-      console.log('[GLTF-TEST] fetch direct: status='+resp.status+' ok='+resp.ok);
-      return resp.arrayBuffer();
-    }).then(function(buf){
-      console.log('[GLTF-TEST] fetch direct: received '+buf.byteLength+' bytes');
-    }).catch(function(err2){
-      console.error('[GLTF-TEST] fetch direct also FAILED: '+err2.message);
-    });
-  });
-
-  // Second try: actual GLTFLoader from proxy URL
-  console.log('[GLTF-TEST] Step 2: Loading via GLTFLoader from proxy...');
-  gltfLoader.load(proxyUrl,function(gltf){
-    console.log('[GLTF-TEST] GLTFLoader SUCCESS from proxy!');
-    var m=gltf.scene;
-    var bbox=new THREE.Box3().setFromObject(m);
-    var sz=bbox.getSize(new THREE.Vector3());
-    console.log('[GLTF-TEST] Model size: '+sz.x.toFixed(2)+'x'+sz.y.toFixed(2)+'x'+sz.z.toFixed(2));
-    // Place at scene center, scaled to 1m tall
-    var s=1.0/Math.max(sz.y,0.01);
-    m.scale.set(s,s,s);
-    m.position.set(CX,0,CZ);
-    m.traverse(function(ch){if(ch.isMesh){ch.castShadow=true;ch.receiveShadow=true}});
-    scene.add(m);
-    console.log('[GLTF-TEST] Model added to scene at center ('+CX+',0,'+CZ+') scale='+s.toFixed(4));
-    console.log('[GLTF-TEST] Scene children count: '+scene.children.length);
-  },function(p){
-    if(p.total>0)console.log('[GLTF-TEST] proxy progress: '+Math.round(p.loaded/p.total*100)+'%');
-    else console.log('[GLTF-TEST] proxy progress: '+p.loaded+' bytes loaded (total unknown)');
-  },function(err){
-    console.error('[GLTF-TEST] GLTFLoader PROXY FAILED: '+(err&&err.message?err.message:String(err)));
-    // Fallback: try direct R2 URL
-    console.log('[GLTF-TEST] Step 3: Trying GLTFLoader from direct R2 URL...');
-    gltfLoader.load(directUrl,function(gltf){
-      console.log('[GLTF-TEST] GLTFLoader SUCCESS from direct R2!');
-      var m=gltf.scene;
-      var bbox=new THREE.Box3().setFromObject(m);
-      var sz=bbox.getSize(new THREE.Vector3());
-      console.log('[GLTF-TEST] Model size: '+sz.x.toFixed(2)+'x'+sz.y.toFixed(2)+'x'+sz.z.toFixed(2));
-      var s=1.0/Math.max(sz.y,0.01);
-      m.scale.set(s,s,s);
-      m.position.set(CX,0,CZ);
-      m.traverse(function(ch){if(ch.isMesh){ch.castShadow=true;ch.receiveShadow=true}});
-      scene.add(m);
-      console.log('[GLTF-TEST] Model added from direct URL. Scene children: '+scene.children.length);
-    },function(p){
-      if(p.total>0)console.log('[GLTF-TEST] direct progress: '+Math.round(p.loaded/p.total*100)+'%');
-    },function(err2){
-      console.error('[GLTF-TEST] GLTFLoader DIRECT ALSO FAILED: '+(err2&&err2.message?err2.message:String(err2)));
-      console.error('[GLTF-TEST] ====== ALL METHODS FAILED ======');
-    });
-  });
-  console.log('[GLTF-TEST] ====== TEST DISPATCHED ======');
-},3000);
 <\/script>
 </body>
 </html>`;
