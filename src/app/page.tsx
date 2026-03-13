@@ -15,6 +15,7 @@ import { useLocale } from '@/hooks/useLocale';
 import type { TranslationKey } from '@/lib/i18n';
 import { trackLead } from '@/lib/meta-pixel';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { PipelineSection } from '@/components/landing/PipelineSection';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1203,6 +1204,9 @@ export default function LandingPage() {
             ))}
           </motion.div>
         </motion.section>
+
+        {/* ── Coming Soon — Workflow Pipeline ─────────────────────── */}
+        <PipelineSection />
 
         {/* ── Core Capabilities — Workflow Pipeline Visual ────────── */}
         <section className="landing-section" style={{
