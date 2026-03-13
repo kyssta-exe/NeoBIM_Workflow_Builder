@@ -64,8 +64,15 @@ var isNonRect=D.buildingOutline&&D.buildingOutline.length>=3&&D.buildingShape&&D
 var IMG_SRC="${sourceImage ?? ''}";
 var HAS_IMG=IMG_SRC.length>10;
 var HAS_SVG_WALLS=D.walls&&D.walls.length>4;
-var MODEL_CDN="https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models";
-var HAS_MODELS=true;
+// Resolve parent origin for same-origin proxy (blob: iframes can't use relative URLs)
+var __parentOrigin='';
+try{__parentOrigin=window.parent.location.origin}catch(e){}
+if(!__parentOrigin||__parentOrigin==='null'){try{__parentOrigin=document.referrer?new URL(document.referrer).origin:''}catch(e){}}
+if(!__parentOrigin||__parentOrigin==='null'){__parentOrigin="${modelBase ?? ''}"}
+// Use same-origin proxy /r2-models/* → R2 CDN (avoids CORS since R2 GET lacks Access-Control-Allow-Origin)
+var MODEL_CDN=__parentOrigin?__parentOrigin+'/r2-models':'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models';
+var HAS_MODELS=MODEL_CDN.length>10;
+console.log('[GLTF] Model CDN: '+MODEL_CDN);
 var CX=BW/2,CZ=BD/2,MXD=Math.max(BW,BD);
 
 // ─── Inline OrbitControls ─────────────────────────────────────────────────────
@@ -786,10 +793,7 @@ var gndTex=new THREE.CanvasTexture(gndC);gndTex.wrapS=gndTex.wrapT=THREE.RepeatW
 var gnd=new THREE.Mesh(new THREE.PlaneGeometry(BW+20,BD+20),new THREE.MeshStandardMaterial({map:gndTex,color:0x14141E,roughness:.92,metalness:.02}));
 gnd.rotation.x=-Math.PI/2;gnd.position.set(CX,-.16,CZ);gnd.receiveShadow=true;scene.add(gnd);
 
-// ─── Subtle grid helper ──────────────────────────────────────────────────────
-var gridSize=Math.ceil(Math.max(BW,BD)/2)*2+8;
-var grid=new THREE.GridHelper(gridSize,gridSize,0x1E1E30,0x1E1E30);
-grid.position.set(CX,-.14,CZ);grid.material.opacity=0.25;grid.material.transparent=true;scene.add(grid);
+// Grid removed — clean ground plane only (professional arch-viz look)
 
 // ─── Contact Shadow (soft radial shadow under building) ──────────────────────
 (function(){
@@ -1361,16 +1365,22 @@ document.body.appendChild(crosshair);
 
 function enterWalkMode(){
   if(!fpControls)return;
-  isWalking=true;
-  fpCamera.position.set(CX,1.6,CZ);
-  fpCamera.rotation.set(0,0,0);
-  controls.enabled=false;
-  fpControls.lock();
-  walkOvl.style.display='block';
-  crosshair.style.display='block';
-  setTimeout(function(){walkOvl.style.display='none'},3000);
-  console.log('[WALK] Entered first-person mode');
-  try{parent.postMessage({type:'walkModeChanged',walking:true},'*')}catch(e){}
+  // PointerLock requires a direct user gesture inside the iframe
+  var clickOverlay=document.createElement('div');
+  clickOverlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);';
+  clickOverlay.innerHTML='<div style="text-align:center;font-family:Inter,system-ui,sans-serif;"><div style="font-size:48px;margin-bottom:16px;">\\u{1F6B6}</div><div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">Click to Enter Walkthrough</div><div style="font-size:13px;color:#8A8AA8;line-height:1.6;">WASD to move &middot; Mouse to look &middot; ESC to exit</div></div>';
+  clickOverlay.addEventListener('click',function(){
+    document.body.removeChild(clickOverlay);
+    isWalking=true;
+    fpCamera.position.set(CX,1.6,CZ);
+    fpCamera.rotation.set(0,0,0);
+    controls.enabled=false;
+    fpControls.lock();
+    crosshair.style.display='block';
+    console.log('[WALK] Entered first-person mode');
+    try{parent.postMessage({type:'walkModeChanged',walking:true},'*')}catch(e){}
+  });
+  document.body.appendChild(clickOverlay);
 }
 function exitWalkMode(){
   isWalking=false;
