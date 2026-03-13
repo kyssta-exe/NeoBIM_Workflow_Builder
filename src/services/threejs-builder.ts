@@ -217,19 +217,19 @@ function makeFloorTex(type,hex){
         pGrad.addColorStop(1,'rgb('+bc[0]+','+bc[1]+','+bc[2]+')');
         g.fillStyle=pGrad;
         g.fillRect(px+stagger+1,row*plankH+1.5,pw-2,plankH-3);
-        // Vertical plank-end gap
-        g.fillStyle='rgba(25,12,4,0.3)';
-        g.fillRect(px+stagger,row*plankH,1.5,plankH);
+        // Vertical plank-end gap (subtle)
+        g.fillStyle='rgba(25,12,4,0.12)';
+        g.fillRect(px+stagger,row*plankH,1,plankH);
       }
-      // Horizontal plank gap
-      g.fillStyle='rgba(20,8,2,0.5)';
-      g.fillRect(0,row*plankH,S,2);
-      // Wavy grain lines
-      for(var gi=0;gi<35;gi++){
+      // Horizontal plank gap (subtle)
+      g.fillStyle='rgba(20,8,2,0.18)';
+      g.fillRect(0,row*plankH,S,1);
+      // Wavy grain lines (very subtle)
+      for(var gi=0;gi<20;gi++){
         var gy=row*plankH+3+Math.random()*(plankH-6);
-        var gAlpha=0.02+Math.random()*0.06;
+        var gAlpha=0.01+Math.random()*0.03;
         g.strokeStyle='rgba(50,28,10,'+gAlpha+')';
-        g.lineWidth=0.5+Math.random()*0.8;
+        g.lineWidth=0.3+Math.random()*0.5;
         g.beginPath();
         g.moveTo(0,gy);
         for(var gx=0;gx<S;gx+=25){
@@ -265,8 +265,8 @@ function makeFloorTex(type,hex){
         g.fillRect(tx+Math.random()*ts,ty+Math.random()*ts,2+Math.random()*2,1+Math.random()*2);
       }
     }
-    // Grout lines
-    g.strokeStyle='rgba(0,0,0,0.18)';g.lineWidth=2;
+    // Grout lines (subtle)
+    g.strokeStyle='rgba(0,0,0,0.08)';g.lineWidth=1;
     for(var tlx=0;tlx<=S;tlx+=ts){g.beginPath();g.moveTo(tlx,0);g.lineTo(tlx,S);g.stroke()}
     for(var tly=0;tly<=S;tly+=ts){g.beginPath();g.moveTo(0,tly);g.lineTo(S,tly);g.stroke()}
   }else if(type==="mosaic"){
@@ -276,7 +276,7 @@ function makeFloorTex(type,hex){
       g.fillStyle='rgb('+Math.max(0,Math.min(255,R+mv))+','+Math.max(0,Math.min(255,G+mv))+','+Math.max(0,Math.min(255,B+mv))+')';
       g.fillRect(mx+0.5,my+0.5,ms-1,ms-1);
     }
-    g.strokeStyle='rgba(0,0,0,0.12)';g.lineWidth=1;
+    g.strokeStyle='rgba(0,0,0,0.06)';g.lineWidth=0.5;
     for(var mlx=0;mlx<=S;mlx+=ms){g.beginPath();g.moveTo(mlx,0);g.lineTo(mlx,S);g.stroke()}
     for(var mly=0;mly<=S;mly+=ms){g.beginPath();g.moveTo(0,mly);g.lineTo(S,mly);g.stroke()}
   }else if(type==="stone"){
@@ -285,7 +285,7 @@ function makeFloorTex(type,hex){
       var sv=Math.random()*28-14;
       g.fillStyle='rgb('+Math.max(0,Math.min(255,R+sv))+','+Math.max(0,Math.min(255,G+sv))+','+Math.max(0,Math.min(255,B+sv))+')';
       g.fillRect(sx2,sy2,sw2,sh2);
-      g.strokeStyle='rgba(0,0,0,0.12)';g.lineWidth=1.5;g.strokeRect(sx2,sy2,sw2,sh2);
+      g.strokeStyle='rgba(0,0,0,0.06)';g.lineWidth=0.8;g.strokeRect(sx2,sy2,sw2,sh2);
       // Surface noise per stone
       for(var sn=0;sn<8;sn++){g.fillStyle='rgba(0,0,0,'+(Math.random()*0.03)+')';g.fillRect(sx2+Math.random()*sw2,sy2+Math.random()*sh2,3,2)}
     }
@@ -398,8 +398,10 @@ var MODEL_TARGET_H={
 
 function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
   var id=filename.replace('.glb','');
-  if(!gltfLoader){return}
+  if(!gltfLoader){console.warn('[GLTF] GLTFLoader not available');return}
   var url=MODEL_CDN+'/'+filename;
+  console.log('[GLTF] === LOAD: '+filename+' from '+url+' ===');
+  console.log('[GLTF]   pos=('+targetX.toFixed(1)+','+targetZ.toFixed(1)+') area='+targetW.toFixed(1)+'x'+targetD.toFixed(1));
   gltfTotal++;
   updateLoadBar();
 
@@ -421,7 +423,6 @@ function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
   if(modelCache[id]){
     var cd=modelCache[id];
     var clone=cd.model.clone();
-    // Re-scale to fit this specific target area
     var fitS=Math.min(targetW/Math.max(cd.rawW,0.01),targetD/Math.max(cd.rawD,0.01))*0.85;
     var thS=(MODEL_TARGET_H[id]||1.0)/Math.max(cd.rawH,0.01);
     var s=Math.min(fitS,thS);
@@ -429,6 +430,7 @@ function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
     placeModel(clone,s,yOff);
     gltfLoaded++;
     updateLoadBar();
+    console.log('[GLTF] Cloned '+filename+' from cache (scale:'+s.toFixed(4)+')');
     return;
   }
 
@@ -436,7 +438,6 @@ function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
     var m=gltf.scene;
     var bbox=new THREE.Box3().setFromObject(m);
     var sz=bbox.getSize(new THREE.Vector3());
-    var ctr=bbox.getCenter(new THREE.Vector3());
 
     // Cache raw dimensions
     modelCache[id]={model:m.clone(),rawW:sz.x,rawH:sz.y,rawD:sz.z,bboxMinY:bbox.min.y};
@@ -451,12 +452,12 @@ function loadGLTF(filename,targetX,targetZ,targetW,targetD,rotY){
     placeModel(m,s,yOff);
     gltfLoaded++;
     updateLoadBar();
-    console.log('[GLTF] Loaded '+filename+' (raw:'+sz.x.toFixed(1)+'x'+sz.y.toFixed(1)+'x'+sz.z.toFixed(1)+' scale:'+s.toFixed(4)+') ['+gltfLoaded+'/'+gltfTotal+']');
+    console.log('[GLTF] OK '+filename+' (raw:'+sz.x.toFixed(1)+'x'+sz.y.toFixed(1)+'x'+sz.z.toFixed(1)+' scale:'+s.toFixed(4)+') ['+gltfLoaded+'/'+gltfTotal+']');
   },function(p){
-    if(p.total>0&&p.loaded>0){var pct=Math.round(p.loaded/p.total*100);if(pct%25===0)console.log('[GLTF] '+id+' '+pct+'%')}
-  },function(){
-    console.log('[GLTF] '+filename+' not found on CDN');
-    modelAvailable[id]=false;
+    if(p.total>0){var pct=Math.round(p.loaded/p.total*100);if(pct%20===0)console.log('[GLTF] '+id+' '+pct+'% ('+Math.round(p.loaded/1024/1024)+'MB)')}
+  },function(err){
+    console.error('[GLTF] FAIL '+filename+': '+(err&&err.message?err.message:String(err)));
+    console.error('[GLTF] URL was: '+url);
     gltfFailed++;
     updateLoadBar();
   });
@@ -942,6 +943,7 @@ D.rooms.forEach(function(r){
 
   // Try GLTF models for this room type (loads async from R2 CDN)
   var rModels=ROOM_MODELS[r.type];
+  console.log('[FURNITURE] Room "'+r.name+'" type='+r.type+' models='+(rModels?rModels.length:0)+' gltfLoader='+(!!gltfLoader));
   if(rModels&&gltfLoader){
     rModels.forEach(function(md){
       loadGLTF(md.file,rx+w*md.rx,ry+d*md.rz,w*md.wF,d*md.dF,md.rot);
