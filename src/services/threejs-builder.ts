@@ -331,21 +331,14 @@ function albedoToNormal(albedoCanvas,str){
   hx.putImageData(hD,0,0);
   return heightToNormal(hC,str);
 }
-// ─── Floor Material Factory (real PBR textures from R2 CDN) ─────────────────
+// ─── Floor Material Factory (wood PBR texture for ALL rooms) ────────────────
 function makePBRFloor(type,hex,rw,rd){
   var rx=Math.max(1,rw/2),ry=Math.max(1,rd/2);
-  if(type==='wood'){
-    var mat=new THREE.MeshStandardMaterial({color:hex,roughness:0.55,metalness:0.0,envMapIntensity:0.3});
-    loadPBRTex(mat,'wood',rx,ry,0.8);
-    return mat;
-  }
-  if(type==='tile'){
-    var mat=new THREE.MeshStandardMaterial({color:hex,roughness:0.3,metalness:0.02,envMapIntensity:0.4});
-    loadPBRTex(mat,'tile',rx*0.67,ry*0.67,0.6);
-    return mat;
-  }
-  // Stone / concrete: solid color (no R2 texture yet)
-  return new THREE.MeshStandardMaterial({color:hex,roughness:0.75,metalness:0.02,envMapIntensity:0.2});
+  // All rooms get wood texture — consistent, professional look
+  var rough=type==='tile'?0.4:type==='stone'?0.6:0.55;
+  var mat=new THREE.MeshStandardMaterial({color:hex,roughness:rough,metalness:0.0,envMapIntensity:0.3});
+  loadPBRTex(mat,'wood',rx,ry,0.8);
+  return mat;
 }
 
 // ─── PBR Wall Material (real plaster textures from R2 CDN) ───────────────
@@ -363,7 +356,7 @@ function makePBRWall(isExt){
 }
 
 // ─── Color / texture maps ────────────────────────────────────────────────────
-var TT={living:"wood",dining:"wood",bedroom:"wood",office:"wood",studio:"wood",kitchen:"tile",bathroom:"tile",veranda:"stone",balcony:"stone",patio:"stone",hallway:"wood",entrance:"wood",passage:"wood",staircase:"wood",utility:"wood",storage:"wood",closet:"wood",other:"wood"};
+var TT={living:"wood",dining:"wood",bedroom:"wood",office:"wood",studio:"wood",kitchen:"wood",bathroom:"wood",veranda:"wood",balcony:"wood",patio:"wood",hallway:"wood",entrance:"wood",passage:"wood",staircase:"wood",utility:"wood",storage:"wood",closet:"wood",other:"wood"};
 var FC={living:0xB89B6A,dining:0xB89B6A,kitchen:0xD4C4A8,bedroom:0xB89B6A,bathroom:0xE8E0D4,veranda:0xC0B098,balcony:0xC0B098,patio:0xC0B098,hallway:0xB89B6A,entrance:0xB89B6A,passage:0xB89B6A,staircase:0xB89B6A,utility:0xB89B6A,storage:0xB89B6A,closet:0xB89B6A,office:0xB89B6A,studio:0xB89B6A,other:0xB89B6A};
 var LC={living:"#4F8AFF",dining:"#4F8AFF",studio:"#4F8AFF",bedroom:"#8B5CF6",office:"#8B5CF6",kitchen:"#10B981",bathroom:"#3B82F6",veranda:"#10B981",balcony:"#10B981",patio:"#10B981",hallway:"#F59E0B",entrance:"#F59E0B",passage:"#F59E0B",staircase:"#F59E0B",utility:"#707080",storage:"#707080",closet:"#707080",other:"#8888A0"};
 
@@ -845,11 +838,22 @@ slabShape.closePath();
 var slabGeo=new THREE.ShapeGeometry(slabShape);
 var slabM=new THREE.Mesh(slabGeo,new THREE.MeshStandardMaterial({color:0xD0C8B8,roughness:.8}));
 slabM.rotation.x=-Math.PI/2;slabM.position.y=-.075;slabM.receiveShadow=true;scene.add(slabM);
+// Full-building wood floor for non-rect buildings
+var nrFillMat=new THREE.MeshStandardMaterial({color:0xB89B6A,roughness:0.55,metalness:0.0,envMapIntensity:0.3});
+loadPBRTex(nrFillMat,'wood',Math.max(1,BW/2),Math.max(1,BD/2),0.8);
+var nrFillGeo=new THREE.ShapeGeometry(slabShape);
+var nrFill=new THREE.Mesh(nrFillGeo,nrFillMat);
+nrFill.rotation.x=-Math.PI/2;nrFill.position.y=.003;nrFill.receiveShadow=true;scene.add(nrFill);
 } else {
 var slab=box(BW+.2,.15,BD+.2,new THREE.MeshStandardMaterial({color:0xD0C8B8,roughness:.7,metalness:.02}));
 slab.position.set(CX,-.075,CZ);slab.receiveShadow=true;scene.add(slab);
 var slabEdge2=box(BW+.3,.02,BD+.3,new THREE.MeshStandardMaterial({color:0xC8C0B0,roughness:.4,metalness:.05}));
 slabEdge2.position.set(CX,.005,CZ);scene.add(slabEdge2);
+// Full-building wood floor plane to cover gaps between rooms
+var gapFillMat=new THREE.MeshStandardMaterial({color:0xB89B6A,roughness:0.55,metalness:0.0,envMapIntensity:0.3});
+loadPBRTex(gapFillMat,'wood',Math.max(1,BW/2),Math.max(1,BD/2),0.8);
+var gapFill=new THREE.Mesh(new THREE.PlaneGeometry(BW,BD),gapFillMat);
+gapFill.rotation.x=-Math.PI/2;gapFill.position.set(CX,.003,CZ);gapFill.receiveShadow=true;scene.add(gapFill);
 }
 
 // ─── Floor plan image overlay (subtle ghost of original plan) ────────────────
@@ -889,11 +893,11 @@ D.rooms.forEach(function(r){
     fl=new THREE.Mesh(new THREE.ShapeGeometry(roomShape),polyMat);
     fl.rotation.x=-Math.PI/2;fl.position.y=.005;fl.receiveShadow=true;
   }else if(HAS_IMG){
-    fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide}));
+    fl=new THREE.Mesh(new THREE.PlaneGeometry(w,d),new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide}));
     fl.rotation.x=-Math.PI/2;fl.position.set(cx,.005,cz);fl.receiveShadow=true;
   }else{
-    var rectMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xB89B6A,w,d);
-    fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),rectMat);
+    var rectMat=makePBRFloor(TT[r.type]||"wood",FC[r.type]||0xB89B6A,w,d);
+    fl=new THREE.Mesh(new THREE.PlaneGeometry(w,d),rectMat);
     fl.rotation.x=-Math.PI/2;fl.position.set(cx,.005,cz);fl.receiveShadow=true;
   }
   fl.userData={room:r,area:area,cx:cx,cz:cz};rmM.push(fl);scene.add(fl);
