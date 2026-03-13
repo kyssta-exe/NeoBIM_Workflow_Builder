@@ -31,7 +31,7 @@ export function buildFloorPlan3D(data: FloorPlanGeometry, sourceImage?: string, 
 <title>BuildFlow \u2014 3D Floor Plan</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#060610;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#E0E0E0}
+body{background:#F0EBE0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#E0E0E0}
 canvas{display:block}
 #tip{position:fixed;background:rgba(8,10,18,.92);border:1px solid rgba(79,138,255,.25);padding:10px 16px;border-radius:10px;font-size:12px;pointer-events:none;display:none;backdrop-filter:blur(12px);z-index:30;max-width:240px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 #tip .tn{color:#6EA0FF;font-weight:600;font-size:13px}#tip .td{color:#A0A0B8;margin-top:3px;line-height:1.4}
@@ -108,17 +108,17 @@ var scene=new THREE.Scene();
   var skyC=document.createElement("canvas");skyC.width=2;skyC.height=256;
   var skyG=skyC.getContext("2d");
   var grad=skyG.createLinearGradient(0,0,0,256);
-  grad.addColorStop(0,"#060610");
-  grad.addColorStop(0.3,"#0A0E1E");
-  grad.addColorStop(0.6,"#101828");
-  grad.addColorStop(0.85,"#1A2540");
-  grad.addColorStop(1.0,"#2A3555");
+  grad.addColorStop(0,"#C8D8E8");
+  grad.addColorStop(0.3,"#D8E0E8");
+  grad.addColorStop(0.6,"#E8E0D0");
+  grad.addColorStop(0.85,"#F0E8D8");
+  grad.addColorStop(1.0,"#F5EDE0");
   skyG.fillStyle=grad;skyG.fillRect(0,0,2,256);
   var skyTex=new THREE.CanvasTexture(skyC);
   skyTex.magFilter=THREE.LinearFilter;
   scene.background=skyTex;
 })();
-scene.fog=new THREE.FogExp2(0x0A0A18,0.012);
+scene.fog=new THREE.FogExp2(0xF0EBE0,0.005);
 
 var camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,.1,500);
 var SP=new THREE.Vector3(CX+MXD*.8,MXD*.7,CZ+MXD*.9);
@@ -132,7 +132,7 @@ renderer.physicallyCorrectLights=true;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=0.95;
+renderer.toneMappingExposure=1.15;
 renderer.outputEncoding=THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
 var controls=new THREE.OrbitControls(camera,renderer.domElement);
@@ -167,25 +167,25 @@ controls.target.set(CX,0,CZ);
   // Add directional light into env scene for specular highlights
   var envSun=new THREE.DirectionalLight(0xFFE8C0,3);
   envSun.position.set(5,10,-3);envScene.add(envSun);
-  envScene.add(new THREE.AmbientLight(0xD0E0F0,0.6));
+  envScene.add(new THREE.AmbientLight(0xF0E8D0,0.8));
   var envMap=pmremGen.fromScene(envScene,0).texture;
   scene.environment=envMap;
   pmremGen.dispose();
   console.log('[BUILDER] Procedural HDR environment map applied');
 })();
 
-// ─── Lights (warm golden-hour key + cool fill + sky hemisphere) ──────────────
-scene.add(new THREE.AmbientLight(0xFFF5E8,.2));
-var sun=new THREE.DirectionalLight(0xFFF4E0,2.8);
+// ─── Lights (warm golden-hour key + warm fill + sky hemisphere) ──────────────
+scene.add(new THREE.AmbientLight(0xFFF0D8,.4));
+var sun=new THREE.DirectionalLight(0xFFE8B0,3.2);
 sun.position.set(BW*0.7,18,-BD*0.3);sun.castShadow=true;
 sun.shadow.mapSize.set(4096,4096);
 var sc=sun.shadow.camera;sc.left=-BW-4;sc.right=BW+4;sc.top=BD+4;sc.bottom=-BD-4;sc.near=1;sc.far=60;
 sun.shadow.bias=-.0001;sun.shadow.normalBias=.015;scene.add(sun);
-var fill=new THREE.DirectionalLight(0xC8DDFF,.5);
+var fill=new THREE.DirectionalLight(0xF0E0D0,.7);
 fill.position.set(-BW*0.5,12,BD*0.5);scene.add(fill);
-var rim=new THREE.DirectionalLight(0xE0C8F0,.15);
+var rim=new THREE.DirectionalLight(0xF0E0C8,.2);
 rim.position.set(CX,-2,CZ-MXD);scene.add(rim);
-scene.add(new THREE.HemisphereLight(0xF0EDE8,0x8A7A60,.7));
+scene.add(new THREE.HemisphereLight(0xFFF5E8,0xA89070,.9));
 
 // ─── Anisotropic Filtering ───────────────────────────────────────────────────
 var maxAniso=renderer.capabilities.getMaxAnisotropy();
@@ -310,7 +310,7 @@ function makeFloorTex(type,hex){
 function makePlasterTex(){
   var S=512,c=document.createElement("canvas");c.width=S;c.height=S;
   var g=c.getContext("2d");
-  g.fillStyle="#F5F0E8";g.fillRect(0,0,S,S);
+  g.fillStyle="#F2EDE4";g.fillRect(0,0,S,S);
   // Plaster micro-texture — warm stucco feel with varied stippling
   for(var i=0;i<5000;i++){
     var v=228+Math.floor(Math.random()*22-11);
@@ -427,7 +427,7 @@ function makePBRWall(isExt){
   var nTex=new THREE.CanvasTexture(nCanvas);
   nTex.wrapS=nTex.wrapT=THREE.RepeatWrapping;
   nTex.repeat.copy(diff.repeat);
-  return new THREE.MeshStandardMaterial({map:diff,normalMap:nTex,normalScale:new THREE.Vector2(0.35,0.35),color:isExt?0xF0E8DC:0xF5F0E8,roughness:isExt?0.78:0.82,metalness:0.01,envMapIntensity:0.15});
+  return new THREE.MeshStandardMaterial({map:diff,normalMap:nTex,normalScale:new THREE.Vector2(0.35,0.35),color:isExt?0xEDE5D8:0xF2EDE4,roughness:isExt?0.78:0.82,metalness:0.01,envMapIntensity:0.15});
 }
 
 // ─── Clean Floor Texture (V2 — accumulated position, no stripe artifacts) ────
@@ -441,12 +441,12 @@ function makeFloorTexV2(type,hex){
     while(yP<S){
       var pH=70+Math.floor(Math.random()*35);
       if(yP+pH>S)pH=S-yP;
-      var rv=Math.floor(Math.random()*18-9);
+      var rv=Math.floor(Math.random()*10-5);
       var cR=Math.max(0,Math.min(255,R+rv)),cG=Math.max(0,Math.min(255,G+Math.floor(rv*0.7))),cB=Math.max(0,Math.min(255,B+Math.floor(rv*0.5)));
       var stg=(rw%3)*(S*0.22)+Math.random()*S*0.06;
       var pW=S*0.38+Math.random()*S*0.28;
       for(var px=-pW+stg;px<S+pW;px+=pW){
-        var sv=Math.floor(Math.random()*10-5);
+        var sv=Math.floor(Math.random()*6-3);
         var sR=Math.max(0,Math.min(255,cR+sv)),sG=Math.max(0,Math.min(255,cG+Math.floor(sv*0.8))),sB=Math.max(0,Math.min(255,cB+Math.floor(sv*0.6)));
         var pg=g.createLinearGradient(px,0,px+pW,0);
         pg.addColorStop(0,'rgb('+sR+','+sG+','+sB+')');
@@ -492,8 +492,8 @@ function makeFloorTexV2(type,hex){
 }
 
 // ─── Color / texture maps ────────────────────────────────────────────────────
-var TT={living:"wood",dining:"wood",bedroom:"wood",office:"wood",studio:"wood",kitchen:"wood",bathroom:"tile",veranda:"stone",balcony:"stone",patio:"stone",hallway:"wood",entrance:"wood",passage:"wood",staircase:"wood",utility:"wood",storage:"wood",closet:"wood",other:"wood"};
-var FC={living:0xA08458,dining:0xA08458,kitchen:0xA08458,bedroom:0xA08458,bathroom:0xD0CBC0,veranda:0x8A806E,balcony:0x8A806E,patio:0x8A806E,hallway:0xA08458,entrance:0xA08458,passage:0xA08458,staircase:0xA08458,utility:0xA08458,storage:0xA08458,closet:0xA08458,office:0xA08458,studio:0xA08458,other:0xA08458};
+var TT={living:"wood",dining:"wood",bedroom:"wood",office:"wood",studio:"wood",kitchen:"tile",bathroom:"tile",veranda:"stone",balcony:"stone",patio:"stone",hallway:"wood",entrance:"wood",passage:"wood",staircase:"wood",utility:"wood",storage:"wood",closet:"wood",other:"wood"};
+var FC={living:0xB89B6A,dining:0xB89B6A,kitchen:0xD4C4A8,bedroom:0xB89B6A,bathroom:0xE8E0D4,veranda:0xC0B098,balcony:0xC0B098,patio:0xC0B098,hallway:0xB89B6A,entrance:0xB89B6A,passage:0xB89B6A,staircase:0xB89B6A,utility:0xB89B6A,storage:0xB89B6A,closet:0xB89B6A,office:0xB89B6A,studio:0xB89B6A,other:0xB89B6A};
 var LC={living:"#4F8AFF",dining:"#4F8AFF",studio:"#4F8AFF",bedroom:"#8B5CF6",office:"#8B5CF6",kitchen:"#10B981",bathroom:"#3B82F6",veranda:"#10B981",balcony:"#10B981",patio:"#10B981",hallway:"#F59E0B",entrance:"#F59E0B",passage:"#F59E0B",staircase:"#F59E0B",utility:"#707080",storage:"#707080",closet:"#707080",other:"#8888A0"};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -927,11 +927,11 @@ D.rooms.forEach(function(r){
 var gndC=document.createElement("canvas");gndC.width=512;gndC.height=512;
 var gndG=gndC.getContext("2d");
 var gndGrad=gndG.createRadialGradient(256,256,0,256,256,360);
-gndGrad.addColorStop(0,"#1A1A28");gndGrad.addColorStop(1,"#0E0E18");
+gndGrad.addColorStop(0,"#E8E0D4");gndGrad.addColorStop(1,"#D8D0C4");
 gndG.fillStyle=gndGrad;gndG.fillRect(0,0,512,512);
-for(var gi2=0;gi2<600;gi2++){gndG.fillStyle="rgba(255,255,255,"+(Math.random()*.012)+")";gndG.fillRect(Math.random()*512,Math.random()*512,2+Math.random()*3,1+Math.random()*2)}
+for(var gi2=0;gi2<600;gi2++){gndG.fillStyle="rgba(0,0,0,"+(Math.random()*.012)+")";gndG.fillRect(Math.random()*512,Math.random()*512,2+Math.random()*3,1+Math.random()*2)}
 var gndTex=new THREE.CanvasTexture(gndC);gndTex.wrapS=gndTex.wrapT=THREE.RepeatWrapping;gndTex.repeat.set(3,3);
-var gnd=new THREE.Mesh(new THREE.PlaneGeometry(BW+20,BD+20),new THREE.MeshStandardMaterial({map:gndTex,color:0x14141E,roughness:.92,metalness:.02}));
+var gnd=new THREE.Mesh(new THREE.PlaneGeometry(BW+20,BD+20),new THREE.MeshStandardMaterial({map:gndTex,color:0xE0D8CC,roughness:.92,metalness:.02}));
 gnd.rotation.x=-Math.PI/2;gnd.position.set(CX,-.16,CZ);gnd.receiveShadow=true;scene.add(gnd);
 
 // Grid removed — clean ground plane only (professional arch-viz look)
@@ -941,9 +941,9 @@ gnd.rotation.x=-Math.PI/2;gnd.position.set(CX,-.16,CZ);gnd.receiveShadow=true;sc
   var shC=document.createElement('canvas');shC.width=512;shC.height=512;
   var shCtx=shC.getContext('2d');
   var shGrad=shCtx.createRadialGradient(256,256,0,256,256,256);
-  shGrad.addColorStop(0,'rgba(0,0,0,0.3)');
-  shGrad.addColorStop(0.4,'rgba(0,0,0,0.18)');
-  shGrad.addColorStop(0.7,'rgba(0,0,0,0.06)');
+  shGrad.addColorStop(0,'rgba(0,0,0,0.15)');
+  shGrad.addColorStop(0.4,'rgba(0,0,0,0.08)');
+  shGrad.addColorStop(0.7,'rgba(0,0,0,0.02)');
   shGrad.addColorStop(1,'rgba(0,0,0,0)');
   shCtx.fillStyle=shGrad;shCtx.fillRect(0,0,512,512);
   var shTex=new THREE.CanvasTexture(shC);
@@ -960,10 +960,10 @@ if(HAS_IMG){
 var imgLoader=new THREE.TextureLoader();imgLoader.load(IMG_SRC,function(tex){tex.minFilter=THREE.LinearFilter;tex.magFilter=THREE.LinearFilter;
 var imgFloor=new THREE.Mesh(new THREE.PlaneGeometry(BW,BD),new THREE.MeshStandardMaterial({map:tex,roughness:.5}));
 imgFloor.rotation.x=-Math.PI/2;imgFloor.position.set(CX,.01,CZ);imgFloor.receiveShadow=true;scene.add(imgFloor);});
-var slab=box(BW+.2,.12,BD+.2,new THREE.MeshStandardMaterial({color:0x303040,roughness:.7,metalness:.05}));
+var slab=box(BW+.2,.12,BD+.2,new THREE.MeshStandardMaterial({color:0xD0C8B8,roughness:.7,metalness:.02}));
 slab.position.set(CX,-.06,CZ);slab.receiveShadow=true;scene.add(slab);
 // Slab edge bevel strip
-var slabEdge=box(BW+.3,.02,BD+.3,new THREE.MeshStandardMaterial({color:0x404050,roughness:.4,metalness:.1}));
+var slabEdge=box(BW+.3,.02,BD+.3,new THREE.MeshStandardMaterial({color:0xC8C0B0,roughness:.4,metalness:.05}));
 slabEdge.position.set(CX,.005,CZ);scene.add(slabEdge);
 } else if(isNonRect){
 var slabShape=new THREE.Shape();
@@ -972,12 +972,12 @@ slabShape.moveTo(ol[0][0],-ol[0][1]);
 for(var si=1;si<ol.length;si++) slabShape.lineTo(ol[si][0],-ol[si][1]);
 slabShape.closePath();
 var slabGeo=new THREE.ShapeGeometry(slabShape);
-var slabM=new THREE.Mesh(slabGeo,new THREE.MeshStandardMaterial({color:0x2A2A35,roughness:.9}));
+var slabM=new THREE.Mesh(slabGeo,new THREE.MeshStandardMaterial({color:0xD0C8B8,roughness:.8}));
 slabM.rotation.x=-Math.PI/2;slabM.position.y=-.075;slabM.receiveShadow=true;scene.add(slabM);
 } else {
-var slab=box(BW+.2,.15,BD+.2,new THREE.MeshStandardMaterial({color:0x303040,roughness:.7,metalness:.05}));
+var slab=box(BW+.2,.15,BD+.2,new THREE.MeshStandardMaterial({color:0xD0C8B8,roughness:.7,metalness:.02}));
 slab.position.set(CX,-.075,CZ);slab.receiveShadow=true;scene.add(slab);
-var slabEdge2=box(BW+.3,.02,BD+.3,new THREE.MeshStandardMaterial({color:0x404050,roughness:.4,metalness:.1}));
+var slabEdge2=box(BW+.3,.02,BD+.3,new THREE.MeshStandardMaterial({color:0xC8C0B0,roughness:.4,metalness:.05}));
 slabEdge2.position.set(CX,.005,CZ);scene.add(slabEdge2);
 }
 
@@ -1003,7 +1003,7 @@ D.rooms.forEach(function(r){
   var rx=r.x,ry=r.y,w=r.width,d=r.depth;
   var cx=rx+w/2,cz=ry+d/2;
   var area=r.area||(w*d);
-  var floorHex=FC[r.type]||0xA89888;
+  var floorHex=FC[r.type]||0xB89B6A;
   console.log("[IFRAME] Floor:",r.name,"type:",r.type,"color:#"+floorHex.toString(16));
 
   // Room floor: polygon (SVG) → THREE.Shape, image → invisible target, else → textured rect
@@ -1013,7 +1013,7 @@ D.rooms.forEach(function(r){
     roomShape.moveTo(r.polygon[0][0],-r.polygon[0][1]);
     for(var pi=1;pi<r.polygon.length;pi++) roomShape.lineTo(r.polygon[pi][0],-r.polygon[pi][1]);
     roomShape.closePath();
-    var polyMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xC0B8A8,w,d);
+    var polyMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xB89B6A,w,d);
     polyMat.side=THREE.DoubleSide;
     fl=new THREE.Mesh(new THREE.ShapeGeometry(roomShape),polyMat);
     fl.rotation.x=-Math.PI/2;fl.position.y=.005;fl.receiveShadow=true;
@@ -1021,7 +1021,7 @@ D.rooms.forEach(function(r){
     fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide}));
     fl.rotation.x=-Math.PI/2;fl.position.set(cx,.005,cz);fl.receiveShadow=true;
   }else{
-    var rectMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xC0B8A8,w,d);
+    var rectMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xB89B6A,w,d);
     fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),rectMat);
     fl.rotation.x=-Math.PI/2;fl.position.set(cx,.005,cz);fl.receiveShadow=true;
   }
@@ -1029,7 +1029,7 @@ D.rooms.forEach(function(r){
 
   // Soft per-room fill light (very subtle — avoids washing out textures)
   if(!HAS_IMG&&area>5){
-    var roomFill=new THREE.PointLight(0xFFF4E0,0.15,Math.max(w,d)*1.5);
+    var roomFill=new THREE.PointLight(0xFFF0D0,0.35,Math.max(w,d)*2.0);
     roomFill.position.set(cx,WH*0.8,cz);scene.add(roomFill);
   }
 
@@ -1234,8 +1234,8 @@ function addPainting(px,py,pz,pw,ph,rotY){
 }
 
 // ─── Door Frame + Panel ─────────────────────────────────────────────────────
-var dfMat=new THREE.MeshStandardMaterial({color:0x5C3D2E,roughness:0.5,metalness:0.05});
-var dpMat=new THREE.MeshStandardMaterial({color:0x8B6F4E,roughness:0.4,metalness:0.03});
+var dfMat=new THREE.MeshStandardMaterial({color:0x8B6B4A,roughness:0.45,metalness:0.03});
+var dpMat=new THREE.MeshStandardMaterial({color:0xA88860,roughness:0.35,metalness:0.02});
 var dhMat=new THREE.MeshStandardMaterial({color:0xC0C0C0,roughness:0.15,metalness:0.85});
 function addDoorFrame(dx,dz,isVert){
   var dw=0.85,dh=2.1,ft=0.055,fd=0.13;
@@ -1401,8 +1401,8 @@ for(var i=0;i<D.rooms.length;i++){
 }
 
 // ─── Baseboards (subtle dark strip at wall base) ─────────────────────────────
-var bbMat=new THREE.MeshStandardMaterial({color:0x4A4038,roughness:.6,metalness:.03});
-var bbH=0.06,bbD=0.02;
+var bbMat=new THREE.MeshStandardMaterial({color:0xF5F2EE,roughness:.5,metalness:.02});
+var bbH=0.08,bbD=0.025;
 if(HAS_SVG_WALLS){
 for(var bi=0;bi<D.walls.length;bi++){
   var bw2=D.walls[bi];
@@ -1426,7 +1426,7 @@ for(var bi=0;bi<D.walls.length;bi++){
 }
 
 // ─── Crown Molding (thin dark strip at wall tops) ────────────────────────────
-var cmMat=new THREE.MeshStandardMaterial({color:0x3A3430,roughness:.4,metalness:.06});
+var cmMat=new THREE.MeshStandardMaterial({color:0xE8E4DE,roughness:.4,metalness:.03});
 var cmH=0.04,cmD=0.03;
 if(HAS_SVG_WALLS){
 for(var ci=0;ci<D.walls.length;ci++){
@@ -1746,7 +1746,7 @@ composer.addPass(renderPass);
 // Bloom (very subtle — preserves texture detail)
 var bloomPass=new THREE.UnrealBloomPass(
   new THREE.Vector2(innerWidth,innerHeight),
-  0.06,0.3,0.92
+  0.10,0.4,0.88
 );
 composer.addPass(bloomPass);
 
@@ -1754,10 +1754,10 @@ composer.addPass(bloomPass);
 var colorGradeShader={
   uniforms:{
     tDiffuse:{value:null},
-    brightness:{value:-0.01},
-    contrast:{value:0.12},
-    warmth:{value:0.04},
-    vignette:{value:0.25}
+    brightness:{value:0.04},
+    contrast:{value:0.08},
+    warmth:{value:0.07},
+    vignette:{value:0.10}
   },
   vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
   fragmentShader:[
