@@ -130,6 +130,10 @@ const nextConfig: NextConfig = {
         source: '/r2-models/:path*',
         destination: 'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models/:path*',
       },
+      {
+        source: '/r2-textures/:path*',
+        destination: 'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/textures/:path*',
+      },
     ];
   },
 };

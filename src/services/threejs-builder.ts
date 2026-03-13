@@ -74,8 +74,10 @@ if(!__parentOrigin||__parentOrigin==='null'){try{__parentOrigin=document.referre
 if(!__parentOrigin||__parentOrigin==='null'){__parentOrigin="${modelBase ?? ''}"}
 // Use same-origin proxy /r2-models/* → R2 CDN (avoids CORS since R2 GET lacks Access-Control-Allow-Origin)
 var MODEL_CDN=__parentOrigin?__parentOrigin+'/r2-models':'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models';
+var TEXTURE_CDN=__parentOrigin?__parentOrigin+'/r2-textures':'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/textures';
 var HAS_MODELS=MODEL_CDN.length>10;
 console.log('[GLTF] Model CDN: '+MODEL_CDN);
+console.log('[TEX] Texture CDN: '+TEXTURE_CDN);
 var CX=BW/2,CZ=BD/2,MXD=Math.max(BW,BD);
 
 // ─── Inline OrbitControls ─────────────────────────────────────────────────────
@@ -191,7 +193,27 @@ scene.add(new THREE.HemisphereLight(0xFFF5E8,0xA89070,.9));
 var maxAniso=renderer.capabilities.getMaxAnisotropy();
 console.log('[BUILDER] Max anisotropy:',maxAniso);
 
-// ─── Texture helpers (kept minimal — floors use flat solid colors) ───────────
+// ─── Real PBR Texture Loader (R2 CDN with solid-color fallback) ──────────────
+var texLoader=new THREE.TextureLoader();
+function loadPBRTex(mat,name,rx,ry,normalStr){
+  texLoader.load(TEXTURE_CDN+'/'+name+'-color.jpg',function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.repeat.set(rx,ry);
+    tex.anisotropy=maxAniso;
+    tex.encoding=THREE.sRGBEncoding;
+    mat.map=tex;mat.color.set(0xFFFFFF);mat.needsUpdate=true;
+    console.log('[TEX] Loaded '+name+'-color.jpg');
+  },null,function(){console.warn('[TEX] Failed: '+name+'-color.jpg — using solid color fallback')});
+  texLoader.load(TEXTURE_CDN+'/'+name+'-normal.jpg',function(tex){
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.repeat.set(rx,ry);
+    mat.normalMap=tex;mat.normalScale=new THREE.Vector2(normalStr,normalStr);
+    mat.needsUpdate=true;
+    console.log('[TEX] Loaded '+name+'-normal.jpg');
+  },null,function(){});
+}
+
+// ─── Texture helpers ────────────────────────────────────────────────────────
 function shiftHex(hex,amt){
   var r=Math.max(0,Math.min(255,((hex>>16)&0xff)+amt));
   var g=Math.max(0,Math.min(255,((hex>>8)&0xff)+amt));
@@ -309,28 +331,35 @@ function albedoToNormal(albedoCanvas,str){
   hx.putImageData(hD,0,0);
   return heightToNormal(hC,str);
 }
-// ─── Floor Material Factory ────────────────────────────────────────────────
+// ─── Floor Material Factory (real PBR textures from R2 CDN) ─────────────────
 function makePBRFloor(type,hex,rw,rd){
+  var rx=Math.max(1,rw/2),ry=Math.max(1,rd/2);
   if(type==='wood'){
-    // Wood: flat warm solid color — no texture, no planks, no stripes
-    return new THREE.MeshStandardMaterial({color:hex,roughness:0.55,metalness:0.0,envMapIntensity:0.3});
+    var mat=new THREE.MeshStandardMaterial({color:hex,roughness:0.55,metalness:0.0,envMapIntensity:0.3});
+    loadPBRTex(mat,'wood',rx,ry,0.8);
+    return mat;
   }
   if(type==='tile'){
-    // Tile: flat solid color — clean look
-    return new THREE.MeshStandardMaterial({color:hex,roughness:0.3,metalness:0.02,envMapIntensity:0.4});
+    var mat=new THREE.MeshStandardMaterial({color:hex,roughness:0.3,metalness:0.02,envMapIntensity:0.4});
+    loadPBRTex(mat,'tile',rx*0.67,ry*0.67,0.6);
+    return mat;
   }
-  // Stone / concrete: flat solid color
+  // Stone / concrete: solid color (no R2 texture yet)
   return new THREE.MeshStandardMaterial({color:hex,roughness:0.75,metalness:0.02,envMapIntensity:0.2});
 }
 
-// ─── PBR Wall Material ────────────────────────────────────────────────────
+// ─── PBR Wall Material (real plaster textures from R2 CDN) ───────────────
 function makePBRWall(isExt){
+  // Start with procedural plaster as instant fallback
   var diff=makePlasterTex();
   var nCanvas=albedoToNormal(diff.image,1.2);
   var nTex=new THREE.CanvasTexture(nCanvas);
   nTex.wrapS=nTex.wrapT=THREE.RepeatWrapping;
   nTex.repeat.copy(diff.repeat);
-  return new THREE.MeshStandardMaterial({map:diff,normalMap:nTex,normalScale:new THREE.Vector2(0.3,0.3),color:isExt?0xEDE5D8:0xF2EDE4,roughness:isExt?0.78:0.82,metalness:0.01,envMapIntensity:0.15});
+  var mat=new THREE.MeshStandardMaterial({map:diff,normalMap:nTex,normalScale:new THREE.Vector2(0.3,0.3),color:isExt?0xEDE5D8:0xF2EDE4,roughness:isExt?0.78:0.82,metalness:0.01,envMapIntensity:0.15});
+  // Upgrade to real PBR plaster texture when loaded
+  loadPBRTex(mat,'plaster',3,1.5,0.3);
+  return mat;
 }
 
 // ─── Color / texture maps ────────────────────────────────────────────────────

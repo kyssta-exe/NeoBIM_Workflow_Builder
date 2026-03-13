@@ -239,7 +239,8 @@ function FloorPlanLayout({
   const [activeView, setActiveView] = useState("top");
   const [showLabels, setShowLabels] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
-  const [showAiRender, setShowAiRender] = useState(false);
+  // Default to AI Render when available
+  const [showAiRender, setShowAiRender] = useState(!!aiRenderUrl);
   const [isWalking, setIsWalking] = useState(false);
   const iframeReadyRef = useRef(false);
 
@@ -295,6 +296,14 @@ function FloorPlanLayout({
     }
   }
 
+  // Auto-switch to AI Render when URL becomes available
+  useEffect(() => {
+    if (aiRenderUrl && !showAiRender) {
+      setShowAiRender(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiRenderUrl]);
+
   // Listen for ready handshake from iframe
   useEffect(() => {
     const handler = (ev: MessageEvent) => {
@@ -345,12 +354,15 @@ function FloorPlanLayout({
             <div style={{
               position: "absolute", bottom: 60, left: "50%", transform: "translateX(-50%)",
               background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)",
-              padding: "6px 16px", borderRadius: 8,
-              fontSize: 11, color: "#D8B4FE", fontWeight: 500,
+              padding: "8px 20px", borderRadius: 10,
+              fontSize: 12, color: "#D8B4FE", fontWeight: 500,
               border: "1px solid rgba(139,92,246,0.3)",
               pointerEvents: "none",
+              display: "flex", alignItems: "center", gap: 8,
             }}>
-              DALL-E 3 HD Photorealistic Render
+              <span style={{ fontSize: 14 }}>&#x2728;</span>
+              AI Photorealistic Visualization
+              <span style={{ color: "#8B5CF6", fontSize: 10, opacity: 0.7 }}>DALL-E 3 HD</span>
             </div>
           </div>
         )}
@@ -416,12 +428,13 @@ function FloorPlanLayout({
             boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
           }}>
             {([
+              ...(aiRenderUrl ? [{ id: "airender", label: "AI Render", active: showAiRender, disabled: false }] : []),
               { id: "orbit", label: "Orbit", active: activeView === "perspective" && !showAiRender && !isWalking, disabled: false },
               { id: "top", label: "Top", active: activeView === "top" && !showAiRender && !isWalking, disabled: false },
               { id: "walk", label: "Walk", active: isWalking, disabled: false },
               { id: "labels", label: "Labels", active: showLabels, disabled: false },
               { id: "reset", label: "Reset", active: false, disabled: false },
-              { id: "airender", label: aiRenderUrl ? "AI Render" : "AI Render...", active: showAiRender, disabled: !aiRenderUrl },
+              ...(!aiRenderUrl ? [{ id: "airender", label: "AI Render...", active: false, disabled: true }] : []),
             ] as Array<{ id: string; label: string; active: boolean; disabled: boolean }>).map(btn => (
               <button
                 key={btn.id}

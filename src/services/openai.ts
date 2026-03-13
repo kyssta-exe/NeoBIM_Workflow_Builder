@@ -1337,7 +1337,7 @@ export async function generateFloorPlanRender(
     minimal: "Japanese-inspired minimalist design with tatami mats, shoji screens, low furniture, neutral earth tones, and zen garden elements",
   };
 
-  const prompt = `Photorealistic architectural visualization, bird's-eye cutaway view looking down at 45 degrees into a ${buildingDimensions.width.toFixed(0)}m x ${buildingDimensions.depth.toFixed(0)}m residential floor plan with the roof removed. The interior is fully furnished and decorated in ${styleDescriptions[style]}. Rooms: ${roomList}. Each room has appropriate furniture, rugs, lighting, and decor. Walls are clearly visible separating rooms. Warm golden-hour sunlight casts soft shadows across the interior. Ultra-high detail, 8K quality, architectural photography style, depth of field. No text, no labels, no annotations.`;
+  const prompt = `Architectural dollhouse cutaway from above at a 45-degree angle, looking into a ${buildingDimensions.width.toFixed(0)}m x ${buildingDimensions.depth.toFixed(0)}m residential floor plan with the ceiling/roof completely removed, open top view like a miniature model home. Rooms: ${roomList}. Interior is fully furnished and decorated in ${styleDescriptions[style]}. Real wood plank floors in living spaces, clean white walls with subtle shadows between rooms. Each room has appropriate furniture arranged naturally. Warm golden-hour sunlight streaming through windows casting soft long shadows across the interior. Photorealistic, architectural visualization quality, tilt-shift depth of field, 8K detail. No text, no labels, no annotations, no people.`;
 
   console.log(`[DALL-E 3] Generating floor plan render (${style})...`);
 
