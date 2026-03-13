@@ -132,7 +132,7 @@ renderer.physicallyCorrectLights=true;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.1;
+renderer.toneMappingExposure=0.95;
 renderer.outputEncoding=THREE.sRGBEncoding;
 document.body.appendChild(renderer.domElement);
 var controls=new THREE.OrbitControls(camera,renderer.domElement);
@@ -373,9 +373,66 @@ function makeMarbleTex(){
   return t;
 }
 
+// ─── Normal Map Generator (canvas height → tangent-space normal) ─────────────
+function heightToNormal(hC,str){
+  var w2=hC.width,h2=hC.height,hx=hC.getContext('2d');
+  var hD=hx.getImageData(0,0,w2,h2).data;
+  var nC=document.createElement('canvas');nC.width=w2;nC.height=h2;
+  var nx=nC.getContext('2d'),nD=nx.createImageData(w2,h2),np=nD.data;
+  str=str||2.0;
+  for(var ny=0;ny<h2;ny++){for(var nx2=0;nx2<w2;nx2++){
+    var i=(ny*w2+nx2)*4;
+    var l=nx2>0?hD[((ny*w2+nx2-1)*4)]:hD[i];
+    var r2=nx2<w2-1?hD[((ny*w2+nx2+1)*4)]:hD[i];
+    var t2=ny>0?hD[(((ny-1)*w2+nx2)*4)]:hD[i];
+    var b2=ny<h2-1?hD[(((ny+1)*w2+nx2)*4)]:hD[i];
+    var ddx=(l-r2)/255*str,ddy=(t2-b2)/255*str;
+    var len=Math.sqrt(ddx*ddx+ddy*ddy+1);
+    np[i]=((ddx/len*0.5+0.5)*255)|0;
+    np[i+1]=((ddy/len*0.5+0.5)*255)|0;
+    np[i+2]=((1/len*0.5+0.5)*255)|0;
+    np[i+3]=255;
+  }}
+  nx.putImageData(nD,0,0);return nC;
+}
+// Derive normal map from an albedo canvas (luminance → height → normal)
+function albedoToNormal(albedoCanvas,str){
+  var w2=albedoCanvas.width,h2=albedoCanvas.height;
+  var ctx=albedoCanvas.getContext('2d');
+  var sd=ctx.getImageData(0,0,w2,h2).data;
+  var hC=document.createElement('canvas');hC.width=w2;hC.height=h2;
+  var hx=hC.getContext('2d'),hD=hx.createImageData(w2,h2),hp=hD.data;
+  for(var i=0;i<sd.length;i+=4){
+    var g2=(sd[i]*0.3+sd[i+1]*0.59+sd[i+2]*0.11)|0;
+    hp[i]=hp[i+1]=hp[i+2]=g2;hp[i+3]=255;
+  }
+  hx.putImageData(hD,0,0);
+  return heightToNormal(hC,str);
+}
+// Create a PBR-like floor material: diffuse + normal from existing makeFloorTex
+function makePBRFloor(type,hex,rw,rd){
+  var diffuse=makeFloorTex(type,hex);
+  diffuse.repeat.set(rw/2.5,rd/2.5);
+  var nCanvas=albedoToNormal(diffuse.image,type==='wood'?3.0:type==='tile'?2.5:1.8);
+  var nTex=new THREE.CanvasTexture(nCanvas);
+  nTex.wrapS=nTex.wrapT=THREE.RepeatWrapping;
+  nTex.repeat.copy(diffuse.repeat);nTex.anisotropy=maxAniso;
+  var rough=type==='wood'?0.65:type==='tile'?0.35:type==='mosaic'?0.3:0.75;
+  return new THREE.MeshStandardMaterial({map:diffuse,normalMap:nTex,normalScale:new THREE.Vector2(0.7,0.7),roughness:rough,metalness:0.02,envMapIntensity:0.3});
+}
+// Create PBR wall material: plaster diffuse + normal
+function makePBRWall(isExt){
+  var diff=makePlasterTex();
+  var nCanvas=albedoToNormal(diff.image,1.5);
+  var nTex=new THREE.CanvasTexture(nCanvas);
+  nTex.wrapS=nTex.wrapT=THREE.RepeatWrapping;
+  nTex.repeat.copy(diff.repeat);
+  return new THREE.MeshStandardMaterial({map:diff,normalMap:nTex,normalScale:new THREE.Vector2(0.35,0.35),color:isExt?0xF0E8DC:0xF5F0E8,roughness:isExt?0.78:0.82,metalness:0.01,envMapIntensity:0.15});
+}
+
 // ─── Color / texture maps ────────────────────────────────────────────────────
-var TT={living:"wood",dining:"wood",bedroom:"wood",office:"wood",studio:"wood",kitchen:"tile",bathroom:"mosaic",veranda:"stone",balcony:"stone",patio:"stone",hallway:"concrete",entrance:"concrete",passage:"concrete",staircase:"concrete",utility:"concrete",storage:"concrete",closet:"concrete",other:"concrete"};
-var FC={living:0x8B6F4E,dining:0x7A5C3A,kitchen:0xBCB5A8,bedroom:0x9B7E5E,bathroom:0x5A7080,veranda:0x5A6E50,balcony:0x5A6E50,patio:0x5A6E50,hallway:0x7A7068,entrance:0x7A7068,passage:0x7A7068,staircase:0x605850,utility:0x585050,storage:0x585050,closet:0x585050,office:0x9B7E5E,studio:0x8A7A58,other:0x8A7A68};
+var TT={living:"wood",dining:"wood",bedroom:"wood",office:"wood",studio:"wood",kitchen:"tile",bathroom:"tile",veranda:"stone",balcony:"stone",patio:"stone",hallway:"wood",entrance:"wood",passage:"wood",staircase:"stone",utility:"concrete",storage:"concrete",closet:"concrete",other:"concrete"};
+var FC={living:0xA08458,dining:0x9A7E52,kitchen:0xD4CCC0,bedroom:0xA08458,bathroom:0xCCC8BE,veranda:0x8A806E,balcony:0x8A806E,patio:0x8A806E,hallway:0x9A8E78,entrance:0x9A8E78,passage:0x9A8E78,staircase:0x8A7E68,utility:0x7A7468,storage:0x7A7468,closet:0x7A7468,office:0xA08458,studio:0x9A7E52,other:0x8A8070};
 var LC={living:"#4F8AFF",dining:"#4F8AFF",studio:"#4F8AFF",bedroom:"#8B5CF6",office:"#8B5CF6",kitchen:"#10B981",bathroom:"#3B82F6",veranda:"#10B981",balcony:"#10B981",patio:"#10B981",hallway:"#F59E0B",entrance:"#F59E0B",passage:"#F59E0B",staircase:"#F59E0B",utility:"#707080",storage:"#707080",closet:"#707080",other:"#8888A0"};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -895,34 +952,25 @@ D.rooms.forEach(function(r){
     roomShape.moveTo(r.polygon[0][0],-r.polygon[0][1]);
     for(var pi=1;pi<r.polygon.length;pi++) roomShape.lineTo(r.polygon[pi][0],-r.polygon[pi][1]);
     roomShape.closePath();
-    var fTex=makeFloorTex(TT[r.type]||"concrete",FC[r.type]||0xC0B8A8);
-    fTex.repeat.set(w/2,d/2);
-    fl=new THREE.Mesh(new THREE.ShapeGeometry(roomShape),new THREE.MeshStandardMaterial({map:fTex,roughness:.7,side:THREE.DoubleSide}));
+    var polyMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xC0B8A8,w,d);
+    polyMat.side=THREE.DoubleSide;
+    fl=new THREE.Mesh(new THREE.ShapeGeometry(roomShape),polyMat);
     fl.rotation.x=-Math.PI/2;fl.position.y=.005;fl.receiveShadow=true;
   }else if(HAS_IMG){
     fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide}));
     fl.rotation.x=-Math.PI/2;fl.position.set(cx,.005,cz);fl.receiveShadow=true;
   }else{
-    var fTex2=makeFloorTex(TT[r.type]||"concrete",FC[r.type]||0xC0B8A8);
-    fTex2.repeat.set(w/2,d/2);
-    fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),new THREE.MeshStandardMaterial({map:fTex2,roughness:.7}));
+    var rectMat=makePBRFloor(TT[r.type]||"concrete",FC[r.type]||0xC0B8A8,w,d);
+    fl=new THREE.Mesh(new THREE.PlaneGeometry(w-.04,d-.04),rectMat);
     fl.rotation.x=-Math.PI/2;fl.position.set(cx,.005,cz);fl.receiveShadow=true;
   }
   fl.userData={room:r,area:area,cx:cx,cz:cz};rmM.push(fl);scene.add(fl);
 
-  // ─── Ceiling (off-white plaster, visible in walkthrough) ────────────────────
-  if(!HAS_IMG){
-    var ceilMat=new THREE.MeshStandardMaterial({color:0xF2EDE4,roughness:0.92,metalness:0.0,side:THREE.DoubleSide});
-    var ceilPlane=new THREE.Mesh(new THREE.PlaneGeometry(w-0.04,d-0.04),ceilMat);
-    ceilPlane.rotation.x=Math.PI/2;ceilPlane.position.set(cx,WH-0.01,cz);ceilPlane.receiveShadow=true;
-    scene.add(ceilPlane);
-    // Recessed ceiling light (warm disc)
-    var cLightDisc=new THREE.Mesh(new THREE.CircleGeometry(0.08,16),new THREE.MeshBasicMaterial({color:0xFFF8E8}));
-    cLightDisc.rotation.x=Math.PI/2;cLightDisc.position.set(cx,WH-0.015,cz);scene.add(cLightDisc);
+  // Soft per-room fill light (very subtle — avoids washing out textures)
+  if(!HAS_IMG&&area>5){
+    var roomFill=new THREE.PointLight(0xFFF4E0,0.15,Math.max(w,d)*1.5);
+    roomFill.position.set(cx,WH*0.8,cz);scene.add(roomFill);
   }
-  // Per-room warm point light (simulates ceiling lamp)
-  var roomLight=new THREE.PointLight(0xFFF0D0,0.4,Math.max(w,d)*2);
-  roomLight.position.set(cx,WH-0.1,cz);scene.add(roomLight);
 
   if(!HAS_IMG){
   // Area watermark on floor
@@ -1152,8 +1200,8 @@ function addDoorFrame(dx,dz,isVert){
 // ─── WALLS ──────────────────────────────────────────────────────────────────
 if(HAS_SVG_WALLS){
 // Render wall segments from SVG parsing
-var svgWallMat=new THREE.MeshStandardMaterial({map:makePlasterTex(),color:0xE8E0D4,roughness:.85,metalness:.01});
-var svgIntMat=new THREE.MeshStandardMaterial({map:makePlasterTex(),color:0xEDE6DA,roughness:.88,metalness:.01});
+var svgWallMat=makePBRWall(true);
+var svgIntMat=makePBRWall(false);
 for(var wi=0;wi<D.walls.length;wi++){
   var ww=D.walls[wi];
   if(!ww.start||!ww.end) continue;
@@ -1191,8 +1239,8 @@ if(rl2>=2){var wm3=box(cW*1.5,WH,rl2*cD,wMat);wm3.position.set(wx2*cW,WH/2,(rs2+
 rs2=-1;}}}
 };wallImg2.src=IMG_SRC;
 } else {
-var extMat=new THREE.MeshStandardMaterial({map:pTex,color:0xF0E8DC,roughness:.82,metalness:.01});
-var intMat=new THREE.MeshStandardMaterial({map:pTex,color:0xF5F0E6,roughness:.85,metalness:.01});
+var extMat=makePBRWall(true);
+var intMat=makePBRWall(false);
 var EWT=0.18,IWT=0.1,DGap=0.85,DHt=2.1;
 
 function addWall(x,y2,z,w,h,d,mat){var m=box(w,h,d,mat);m.position.set(x,y2,z);scene.add(m)}
@@ -1634,10 +1682,10 @@ var composer=new THREE.EffectComposer(renderer);
 var renderPass=new THREE.RenderPass(scene,camera);
 composer.addPass(renderPass);
 
-// Bloom (soft glow on bright surfaces)
+// Bloom (very subtle — preserves texture detail)
 var bloomPass=new THREE.UnrealBloomPass(
   new THREE.Vector2(innerWidth,innerHeight),
-  0.15,0.4,0.85
+  0.06,0.3,0.92
 );
 composer.addPass(bloomPass);
 
@@ -1645,10 +1693,10 @@ composer.addPass(bloomPass);
 var colorGradeShader={
   uniforms:{
     tDiffuse:{value:null},
-    brightness:{value:0.02},
-    contrast:{value:0.08},
-    warmth:{value:0.06},
-    vignette:{value:0.3}
+    brightness:{value:-0.01},
+    contrast:{value:0.12},
+    warmth:{value:0.04},
+    vignette:{value:0.25}
   },
   vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
   fragmentShader:[
