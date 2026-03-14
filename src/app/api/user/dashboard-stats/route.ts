@@ -88,7 +88,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       xp,
       level,
       progress,
@@ -102,6 +102,8 @@ export async function GET() {
       flashEvent,
       recentWorkflows: recent,
     });
+    response.headers.set("Cache-Control", "private, max-age=30");
+    return response;
   } catch (error) {
     console.error("Dashboard stats error:", error);
     return NextResponse.json(formatErrorResponse(UserErrors.INTERNAL_ERROR), { status: 500 });

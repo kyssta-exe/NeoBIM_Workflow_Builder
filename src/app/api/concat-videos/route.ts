@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { uploadVideoToR2, isR2Configured } from "@/lib/r2";
 import { formatErrorResponse } from "@/lib/user-errors";
+import { checkEndpointRateLimit } from "@/lib/rate-limit";
 import { execFile } from "child_process";
 import { writeFile, unlink, mkdtemp } from "fs/promises";
 import { tmpdir } from "os";
@@ -24,6 +25,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       formatErrorResponse({ title: "Unauthorized", message: "Please sign in", code: "AUTH_001" }),
       { status: 401 },
+    );
+  }
+
+  const rl = await checkEndpointRateLimit(session.user.id, "concat-videos", 10, "1 h");
+  if (!rl.success) {
+    return NextResponse.json(
+      formatErrorResponse({ title: "Rate limit exceeded", message: "Too many video concatenation requests. Please try again later.", code: "RATE_001" }),
+      { status: 429 },
     );
   }
 
@@ -140,10 +149,10 @@ export async function POST(req: NextRequest) {
   } finally {
     // Clean up temp files
     for (const f of filesToClean) {
-      unlink(f).catch(() => {});
+      unlink(f).catch(err => console.warn("[cleanup]", err));
     }
     if (tempDir) {
-      import("fs/promises").then(fs => fs.rm(tempDir, { recursive: true, force: true })).catch(() => {});
+      import("fs/promises").then(fs => fs.rm(tempDir, { recursive: true, force: true })).catch(err => console.warn("[cleanup]", err));
     }
   }
 }

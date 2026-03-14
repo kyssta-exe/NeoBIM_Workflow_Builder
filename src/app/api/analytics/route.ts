@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         userId,
         eventName: evt.event as Parameters<typeof trackEvent>[0]["eventName"],
         properties: evt.properties ?? {},
-      }).catch(() => {});
+      }).catch(err => console.warn("[analytics]", err));
     }
 
     return NextResponse.json({ ok: true });

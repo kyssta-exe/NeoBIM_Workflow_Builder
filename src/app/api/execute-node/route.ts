@@ -30,6 +30,7 @@ import {
   logWorkflowStart, logRateLimit, logNodeStart, logNodeSuccess,
   logNodeError, logValidationError, logInfo,
 } from "@/lib/workflow-logger";
+import { logger } from "@/lib/logger";
 
 // Detect region/city from text for cost estimation
 function detectRegionFromText(text: string): string | null {
@@ -280,8 +281,8 @@ export async function POST(req: NextRequest) {
 
       let extractedText = typeof rawText === "string" ? rawText : "";
 
-      console.log("[TR-001] rawText from inputData:", typeof rawText, "length:", typeof rawText === "string" ? rawText.length : 0);
-      console.log("[TR-001] pdfBase64 present:", !!pdfBase64, "type:", typeof pdfBase64, "length:", typeof pdfBase64 === "string" ? pdfBase64.length : 0);
+      logger.debug("[TR-001] rawText from inputData:", typeof rawText, "length:", typeof rawText === "string" ? rawText.length : 0);
+      logger.debug("[TR-001] pdfBase64 present:", !!pdfBase64, "type:", typeof pdfBase64, "length:", typeof pdfBase64 === "string" ? pdfBase64.length : 0);
 
       // If we have actual PDF data (base64), extract text from it
       if (pdfBase64 && typeof pdfBase64 === "string") {
@@ -291,10 +292,10 @@ export async function POST(req: NextRequest) {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buf: Buffer) => Promise<{ text: string; numpages: number; info: Record<string, unknown> }>;
           const buffer = Buffer.from(pdfBase64, "base64");
-          console.log("[TR-001] PDF buffer size:", buffer.length, "bytes");
+          logger.debug("[TR-001] PDF buffer size:", buffer.length, "bytes");
           const pdfData = await pdfParse(buffer);
-          console.log("[TR-001] pdf-parse result — pages:", pdfData.numpages, "text length:", pdfData.text?.length ?? 0);
-          console.log("[TR-001] Extracted text (first 300):", pdfData.text?.slice(0, 300));
+          logger.debug("[TR-001] pdf-parse result — pages:", pdfData.numpages, "text length:", pdfData.text?.length ?? 0);
+          logger.debug("[TR-001] Extracted text (first 300):", pdfData.text?.slice(0, 300));
           extractedText = pdfData.text || "";
         } catch (parseErr) {
           console.error("[TR-001] PDF parsing failed:", parseErr);
@@ -302,7 +303,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      console.log("[TR-001] Final extractedText length:", extractedText.trim().length, "chars");
+      logger.debug("[TR-001] Final extractedText length:", extractedText.trim().length, "chars");
 
       if (!extractedText || extractedText.trim().length < 20) {
         console.error("[TR-001] Text too short or empty — returning 400. Text:", JSON.stringify(extractedText.slice(0, 100)));
@@ -342,9 +343,9 @@ ${parsed.designIntent ? `DESIGN INTENT: ${parsed.designIntent}` : ""}
 
 ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.map(r => `• ${r}`).join("\n")}` : ""}`;
 
-      console.log("[TR-001] Parsed brief — rawText length:", parsed.rawText?.length ?? 0, "chars");
-      console.log("[TR-001] rawText first 300 chars:", parsed.rawText?.slice(0, 300));
-      console.log("[TR-001] projectTitle:", parsed.projectTitle);
+      logger.debug("[TR-001] Parsed brief — rawText length:", parsed.rawText?.length ?? 0, "chars");
+      logger.debug("[TR-001] rawText first 300 chars:", parsed.rawText?.slice(0, 300));
+      logger.debug("[TR-001] projectTitle:", parsed.projectTitle);
 
       artifact = {
         id: generateId(),
@@ -425,7 +426,7 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
       let mlDoors: MLDoor[] = [];
       let mlWindows: MLWindow[] = [];
       try {
-        console.log("[TR-004] Step 1: Getting walls from CubiCasa5K ML...");
+        logger.debug("[TR-004] Step 1: Getting walls from CubiCasa5K ML...");
         const mlResponse = await fetch("http://localhost:5001/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -437,37 +438,37 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
           mlWalls = mlResult.walls ?? [];
           mlDoors = mlResult.doors ?? [];
           mlWindows = mlResult.windows ?? [];
-          console.log(`[TR-004] ML walls: ${mlWalls.length} segments, ${mlDoors.length} doors, ${mlWindows.length} windows (${mlResult.inferenceTime}s)`);
+          logger.debug(`[TR-004] ML walls: ${mlWalls.length} segments, ${mlDoors.length} doors, ${mlWindows.length} windows (${mlResult.inferenceTime}s)`);
         } else {
-          console.log(`[TR-004] ML service returned ${mlResponse.status}`);
+          logger.debug(`[TR-004] ML service returned ${mlResponse.status}`);
         }
       } catch (mlError: unknown) {
         const msg = mlError instanceof Error ? mlError.message : "connection refused";
-        console.log(`[TR-004] ML service unavailable: ${msg}`);
+        logger.debug(`[TR-004] ML service unavailable: ${msg}`);
       }
 
       // ═══ STEP 2: GPT-4o analysis (rooms, layout, descriptions) ═══
       // analyzeImage already produces row-based geometry that GN-011 uses
-      console.log("[TR-004] Step 2: Getting rooms from GPT-4o...");
+      logger.debug("[TR-004] Step 2: Getting rooms from GPT-4o...");
       let analysis = await analyzeImage(base64Data, mimeType, apiKey);
 
       if (analysis.isFloorPlan && base64Data) {
         // ── PRIMARY: Potrace pixel tracing + GPT-4o labeling ──
         let traceSucceeded = false;
         try {
-          console.log("[TR-004] Starting Potrace + GPT-4o hybrid analysis...");
+          logger.debug("[TR-004] Starting Potrace + GPT-4o hybrid analysis...");
           const { traceFloorPlanToSVG } = await import("@/services/floor-plan-tracer");
           const imageBuffer = Buffer.from(base64Data as string, "base64");
           const trace = await traceFloorPlanToSVG(imageBuffer);
 
-          console.log(`[TR-004] Potrace: ${trace.wallSegments.length} walls, ${trace.enclosedRegions.length} regions`);
+          logger.debug(`[TR-004] Potrace: ${trace.wallSegments.length} walls, ${trace.enclosedRegions.length} regions`);
 
           // Save debug SVG
           try {
             const fs = await import("fs");
             const path = await import("path");
             fs.writeFileSync(path.join(process.cwd(), "public", "debug-floor-plan.svg"), trace.svg);
-            console.log("[TR-004] SVG saved to public/debug-floor-plan.svg");
+            logger.debug("[TR-004] SVG saved to public/debug-floor-plan.svg");
           } catch { /* ignore */ }
 
           if (trace.enclosedRegions.length >= 1) {
@@ -482,7 +483,7 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
               apiKey,
             );
 
-            console.log(`[TR-004] GPT-4o labeled: ${labels.rooms.length} rooms, building ${labels.buildingWidthMeters}x${labels.buildingDepthMeters}m`);
+            logger.debug(`[TR-004] GPT-4o labeled: ${labels.rooms.length} rooms, building ${labels.buildingWidthMeters}x${labels.buildingDepthMeters}m`);
 
             const bw = labels.buildingWidthMeters || 10;
             const bd = labels.buildingDepthMeters || 8;
@@ -539,8 +540,8 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
                 rooms: tracedRooms,
               };
               traceSucceeded = true;
-              console.log(`[TR-004] ✓ Potrace+GPT-4o: ${tracedRooms.length} rooms, ${tracedWalls.length} walls, ${bw.toFixed(1)}m × ${bd.toFixed(1)}m`);
-              tracedRooms.forEach(r => console.log(`  ${r.name} (${r.type}): ${r.width}x${r.depth}m at (${r.x},${r.y})`));
+              logger.debug(`[TR-004] ✓ Potrace+GPT-4o: ${tracedRooms.length} rooms, ${tracedWalls.length} walls, ${bw.toFixed(1)}m × ${bd.toFixed(1)}m`);
+              tracedRooms.forEach(r => logger.debug(`  ${r.name} (${r.type}): ${r.width}x${r.depth}m at (${r.x},${r.y})`));
             }
           }
         } catch (traceErr) {
@@ -562,7 +563,7 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
               } : undefined,
             );
 
-            console.log(`[TR-004] Sharp detection: ${sharpResult.geometry.walls.length} walls, ${sharpResult.geometry.rooms.length} rooms, confidence: ${sharpResult.confidence.toFixed(2)}`);
+            logger.debug(`[TR-004] Sharp detection: ${sharpResult.geometry.walls.length} walls, ${sharpResult.geometry.rooms.length} rooms, confidence: ${sharpResult.confidence.toFixed(2)}`);
 
             const useSharp = sharpResult.confidence >= 0.4
               && sharpResult.geometry.walls.length >= 3
@@ -616,9 +617,9 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
                 rooms: sharpRooms,
               };
 
-              console.log(`[TR-004] Fallback: sharp+GPT hybrid: ${mergedRooms.length} rooms`);
+              logger.debug(`[TR-004] Fallback: sharp+GPT hybrid: ${mergedRooms.length} rooms`);
             } else {
-              console.log("[TR-004] Sharp confidence too low, using GPT-4o geometry as-is");
+              logger.debug("[TR-004] Sharp confidence too low, using GPT-4o geometry as-is");
             }
           } catch (sharpErr) {
             console.warn("[TR-004] Sharp detection also failed, using GPT-4o geometry as-is:", sharpErr);
@@ -632,15 +633,15 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
         // Use ML walls if we got meaningful data (>3 segments), otherwise keep existing
         if (mlWalls.length > 3 || !existingWalls || existingWalls.length === 0) {
           (analysis.geometry as Record<string, unknown>).walls = mlWalls;
-          console.log(`[TR-004] ✓ Injected ${mlWalls.length} ML walls into geometry (replacing ${existingWalls?.length ?? 0} existing)`);
+          logger.debug(`[TR-004] ✓ Injected ${mlWalls.length} ML walls into geometry (replacing ${existingWalls?.length ?? 0} existing)`);
         }
         if (mlDoors.length > 0) {
           (analysis.geometry as Record<string, unknown>).doors = mlDoors;
-          console.log(`[TR-004] ✓ Injected ${mlDoors.length} ML doors`);
+          logger.debug(`[TR-004] ✓ Injected ${mlDoors.length} ML doors`);
         }
         if (mlWindows.length > 0) {
           (analysis.geometry as Record<string, unknown>).windows = mlWindows;
-          console.log(`[TR-004] ✓ Injected ${mlWindows.length} ML windows`);
+          logger.debug(`[TR-004] ✓ Injected ${mlWindows.length} ML windows`);
         }
       } else if (mlWalls.length > 0 && !analysis.geometry) {
         // GPT-4o didn't produce geometry but ML has walls — create minimal geometry
@@ -650,7 +651,7 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
           walls: mlWalls as unknown as NonNullable<typeof analysis.geometry>["walls"],
           rooms: [],
         };
-        console.log(`[TR-004] ✓ Created geometry with ${mlWalls.length} ML walls (GPT-4o had no geometry)`);
+        logger.debug(`[TR-004] ✓ Created geometry with ${mlWalls.length} ML walls (GPT-4o had no geometry)`);
       }
 
       const roomCount = analysis.geometry
@@ -660,7 +661,7 @@ ${parsed.keyRequirements?.length ? `KEY REQUIREMENTS:\n${parsed.keyRequirements.
         : 0;
       const wallCount = mlWalls.length;
       const method = mlWalls.length > 3 ? "hybrid (ML walls + GPT-4o rooms)" : "GPT-4o";
-      console.log(`[TR-004] ✓ Final: ${roomCount} rooms, ${wallCount} walls — ${method}`);
+      logger.debug(`[TR-004] ✓ Final: ${roomCount} rooms, ${wallCount} walls — ${method}`);
 
       const roomsText = analysis.rooms?.length
         ? `\nROOMS:\n${analysis.rooms.map(r => `• ${r.name} (${r.dimensions})`).join("\n")}`
@@ -697,7 +698,7 @@ ${analysis.features.map(f => `• ${f}`).join("\n")}`;
           // uploadBase64ToR2 returns the URL string (or original data URI on failure)
           if (r2Url && r2Url.startsWith("http")) {
             sourceImageUrl = r2Url;
-            console.log("[TR-004] Source image uploaded to R2:", sourceImageUrl);
+            logger.debug("[TR-004] Source image uploaded to R2:", sourceImageUrl);
           }
         }
       } catch (r2Err) {
@@ -1810,18 +1811,18 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         return "curtain-wall";
       }
 
-      console.log("========== GN-009 VIDEO WALKTHROUGH START ==========");
-      console.log("[GN-009] All input keys:", Object.keys(inputData ?? {}));
-      console.log("[GN-009] fileData present:", !!(inputData?.fileData));
-      console.log("[GN-009] fileData length:", typeof inputData?.fileData === "string" ? inputData.fileData.length : 0);
-      console.log("[GN-009] imageUrl present:", !!(inputData?.imageUrl));
-      console.log("[GN-009] url present:", !!(inputData?.url));
-      console.log("[GN-009] svg present:", !!(inputData?.svg));
-      console.log("[GN-009] content (buildingDesc) present:", !!(inputData?.content));
-      console.log("[GN-009] content value:", JSON.stringify(inputData?.content)?.slice(0, 200));
-      console.log("[GN-009] description present:", !!(inputData?.description));
-      console.log("[GN-009] mimeType:", inputData?.mimeType);
-      console.log("[GN-009] KLING_ACCESS_KEY set:", !!process.env.KLING_ACCESS_KEY, "KLING_SECRET_KEY set:", !!process.env.KLING_SECRET_KEY);
+      logger.debug("========== GN-009 VIDEO WALKTHROUGH START ==========");
+      logger.debug("[GN-009] All input keys:", Object.keys(inputData ?? {}));
+      logger.debug("[GN-009] fileData present:", !!(inputData?.fileData));
+      logger.debug("[GN-009] fileData length:", typeof inputData?.fileData === "string" ? inputData.fileData.length : 0);
+      logger.debug("[GN-009] imageUrl present:", !!(inputData?.imageUrl));
+      logger.debug("[GN-009] url present:", !!(inputData?.url));
+      logger.debug("[GN-009] svg present:", !!(inputData?.svg));
+      logger.debug("[GN-009] content (buildingDesc) present:", !!(inputData?.content));
+      logger.debug("[GN-009] content value:", JSON.stringify(inputData?.content)?.slice(0, 200));
+      logger.debug("[GN-009] description present:", !!(inputData?.description));
+      logger.debug("[GN-009] mimeType:", inputData?.mimeType);
+      logger.debug("[GN-009] KLING_ACCESS_KEY set:", !!process.env.KLING_ACCESS_KEY, "KLING_SECRET_KEY set:", !!process.env.KLING_SECRET_KEY);
 
       const hasKlingKeys = !!(process.env.KLING_ACCESS_KEY && process.env.KLING_SECRET_KEY);
 
@@ -1830,8 +1831,8 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       let isFloorPlanInput = false;
       let roomInfo = "";
 
-      console.log("[KLING] Step 1: fileData present:", !!(inputData?.fileData), "size:", typeof inputData?.fileData === "string" ? inputData.fileData.length : 0);
-      console.log("[KLING] Step 1: url present:", !!(inputData?.url), "imageUrl present:", !!(inputData?.imageUrl), "svg present:", !!(inputData?.svg));
+      logger.debug("[KLING] Step 1: fileData present:", !!(inputData?.fileData), "size:", typeof inputData?.fileData === "string" ? inputData.fileData.length : 0);
+      logger.debug("[KLING] Step 1: url present:", !!(inputData?.url), "imageUrl present:", !!(inputData?.imageUrl), "svg present:", !!(inputData?.svg));
 
       // ── Priority 1: Direct image upload from IN-003 (original user file) ──
       // FIX F: Send base64 directly to Kling API — no temp-image URL needed.
@@ -1844,23 +1845,23 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         const raw = inputData.fileData as string;
         const cleanBase64 = raw.startsWith("data:") ? raw.split(",")[1] ?? raw : raw;
 
-        console.log("[KLING] Step 2: Clean base64 length:", cleanBase64.length, "mime:", imgMime);
+        logger.debug("[KLING] Step 2: Clean base64 length:", cleanBase64.length, "mime:", imgMime);
 
         // Strategy: R2 URL (if configured) → raw base64 directly to Kling
         // Try R2 first (if configured) — a URL is fastest for Kling
         try {
           const { uploadToR2, isR2Configured } = await import("@/lib/r2");
           if (isR2Configured()) {
-            console.log("[KLING] Step 2a: R2 is configured, uploading...");
+            logger.debug("[KLING] Step 2a: R2 is configured, uploading...");
             const ext = imgMime.includes("png") ? "png" : "jpg";
             const imgBuffer = Buffer.from(cleanBase64, "base64");
             const uploadResult = await uploadToR2(imgBuffer, `floorplan-upload-${generateId()}.${ext}`, imgMime);
             if (uploadResult.success) {
               renderImageUrl = uploadResult.url;
-              console.log("[KLING] Step 2a: R2 upload succeeded:", renderImageUrl);
+              logger.debug("[KLING] Step 2a: R2 upload succeeded:", renderImageUrl);
             }
           } else {
-            console.log("[KLING] Step 2a: R2 not configured, skipping");
+            logger.debug("[KLING] Step 2a: R2 not configured, skipping");
           }
         } catch (r2Err) {
           console.warn("[KLING] Step 2a: R2 upload failed:", r2Err);
@@ -1868,9 +1869,9 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
 
         // FIX F: Send raw base64 directly to Kling (skip temp-image entirely)
         if (!renderImageUrl) {
-          console.log("[KLING] Step 2b: Sending base64 DIRECTLY to Kling (Fix F — no temp-image URL)");
+          logger.debug("[KLING] Step 2b: Sending base64 DIRECTLY to Kling (Fix F — no temp-image URL)");
           renderImageUrl = cleanBase64;
-          console.log("[KLING] Step 2b: Using raw base64, length:", cleanBase64.length);
+          logger.debug("[KLING] Step 2b: Using raw base64, length:", cleanBase64.length);
         }
 
         isFloorPlanInput = true;
@@ -1879,7 +1880,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       // ── Priority 2: Floor plan SVG from GN-004 ──
       // FIX F: Convert SVG→PNG, then send base64 directly to Kling.
       if (!renderImageUrl && inputData?.svg && typeof inputData.svg === "string") {
-        console.log("[KLING] Step 2 (SVG): Floor plan SVG detected, converting to PNG...");
+        logger.debug("[KLING] Step 2 (SVG): Floor plan SVG detected, converting to PNG...");
         try {
           const sharp = (await import("sharp")).default;
           const pngBuffer = await sharp(Buffer.from(inputData.svg))
@@ -1893,7 +1894,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
             const uploadResult = await uploadToR2(pngBuffer, `floorplan-${generateId()}.png`, "image/png");
             if (uploadResult.success) {
               renderImageUrl = uploadResult.url;
-              console.log("[KLING] Step 2 (SVG): R2 upload:", renderImageUrl);
+              logger.debug("[KLING] Step 2 (SVG): R2 upload:", renderImageUrl);
             } else {
               console.warn("[KLING] Step 2 (SVG): R2 upload failed:", uploadResult.error);
             }
@@ -1901,9 +1902,9 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
 
           // FIX F: Send PNG base64 directly to Kling (skip temp-image)
           if (!renderImageUrl) {
-            console.log("[KLING] Step 2 (SVG): Sending PNG base64 DIRECTLY to Kling (Fix F)");
+            logger.debug("[KLING] Step 2 (SVG): Sending PNG base64 DIRECTLY to Kling (Fix F)");
             renderImageUrl = pngBuffer.toString("base64");
-            console.log("[KLING] Step 2 (SVG): Using raw base64, length:", renderImageUrl.length);
+            logger.debug("[KLING] Step 2 (SVG): Using raw base64, length:", renderImageUrl.length);
           }
           isFloorPlanInput = true;
         } catch (svgErr) {
@@ -1925,7 +1926,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           (inputData?.imageUrl as string) ??
           "";
         if (renderImageUrl) {
-          console.log("[KLING] Step 2 (Priority 3): Using upstream URL:", renderImageUrl.slice(0, 120));
+          logger.debug("[KLING] Step 2 (Priority 3): Using upstream URL:", renderImageUrl.slice(0, 120));
         }
       }
 
@@ -1940,20 +1941,20 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       // Pick up roomInfo from TR-004 output (GPT-4o extracted rooms) or SVG roomList
       if (!roomInfo && inputData?.roomInfo && typeof inputData.roomInfo === "string") {
         roomInfo = inputData.roomInfo as string;
-        console.log("[GN-009] roomInfo from TR-004 (GPT-4o):", roomInfo.slice(0, 300));
+        logger.debug("[GN-009] roomInfo from TR-004 (GPT-4o):", roomInfo.slice(0, 300));
       }
 
       // Also pick up layoutDescription from TR-004
       const layoutDescription = (inputData?.layoutDescription as string) ?? "";
 
-      console.log("===== GENERIC FLOOR PLAN DEBUG =====");
-      console.log("[GN-009] All inputData keys:", Object.keys(inputData ?? {}));
-      console.log("[GN-009] buildingDescription:", JSON.stringify(buildingDesc)?.slice(0, 800));
-      console.log("[GN-009] roomInfo:", JSON.stringify(roomInfo)?.slice(0, 800));
-      console.log("[GN-009] layoutDescription:", JSON.stringify(layoutDescription)?.slice(0, 500));
-      console.log("[GN-009] isFloorPlan:", isFloorPlanInput);
-      console.log("[GN-009] renderImageUrl resolved:", renderImageUrl ? renderImageUrl.slice(0, 120) : "EMPTY");
-      console.log("====================================");
+      logger.debug("===== GENERIC FLOOR PLAN DEBUG =====");
+      logger.debug("[GN-009] All inputData keys:", Object.keys(inputData ?? {}));
+      logger.debug("[GN-009] buildingDescription:", JSON.stringify(buildingDesc)?.slice(0, 800));
+      logger.debug("[GN-009] roomInfo:", JSON.stringify(roomInfo)?.slice(0, 800));
+      logger.debug("[GN-009] layoutDescription:", JSON.stringify(layoutDescription)?.slice(0, 500));
+      logger.debug("[GN-009] isFloorPlan:", isFloorPlanInput);
+      logger.debug("[GN-009] renderImageUrl resolved:", renderImageUrl ? renderImageUrl.slice(0, 120) : "EMPTY");
+      logger.debug("====================================");
 
       if (!hasKlingKeys) {
         // ── No Kling API keys — fall back to Three.js client-side rendering ──
@@ -2009,25 +2010,25 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           console.warn("[KLING]    To fix: deploy to a public URL, or use ngrok to tunnel localhost.");
         }
 
-        console.log("[GN-009] About to call video function:");
-        console.log("[GN-009] Image being passed (first 100 chars):", renderImageUrl?.slice(0, 100));
-        console.log("[GN-009] Image type:", renderImageUrl?.startsWith("http") ? "URL" : renderImageUrl?.startsWith("data:") ? "data URI" : "raw base64");
-        console.log("[GN-009] Image total length:", renderImageUrl?.length);
-        console.log("[GN-009] Mode: pro");
-        console.log("[GN-009] isFloorPlan flag:", isFloorPlanInput);
-        console.log("[GN-009] buildingDesc (first 200 chars):", buildingDesc?.slice(0, 200));
+        logger.debug("[GN-009] About to call video function:");
+        logger.debug("[GN-009] Image being passed (first 100 chars):", renderImageUrl?.slice(0, 100));
+        logger.debug("[GN-009] Image type:", renderImageUrl?.startsWith("http") ? "URL" : renderImageUrl?.startsWith("data:") ? "data URI" : "raw base64");
+        logger.debug("[GN-009] Image total length:", renderImageUrl?.length);
+        logger.debug("[GN-009] Mode: pro");
+        logger.debug("[GN-009] isFloorPlan flag:", isFloorPlanInput);
+        logger.debug("[GN-009] buildingDesc (first 200 chars):", buildingDesc?.slice(0, 200));
 
         try {
           if (isFloorPlanInput) {
             // ── Floor plan video: tries Kling 3.0 Omni (12s) → fallback v2.6 (10s) ──
-            console.log("[GN-009] Function: submitFloorPlanWalkthrough (Omni v3 12s → fallback v2.6 10s)");
-            console.log("[GN-009] buildFloorPlanCombinedPrompt args — buildingDesc length:", buildingDesc?.length, "roomInfo length:", roomInfo?.length);
+            logger.debug("[GN-009] Function: submitFloorPlanWalkthrough (Omni v3 12s → fallback v2.6 10s)");
+            logger.debug("[GN-009] buildFloorPlanCombinedPrompt args — buildingDesc length:", buildingDesc?.length, "roomInfo length:", roomInfo?.length);
             const combinedPrompt = buildFloorPlanCombinedPrompt(buildingDesc, roomInfo);
-            console.log("[GN-009] FINAL PROMPT SENT TO KLING:", combinedPrompt?.slice(0, 1500));
+            logger.debug("[GN-009] FINAL PROMPT SENT TO KLING:", combinedPrompt?.slice(0, 1500));
 
             const submitted = await submitFloorPlanWalkthrough(renderImageUrl, combinedPrompt, "pro");
 
-            console.log("[GN-009] Floor plan task submitted! taskId:", submitted.taskId, "usedOmni:", submitted.usedOmni, "duration:", submitted.durationSeconds);
+            logger.debug("[GN-009] Floor plan task submitted! taskId:", submitted.taskId, "usedOmni:", submitted.usedOmni, "duration:", submitted.durationSeconds);
 
             artifact = {
               id: generateId(),
@@ -2064,15 +2065,15 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
               },
               createdAt: new Date(),
             };
-            console.log("[GN-009] Artifact data.taskId:", submitted.taskId);
-            console.log("[GN-009] Artifact data.usedOmni:", submitted.usedOmni);
-            console.log("[GN-009] Artifact data.durationSeconds:", submitted.durationSeconds);
+            logger.debug("[GN-009] Artifact data.taskId:", submitted.taskId);
+            logger.debug("[GN-009] Artifact data.usedOmni:", submitted.usedOmni);
+            logger.debug("[GN-009] Artifact data.durationSeconds:", submitted.durationSeconds);
           } else {
             // ── DUAL video for non-floor-plan (concept renders) ──
-            console.log("[GN-009] Function: submitDualWalkthrough (concept render → dual 5s+10s)");
+            logger.debug("[GN-009] Function: submitDualWalkthrough (concept render → dual 5s+10s)");
             const submitted = await submitDualWalkthrough(renderImageUrl, buildingDesc, "pro");
 
-            console.log("[GN-009] Dual tasks submitted! exterior:", submitted.exteriorTaskId, "interior:", submitted.interiorTaskId);
+            logger.debug("[GN-009] Dual tasks submitted! exterior:", submitted.exteriorTaskId, "interior:", submitted.interiorTaskId);
 
             artifact = {
               id: generateId(),
@@ -2109,7 +2110,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
               createdAt: new Date(),
             };
           }
-          console.log("========== GN-009 VIDEO WALKTHROUGH END ==========");
+          logger.debug("========== GN-009 VIDEO WALKTHROUGH END ==========");
         } catch (klingErr) {
           const errMsg = klingErr instanceof Error ? klingErr.message : String(klingErr);
           console.error("[GN-009] Kling API failed:", errMsg);
@@ -2132,10 +2133,10 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         // ── Kling text-to-video path ──
         // No render image available (e.g. PDF → video pipeline).
         // Generate ultra-realistic video directly from the ORIGINAL PDF text.
-        console.log("[GN-009] Text2Video — using original PDF text as source of truth");
-        console.log("[GN-009] Source:", originalPdfText ? "rawText from PDF" : "fallback content");
-        console.log("[GN-009] Prompt length:", buildingDesc.length, "chars");
-        console.log("[GN-009] First 200 chars:", buildingDesc.slice(0, 200));
+        logger.debug("[GN-009] Text2Video — using original PDF text as source of truth");
+        logger.debug("[GN-009] Source:", originalPdfText ? "rawText from PDF" : "fallback content");
+        logger.debug("[GN-009] Prompt length:", buildingDesc.length, "chars");
+        logger.debug("[GN-009] First 200 chars:", buildingDesc.slice(0, 200));
 
         const submitted = await submitDualTextToVideo(
           buildingDesc,
@@ -2343,7 +2344,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         allRoomsFlat.filter(r => typeof r.positionLeftPercent === "number" && typeof r.positionTopPercent === "number").length >= allRoomsFlat.length * 0.6;
 
       if (hasPercentPositions) {
-        console.log(`[GN-011] Using GPT-4o ACCURATE positions (${allRoomsFlat.length} rooms with percentage coordinates)`);
+        logger.debug(`[GN-011] Using GPT-4o ACCURATE positions (${allRoomsFlat.length} rooms with percentage coordinates)`);
         for (const r of allRoomsFlat) {
           const name = String(r.name ?? "Room");
           const w = Math.max(1.0, Number(r.width ?? 3));
@@ -2370,7 +2371,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
             const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
             const overlapY = Math.min(a.y + a.depth, b.y + b.depth) - Math.max(a.y, b.y);
             if (overlapX > 0.2 && overlapY > 0.2) {
-              console.log(`[GN-011] Overlap: ${a.name} & ${b.name} (${overlapX.toFixed(1)}×${overlapY.toFixed(1)}m) — nudging`);
+              logger.debug(`[GN-011] Overlap: ${a.name} & ${b.name} (${overlapX.toFixed(1)}×${overlapY.toFixed(1)}m) — nudging`);
               const smaller = (a.width * a.depth) < (b.width * b.depth) ? a : b;
               const larger = smaller === a ? b : a;
               if (overlapX < overlapY) {
@@ -2393,16 +2394,16 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         }
 
         // Log positions for debugging
-        console.log("[GN-011] Room positions (accurate):");
+        logger.debug("[GN-011] Room positions (accurate):");
         for (const rm of layoutRooms) {
           const origR = allRoomsFlat.find(r => r.name === rm.name);
-          console.log(`  ${rm.name}: x=${rm.x.toFixed(1)} y=${rm.y.toFixed(1)} ${rm.width}×${rm.depth}m (from ${origR?.positionLeftPercent ?? "?"}%, ${origR?.positionTopPercent ?? "?"}%)`);
+          logger.debug(`  ${rm.name}: x=${rm.x.toFixed(1)} y=${rm.y.toFixed(1)} ${rm.width}×${rm.depth}m (from ${origR?.positionLeftPercent ?? "?"}%, ${origR?.positionTopPercent ?? "?"}%)`);
         }
       }
 
       // ── Priority 1: Row-based layout from GPT-4o (fallback) ──
       if (layoutRooms.length === 0 && Array.isArray(rawRows) && rawRows.length > 0) {
-        console.log(`[GN-011] Using ROW-BASED layout: ${rawRows.length} rows`);
+        logger.debug(`[GN-011] Using ROW-BASED layout: ${rawRows.length} rows`);
         const result = rowsToPositions(rawRows);
         for (const rm of result.rooms) layoutRooms.push(rm);
         bW = result.width;
@@ -2520,9 +2521,9 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       const finalW = Math.max(bW, maxX);
       const finalD = Math.max(bD, maxZ);
 
-      console.log(`[GN-011] ${layoutRooms.length} rooms, building ${finalW.toFixed(1)}x${finalD.toFixed(1)}m`);
+      logger.debug(`[GN-011] ${layoutRooms.length} rooms, building ${finalW.toFixed(1)}x${finalD.toFixed(1)}m`);
       for (const rm of layoutRooms) {
-        console.log(`  ${rm.name}: x=${rm.x.toFixed(1)} y=${rm.y.toFixed(1)} ${rm.width.toFixed(1)}x${rm.depth.toFixed(1)}m (${rm.type})`);
+        logger.debug(`  ${rm.name}: x=${rm.x.toFixed(1)} y=${rm.y.toFixed(1)} ${rm.width.toFixed(1)}x${rm.depth.toFixed(1)}m (${rm.type})`);
       }
 
       // Build FloorPlanGeometry — center derived from x,y
@@ -2577,7 +2578,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           const imgBuf = Buffer.from(await imgResp.arrayBuffer());
           const imgMime = imgResp.headers.get("content-type") || "image/jpeg";
           sourceImageDataUrl = `data:${imgMime};base64,${imgBuf.toString("base64")}`;
-          console.log(`[GN-011] Fetched source image: ${(imgBuf.length / 1024).toFixed(0)}KB`);
+          logger.debug(`[GN-011] Fetched source image: ${(imgBuf.length / 1024).toFixed(0)}KB`);
         } catch (imgErr) {
           console.warn("[GN-011] Failed to fetch source image for 3D floor:", imgErr);
         }
@@ -2609,22 +2610,22 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         const renderRooms = fpRooms.map((r: { name: string; type: string; width: number; depth: number }) => ({
           name: r.name, type: r.type, width: r.width, depth: r.depth,
         }));
-        console.log(`[GN-011] Generating DALL-E 3 photorealistic render for ${renderRooms.length} rooms...`);
-        console.log(`[GN-011] API key present: ${!!renderApiKey}, source: ${apiKey ? "user" : process.env.OPENAI_API_KEY ? "env" : "NONE"}, key prefix: ${renderApiKey ? renderApiKey.substring(0, 8) + "..." : "NONE"}`);
+        logger.debug(`[GN-011] Generating DALL-E 3 photorealistic render for ${renderRooms.length} rooms...`);
+        logger.debug(`[GN-011] API key present: ${!!renderApiKey}, source: ${apiKey ? "user" : process.env.OPENAI_API_KEY ? "env" : "NONE"}, key prefix: ${renderApiKey ? renderApiKey.substring(0, 8) + "..." : "NONE"}`);
         const renderResult = await generateFloorPlanRender(
           renderRooms,
           { width: fpGeometry.footprint.width, depth: fpGeometry.footprint.depth },
           { userApiKey: renderApiKey },
         );
         aiRenderUrl = renderResult.imageUrl;
-        console.log(`[GN-011] DALL-E render ready: ${aiRenderUrl ? aiRenderUrl.substring(0, 60) + "..." : "EMPTY"} (${(aiRenderUrl.length / 1024).toFixed(0)}KB)`);
+        logger.debug(`[GN-011] DALL-E render ready: ${aiRenderUrl ? aiRenderUrl.substring(0, 60) + "..." : "EMPTY"} (${(aiRenderUrl.length / 1024).toFixed(0)}KB)`);
       } catch (renderErr: unknown) {
         const errMsg = renderErr instanceof Error ? renderErr.message : String(renderErr);
         const stack = renderErr instanceof Error ? renderErr.stack : "";
         console.warn(`[GN-011] DALL-E render failed (non-critical): ${errMsg}`);
         if (stack) console.warn(`[GN-011] Stack: ${stack}`);
       }
-      console.log(`[GN-011] Final aiRenderUrl: ${aiRenderUrl ? "YES (" + aiRenderUrl.length + " chars)" : "NONE"}`);
+      logger.debug(`[GN-011] Final aiRenderUrl: ${aiRenderUrl ? "YES (" + aiRenderUrl.length + " chars)" : "NONE"}`);
 
       artifact = {
         id: generateId(),
@@ -2712,11 +2713,11 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
       const rawHeight = Number(rawData?.height ?? 0);
       const height = rawHeight > 0 ? rawHeight : undefined;
 
-      console.log("[GN-001] rawData keys:", Object.keys(rawData ?? {}));
+      logger.debug("[GN-001] rawData keys:", Object.keys(rawData ?? {}));
 
       if (is3DAIConfigured()) {
         // ── PRIMARY PATH: 3D AI Studio Text-to-3D ──
-        console.log("[GN-001] Using 3D AI Studio Text-to-3D API");
+        logger.debug("[GN-001] Using 3D AI Studio Text-to-3D API");
 
         const requirements: BuildingRequirements = {
           buildingType,
@@ -2746,7 +2747,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           };
         }
 
-        console.log("[GN-001] requirements:", JSON.stringify(requirements, null, 2));
+        logger.debug("[GN-001] requirements:", JSON.stringify(requirements, null, 2));
 
         let result;
         try {
@@ -2757,7 +2758,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           throw new Error(`3D model generation failed: ${genMsg}`);
         }
 
-        console.log("[GN-001] 3D AI Studio result:", {
+        logger.debug("[GN-001] 3D AI Studio result:", {
           taskId: result.taskId,
           glbUrl: result.glbUrl?.slice(0, 80),
           generationTimeMs: result.metadata.generationTimeMs,
@@ -2813,7 +2814,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
         };
       } else {
         // ── FALLBACK: Procedural massing generator ──
-        console.log("[GN-001] THREEDAI_API_KEY not set, falling back to procedural massing generator");
+        logger.debug("[GN-001] THREEDAI_API_KEY not set, falling back to procedural massing generator");
 
         const massingInput = {
           floors,
@@ -2825,11 +2826,11 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           prompt: String(inputData?.prompt ?? textContent),
         };
 
-        console.log("[GN-001] massingInput:", JSON.stringify(massingInput, null, 2));
+        logger.debug("[GN-001] massingInput:", JSON.stringify(massingInput, null, 2));
 
         const geometry = generateMassingGeometry(massingInput);
 
-        console.log("[GN-001] geometry result:", { floors: geometry.floors, height: geometry.totalHeight, footprint: geometry.footprintArea, gfa: geometry.gfa, buildingType: geometry.buildingType });
+        logger.debug("[GN-001] geometry result:", { floors: geometry.floors, height: geometry.totalHeight, footprint: geometry.footprintArea, gfa: geometry.gfa, buildingType: geometry.buildingType });
 
         artifact = {
           id: generateId(),
@@ -2972,7 +2973,7 @@ ${siteData.designImplications.map(d => `• ${d}`).join("\n")}`;
           rawData?.projectTitle ?? rawData?.projectName ?? inputData?.buildingType ?? resolvedBuildingType
         );
 
-        console.log("[EX-001] Extracted params:", { floors, footprint: computedFootprint, buildingType: resolvedBuildingType, gfa, height, projectName: resolvedProjectName, programmeTotal });
+        logger.debug("[EX-001] Extracted params:", { floors, footprint: computedFootprint, buildingType: resolvedBuildingType, gfa, height, projectName: resolvedProjectName, programmeTotal });
 
         const fallbackGeometry = generateMassingGeometry({
           floors,

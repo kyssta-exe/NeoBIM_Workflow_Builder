@@ -33,7 +33,7 @@ export default function BillingPage() {
     const canceled = searchParams.get("canceled");
 
     if (success === "true") {
-      toast.success("Payment successful! Your plan is being activated...", {
+      toast.success(t('billing.paymentSuccess'), {
         icon: <CheckCircle2 size={18} />,
         duration: 5000,
       });
@@ -42,7 +42,7 @@ export default function BillingPage() {
       // Clean URL
       window.history.replaceState({}, "", "/dashboard/billing");
     } else if (canceled === "true") {
-      toast.error("Checkout was canceled. No charges were made.", {
+      toast.error(t('billing.checkoutCanceled'), {
         icon: <XCircle size={18} />,
         duration: 4000,
       });

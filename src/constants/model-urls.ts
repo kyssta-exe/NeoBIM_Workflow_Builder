@@ -16,4 +16,6 @@ export const MODEL_URLS: Record<string, string> = {
   "tv-unit": "https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models/tv-unit.glb"
 };
 
-export const MODEL_CDN_BASE = "https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models";
+export const MODEL_CDN_BASE = process.env.R2_PUBLIC_URL
+  ? `${process.env.R2_PUBLIC_URL}/models`
+  : "https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models";

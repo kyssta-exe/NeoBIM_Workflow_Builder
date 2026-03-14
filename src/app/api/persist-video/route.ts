@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { uploadVideoToR2, isR2Configured } from "@/lib/r2";
 import { formatErrorResponse } from "@/lib/user-errors";
+import { checkEndpointRateLimit } from "@/lib/rate-limit";
 
 /**
  * POST /api/persist-video
@@ -16,6 +17,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       formatErrorResponse({ title: "Unauthorized", message: "Please sign in", code: "AUTH_001" }),
       { status: 401 },
+    );
+  }
+
+  const rl = await checkEndpointRateLimit(session.user.id, "persist-video", 10, "1 h");
+  if (!rl.success) {
+    return NextResponse.json(
+      formatErrorResponse({ title: "Rate limit exceeded", message: "Too many video persist requests. Please try again later.", code: "RATE_001" }),
+      { status: 429 },
     );
   }
 
@@ -43,6 +52,12 @@ export async function POST(req: NextRequest) {
         formatErrorResponse({ title: "Download failed", message: `HTTP ${videoRes.status}`, code: "NET_001" }),
         { status: 502 },
       );
+    }
+
+    // Basic MIME validation — warn if Content-Type doesn't indicate video
+    const contentType = videoRes.headers.get("content-type") ?? "";
+    if (!contentType.includes("video")) {
+      console.warn(`[persist-video] Unexpected Content-Type "${contentType}" for ${videoUrl.slice(0, 120)}. Proceeding anyway (some CDNs return incorrect headers).`);
     }
 
     const arrayBuffer = await videoRes.arrayBuffer();

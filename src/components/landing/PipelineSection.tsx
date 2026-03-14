@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { motion, useInView, useMotionValue, useTransform, animate } from "framer-motion";
+import { useLocale } from "@/hooks/useLocale";
+import type { TranslationKey } from "@/lib/i18n";
 
 // ─── Animation Presets ──────────────────────────────────────────────────────
 
@@ -30,53 +32,52 @@ interface PipelineWorkflow {
   nodeId: string;
 }
 
-const WORKFLOWS: PipelineWorkflow[] = [
-  {
-    id: 1,
-    title: "Text to Conceptual Building",
-    description:
-      "Describe your vision in plain text — AI generates a full 3D massing model with floor plans, structural grid, and spatial program.",
-    progress: 70,
-    floors: 7,
-    totalFloors: 10,
-    status: "in-development",
-    statusLabel: "In Development",
-    targetDate: "14 MAR 2026",
-    color: "#4F8AFF",
-    secondaryColor: "#6366F1",
-    nodeId: "WF-01",
-  },
-  {
-    id: 2,
-    title: "Conceptual Building to IFC",
-    description:
-      "Export any massing model as a structured IFC file — real geometry, metadata, and interoperability for Revit, ArchiCAD, or any BIM tool.",
-    progress: 30,
-    floors: 3,
-    totalFloors: 10,
-    status: "research",
-    statusLabel: "Research Phase",
-    targetDate: "15 MAR 2026",
-    color: "#8B5CF6",
-    secondaryColor: "#A78BFA",
-    nodeId: "WF-02",
-  },
-  {
-    id: 3,
-    title: "2D Floor Plan to 3D Render",
-    description:
-      "Upload a 2D floor plan (DXF, PDF, or image) and watch AI reconstruct it as a photorealistic 3D visualization with materials and lighting.",
-    progress: 10,
-    floors: 1,
-    totalFloors: 10,
-    status: "planned",
-    statusLabel: "Planned",
-    targetDate: "16 MAR 2026",
-    color: "#10B981",
-    secondaryColor: "#34D399",
-    nodeId: "WF-03",
-  },
-];
+function getWorkflows(t: (key: TranslationKey) => string): PipelineWorkflow[] {
+  return [
+    {
+      id: 1,
+      title: t('landing.pipeline1Title'),
+      description: t('landing.pipeline1Desc'),
+      progress: 70,
+      floors: 7,
+      totalFloors: 10,
+      status: "in-development",
+      statusLabel: t('landing.pipelineStatusDev'),
+      targetDate: "14 MAR 2026",
+      color: "#4F8AFF",
+      secondaryColor: "#6366F1",
+      nodeId: "WF-01",
+    },
+    {
+      id: 2,
+      title: t('landing.pipeline2Title'),
+      description: t('landing.pipeline2Desc'),
+      progress: 30,
+      floors: 3,
+      totalFloors: 10,
+      status: "research",
+      statusLabel: t('landing.pipelineStatusResearch'),
+      targetDate: "15 MAR 2026",
+      color: "#8B5CF6",
+      secondaryColor: "#A78BFA",
+      nodeId: "WF-02",
+    },
+    {
+      id: 3,
+      title: t('landing.pipeline3Title'),
+      description: t('landing.pipeline3Desc'),
+      progress: 10,
+      floors: 1,
+      totalFloors: 10,
+      status: "planned",
+      statusLabel: t('landing.pipelineStatusPlanned'),
+      targetDate: "16 MAR 2026",
+      color: "#10B981",
+      secondaryColor: "#34D399",
+      nodeId: "WF-03",
+    },
+  ];
+}
 
 // ─── Animated Counter ───────────────────────────────────────────────────────
 
@@ -975,7 +976,9 @@ function SectionTitle() {
 // ─── Main Pipeline Section ──────────────────────────────────────────────────
 
 export function PipelineSection() {
+  const { t } = useLocale();
   const sectionRef = useRef<HTMLElement>(null);
+  const WORKFLOWS = useMemo(() => getWorkflows(t), [t]);
 
   return (
     <section
@@ -1060,7 +1063,7 @@ export function PipelineSection() {
               }} />
             </div>
             <span style={{ fontSize: 14, fontWeight: 600, color: "#9898B0", lineHeight: 1.4 }}>
-              <span style={{ color: "#4F8AFF", fontWeight: 700 }}>Text to Conceptual Building</span>
+              <span style={{ color: "#4F8AFF", fontWeight: 700 }}>{t('landing.pipeline1Title')}</span>
               {" "}— our flagship pipeline — arriving tomorrow
             </span>
           </div>

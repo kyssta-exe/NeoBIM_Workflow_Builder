@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useLocale } from "@/hooks/useLocale";
@@ -53,6 +54,13 @@ export function ModelTab({ data }: ModelTabProps) {
   const [viewMode, setViewMode] = useState<"editor" | "3d">("editor");
   const [generatedHtml, setGeneratedHtml] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  // Sanitize SVG content to prevent XSS
+  const sanitizedSvg = useMemo(() =>
+    typeof window !== "undefined" && data.svgContent
+      ? DOMPurify.sanitize(data.svgContent, { USE_PROFILES: { svg: true, svgFilters: true } })
+      : ""
+  , [data.svgContent]);
 
   const handleGenerate3D = useCallback(async (geometry: FloorPlanGeometry) => {
     const { buildFloorPlan3D } = await import("@/services/threejs-builder");
@@ -171,7 +179,7 @@ export function ModelTab({ data }: ModelTabProps) {
             background: "#fff", borderRadius: 16, padding: 24,
             height: "100%", overflow: "auto",
           }}>
-            <div dangerouslySetInnerHTML={{ __html: data.svgContent }} style={{ width: "100%", height: "100%" }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizedSvg }} style={{ width: "100%", height: "100%" }} />
           </div>
         )}
       </div>

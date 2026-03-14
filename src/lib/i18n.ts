@@ -19,6 +19,7 @@ const en = {
   'nav.collapseSidebar': 'Collapse sidebar',
   'nav.expandSidebar': 'Expand sidebar',
   'nav.userFallback': 'User',
+  'nav.searchPlaceholder': 'Search workflows, templates...',
 
   // ===== AUTH =====
   'auth.welcomeBack': 'Welcome back',
@@ -48,7 +49,7 @@ const en = {
   // ===== DASHBOARD =====
   'dashboard.title': 'Dashboard',
   'dashboard.subtitle': 'Your no-code AEC workflow builder',
-  'dashboard.beta': 'Beta',
+  'dashboard.beta': 'BETA',
   'dashboard.myWorkflows': 'My Workflows',
   'dashboard.executions': 'Executions',
   'dashboard.hoursSaved': 'Hours Saved',
@@ -124,6 +125,20 @@ const en = {
   'canvas.running': 'Running...',
   'canvas.nodes': 'Nodes',
   'canvas.creationMode': 'Creation mode',
+
+  // ===== ONBOARDING =====
+  'onboarding.step1Title': 'Your node library',
+  'onboarding.step1Body': 'Browse 30+ design nodes organized by category — input, transform, generate, and export. Each node performs a specific BIM task.',
+  'onboarding.step1Hint': '← Drag nodes from here',
+  'onboarding.step2Title': 'Or use AI',
+  'onboarding.step2Body': 'Press the AI button to describe what you want to build. The system will suggest and connect the right nodes automatically.',
+  'onboarding.step2Hint': 'Try: "Analyze a floor plan and generate a 3D model"',
+  'onboarding.step3Title': 'Input nodes are special',
+  'onboarding.step3Body': 'Blue input nodes accept your data — paste text, upload IFC files, or enter prompts. They are always the starting point of a workflow.',
+  'onboarding.step3Hint': 'Click a node to configure it',
+  'onboarding.step4Title': 'Click Run to execute',
+  'onboarding.step4Body': 'Once your workflow is connected, hit the Run button. Nodes execute in order and results appear in the showcase panel.',
+  'onboarding.step4Hint': '⌘ + Enter to run',
 
   // ===== CANVAS EMPTY STATE =====
   'canvas.emptyTitle': 'Build your first workflow',
@@ -311,6 +326,8 @@ const en = {
   'billing.unlimitedRuns': 'Pro plan active. 100 runs/day with full AI access.',
   'billing.currentPlanPro': 'Current Plan: Pro',
   'billing.currentPlanTeam': 'Current Plan: Team',
+  'billing.paymentSuccess': 'Payment successful! Your plan is being activated...',
+  'billing.checkoutCanceled': 'Checkout was canceled. No charges were made.',
 
   // ===== SETTINGS =====
   'settings.title': 'Settings',
@@ -484,6 +501,24 @@ const en = {
   'landing.prompt2': 'Create a concept-to-render pipeline with IFC export...',
   'landing.prompt3': 'Build a massing study from project brief to 3D model...',
   'landing.prompt4': 'Design a facade optimization workflow with AI...',
+
+  // ===== LANDING PIPELINE SECTION =====
+  'landing.pipeline1Title': 'Text to Conceptual Building',
+  'landing.pipeline1Desc': 'Describe your vision in plain text — AI generates a full 3D massing model with floor plans, structural grid, and spatial program.',
+  'landing.pipeline2Title': 'Conceptual Building to IFC',
+  'landing.pipeline2Desc': 'Export any massing model as a structured IFC file — real geometry, metadata, and interoperability for Revit, ArchiCAD, or any BIM tool.',
+  'landing.pipeline3Title': '2D Floor Plan to 3D Render',
+  'landing.pipeline3Desc': 'Upload a 2D floor plan (DXF, PDF, or image) and watch AI reconstruct it as a photorealistic 3D visualization with materials and lighting.',
+  'landing.pipelineStatusDev': 'In Development',
+  'landing.pipelineStatusResearch': 'Research Phase',
+  'landing.pipelineStatusPlanned': 'Planned',
+
+  // ===== LANDING TOOLBAR =====
+  'landing.toolbarSelect': 'Select',
+  'landing.toolbarAddNode': 'Add Node',
+  'landing.toolbarConfigure': 'Configure',
+  'landing.toolbarLayers': 'Layers',
+  'landing.toolbarAIAssist': 'AI Assist',
 
   // ===== LANDING ROADMAP / COMMUNITY VOTING =====
   'landing.roadmap.ctaLabel': 'COMMUNITY ROADMAP',
@@ -790,6 +825,7 @@ const de: Record<keyof typeof en, string | string[]> = {
   'nav.collapseSidebar': 'Seitenleiste einklappen',
   'nav.expandSidebar': 'Seitenleiste ausklappen',
   'nav.userFallback': 'Benutzer',
+  'nav.searchPlaceholder': 'Workflows, Vorlagen suchen...',
 
   // ===== AUTH =====
   'auth.welcomeBack': 'Willkommen zurück',
@@ -819,7 +855,7 @@ const de: Record<keyof typeof en, string | string[]> = {
   // ===== DASHBOARD =====
   'dashboard.title': 'Übersicht',
   'dashboard.subtitle': 'Ihr No-Code AEC Workflow Builder',
-  'dashboard.beta': 'Beta',
+  'dashboard.beta': 'BETA',
   'dashboard.myWorkflows': 'Meine Workflows',
   'dashboard.executions': 'Ausführungen',
   'dashboard.hoursSaved': 'Gesparte Stunden',
@@ -896,6 +932,20 @@ const de: Record<keyof typeof en, string | string[]> = {
   'canvas.nodes': 'Nodes',
   'canvas.creationMode': 'Erstellungsmodus',
 
+  // ===== ONBOARDING =====
+  'onboarding.step1Title': 'Ihre Knotenbibliothek',
+  'onboarding.step1Body': 'Durchsuchen Sie 30+ Designknoten, organisiert nach Kategorie — Eingabe, Transformation, Generierung und Export. Jeder Knoten führt eine bestimmte BIM-Aufgabe aus.',
+  'onboarding.step1Hint': '← Knoten hierher ziehen',
+  'onboarding.step2Title': 'Oder nutzen Sie KI',
+  'onboarding.step2Body': 'Drücken Sie die KI-Taste, um zu beschreiben, was Sie erstellen möchten. Das System schlägt automatisch die richtigen Knoten vor und verbindet sie.',
+  'onboarding.step2Hint': 'Versuchen Sie: „Einen Grundriss analysieren und ein 3D-Modell generieren"',
+  'onboarding.step3Title': 'Eingabeknoten sind besonders',
+  'onboarding.step3Body': 'Blaue Eingabeknoten akzeptieren Ihre Daten — fügen Sie Text ein, laden Sie IFC-Dateien hoch oder geben Sie Prompts ein. Sie sind immer der Ausgangspunkt eines Workflows.',
+  'onboarding.step3Hint': 'Klicken Sie auf einen Knoten, um ihn zu konfigurieren',
+  'onboarding.step4Title': 'Klicken Sie auf Ausführen',
+  'onboarding.step4Body': 'Sobald Ihr Workflow verbunden ist, klicken Sie auf Ausführen. Die Knoten werden der Reihe nach ausgeführt und die Ergebnisse erscheinen im Showcase-Bereich.',
+  'onboarding.step4Hint': '⌘ + Enter zum Ausführen',
+
   // ===== CANVAS EMPTY STATE =====
   'canvas.emptyTitle': 'Erstellen Sie Ihren ersten Workflow',
   'canvas.emptyDesc': 'Ziehen Sie Nodes aus der Bibliothek oder beschreiben Sie mit KI, was Sie möchten',
@@ -914,7 +964,7 @@ const de: Record<keyof typeof en, string | string[]> = {
   'aiChat.gptPowered': 'GPT-gestützter Assistent',
   'aiChat.workflowAssistant': 'KI Workflow-Assistent',
   'aiChat.askAnything': 'Fragen Sie mich etwas:',
-  'aiChat.tellMeWhatToChange': 'Sagen Sie mir was ich ändern soll:',
+  'aiChat.tellMeWhatToChange': 'Sagen Sie mir, was ich ändern soll:',
   'aiChat.placeholder': 'Fragen Sie etwas zu Ihrem Workflow...',
   'aiChat.enterToSend': 'Enter zum Senden · Shift+Enter für neue Zeile',
   'aiChat.suggestAddCost': 'Kostenschätzung zu diesem Workflow hinzufügen',
@@ -1082,6 +1132,8 @@ const de: Record<keyof typeof en, string | string[]> = {
   'billing.unlimitedRuns': 'Pro-Plan aktiv. 100 Ausführungen/Tag mit vollem KI-Zugang.',
   'billing.currentPlanPro': 'Aktueller Tarif: Pro',
   'billing.currentPlanTeam': 'Aktueller Tarif: Team',
+  'billing.paymentSuccess': 'Zahlung erfolgreich! Ihr Plan wird aktiviert...',
+  'billing.checkoutCanceled': 'Der Bezahlvorgang wurde abgebrochen. Es wurden keine Gebühren erhoben.',
 
   // ===== SETTINGS =====
   'settings.title': 'Einstellungen',
@@ -1256,6 +1308,24 @@ const de: Record<keyof typeof en, string | string[]> = {
   'landing.prompt3': 'Eine Baukörperstudie vom Projektbriefing zum 3D-Modell erstellen...',
   'landing.prompt4': 'Einen Fassadenoptimierungs-Workflow mit KI entwerfen...',
 
+  // ===== LANDING PIPELINE SECTION =====
+  'landing.pipeline1Title': 'Text zu konzeptuellem Gebäude',
+  'landing.pipeline1Desc': 'Beschreiben Sie Ihre Vision in Textform — KI generiert ein vollständiges 3D-Massenmodell mit Grundrissen, Tragwerksraster und Raumprogramm.',
+  'landing.pipeline2Title': 'Konzeptgebäude zu IFC',
+  'landing.pipeline2Desc': 'Exportieren Sie jedes Massenmodell als strukturierte IFC-Datei — echte Geometrie, Metadaten und Interoperabilität für Revit, ArchiCAD oder jedes BIM-Werkzeug.',
+  'landing.pipeline3Title': '2D-Grundriss zu 3D-Rendering',
+  'landing.pipeline3Desc': 'Laden Sie einen 2D-Grundriss (DXF, PDF oder Bild) hoch und sehen Sie zu, wie KI ihn als fotorealistische 3D-Visualisierung mit Materialien und Beleuchtung rekonstruiert.',
+  'landing.pipelineStatusDev': 'In Entwicklung',
+  'landing.pipelineStatusResearch': 'Forschungsphase',
+  'landing.pipelineStatusPlanned': 'Geplant',
+
+  // ===== LANDING TOOLBAR =====
+  'landing.toolbarSelect': 'Auswählen',
+  'landing.toolbarAddNode': 'Knoten hinzufügen',
+  'landing.toolbarConfigure': 'Konfigurieren',
+  'landing.toolbarLayers': 'Ebenen',
+  'landing.toolbarAIAssist': 'KI-Assistent',
+
   // ===== LANDING ROADMAP / COMMUNITY VOTING =====
   'landing.roadmap.ctaLabel': 'COMMUNITY-ROADMAP',
   'landing.roadmap.ctaText': 'Was als Nächstes gebaut wird — Sie entscheiden',
@@ -1325,9 +1395,9 @@ const de: Record<keyof typeof en, string | string[]> = {
   'canvas.examplePipeline': 'Beispiel AEC-Pipeline',
 
   // ===== HISTORY EXTRA =====
-  'history.secondsAgo': 's her',
-  'history.minutesAgo': 'min her',
-  'history.hoursAgo': 'h her',
+  'history.secondsAgo': ' Sek.',
+  'history.minutesAgo': ' Min.',
+  'history.hoursAgo': ' Std.',
   'history.conceptRender': 'Konzept-Rendering',
   'history.tablePrefix': 'Tabelle',
   'history.data': 'Daten',

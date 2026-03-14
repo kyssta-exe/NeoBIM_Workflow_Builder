@@ -10,6 +10,7 @@ import {
   CheckCircle2, Sparkles, Layers, Calendar, Clock,
   ChevronRight,
 } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 // ─── Design tokens (matching landing page) ──────────────────────────────────
 
@@ -237,6 +238,7 @@ function FormField({
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function BookDemoPage() {
+  const { t } = useLocale();
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", company: "", role: "", message: "",
   });
@@ -332,7 +334,7 @@ export default function BookDemoPage() {
             border: "1px solid rgba(245,158,11,0.25)",
             background: "rgba(245,158,11,0.06)",
           }}>
-            BETA
+            {t('dashboard.beta')}
           </span>
         </Link>
 

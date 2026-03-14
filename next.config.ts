@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === 'development';
+const R2_CDN_BASE = process.env.R2_PUBLIC_URL || "https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev";
 
 const nextConfig: NextConfig = {
   // ⚡ PERFORMANCE: Image optimization
@@ -65,7 +66,7 @@ const nextConfig: NextConfig = {
               img-src 'self' blob: data: https://oaidalleapiprodscus.blob.core.windows.net https://picsum.photos https://images.unsplash.com https://lh3.googleusercontent.com https://*.vercel.app https://www.facebook.com;
               font-src 'self' https://fonts.gstatic.com data:;
               media-src 'self' blob: data: https://*.klingai.com https://*.kuaishou.com https://*.ksyun.com https://*.ks-cdn.com https://*.kscampus.com https://*;
-              connect-src 'self' blob: data: https://api.openai.com https://api.stability.ai https://*.upstash.io https://api.stripe.com https://api.klingai.com https://*.klingai.com https://*.fal.ai https://fal.run https://www.facebook.com https://connect.facebook.net https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev;
+              connect-src 'self' blob: data: https://api.openai.com https://api.stability.ai https://*.upstash.io https://api.stripe.com https://api.klingai.com https://*.klingai.com https://*.fal.ai https://fal.run https://www.facebook.com https://connect.facebook.net ${R2_CDN_BASE};
               frame-src 'self' blob: https://js.stripe.com;
               worker-src 'self' blob:;
               object-src 'none';
@@ -128,11 +129,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/r2-models/:path*',
-        destination: 'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/models/:path*',
+        destination: `${R2_CDN_BASE}/models/:path*`,
       },
       {
         source: '/r2-textures/:path*',
-        destination: 'https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/textures/:path*',
+        destination: `${R2_CDN_BASE}/textures/:path*`,
       },
     ];
   },

@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Fire-and-forget: don't block registration response on analytics
-    trackSignup(user.id, source).catch(() => {});
+    trackSignup(user.id, source).catch(err => console.warn("[analytics]", err));
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {

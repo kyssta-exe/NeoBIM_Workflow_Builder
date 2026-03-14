@@ -73,14 +73,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email: normalizedEmail },
         });
 
-        if (!user || !user.password) return null;
+        if (!user || !user.password) {
+          console.warn("[auth] Failed login attempt for:", normalizedEmail);
+          return null;
+        }
 
         const passwordsMatch = await bcrypt.compare(
           credentials.password as string,
           user.password
         );
 
-        if (!passwordsMatch) return null;
+        if (!passwordsMatch) {
+          console.warn("[auth] Invalid password for:", normalizedEmail);
+          return null;
+        }
 
         return {
           id: user.id,
