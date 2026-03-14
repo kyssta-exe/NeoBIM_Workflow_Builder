@@ -2,6 +2,7 @@
 
 import { Search, User, Command } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "@/hooks/useLocale";
 
 interface HeaderProps {
   title?: string;
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const router = useRouter();
+  const { t } = useLocale();
   return (
     <header
       className="flex items-center justify-between px-6 dashboard-header"
@@ -40,7 +42,7 @@ export function Header({ title, subtitle }: HeaderProps) {
                 fontFamily: "var(--font-jetbrains), monospace",
               }}
             >
-              BETA
+              {t('dashboard.beta')}
             </span>
           </div>
         )}
@@ -76,7 +78,7 @@ export function Header({ title, subtitle }: HeaderProps) {
           }}
         >
           <Search size={12} />
-          <span className="search-text">Search workflows, templates...</span>
+          <span className="search-text">{t('nav.searchPlaceholder')}</span>
           <div className="flex items-center gap-0.5 ml-2">
             <kbd
               className="rounded"

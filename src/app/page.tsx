@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight, Zap, Sparkles, Users, LayoutGrid,
   Box, Play, Image as ImageIcon, FileCode,
@@ -80,12 +80,13 @@ function FloatingCard({ label, category, delay, style }: { label: string; catego
 // ─── Sidebar Icons ───────────────────────────────────────────────────────────
 
 function SideToolbar() {
+  const { t } = useLocale();
   const icons = [
-    { icon: <MousePointerClick size={18} />, tip: "Select" },
-    { icon: <Workflow size={18} />, tip: "Add Node" },
-    { icon: <Settings size={18} />, tip: "Configure" },
-    { icon: <Layers size={18} />, tip: "Layers" },
-    { icon: <Target size={18} />, tip: "AI Assist" },
+    { icon: <MousePointerClick size={18} />, tip: t('landing.toolbarSelect') },
+    { icon: <Workflow size={18} />, tip: t('landing.toolbarAddNode') },
+    { icon: <Settings size={18} />, tip: t('landing.toolbarConfigure') },
+    { icon: <Layers size={18} />, tip: t('landing.toolbarLayers') },
+    { icon: <Target size={18} />, tip: t('landing.toolbarAIAssist') },
   ];
   return (
     <motion.div
@@ -572,6 +573,7 @@ export default function LandingPage() {
   const [requestForm, setRequestForm] = useState({ name: '', discipline: '', problem: '', email: '' });
   const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [showAllCommunity, setShowAllCommunity] = useState(false);
+  const [communityTab, setCommunityTab] = useState<"built" | "vote">("built");
 
   useEffect(() => {
     try {
@@ -668,7 +670,7 @@ export default function LandingPage() {
             </div>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#F0F0F5", letterSpacing: "-0.3px" }}>
               Build<span style={{ color: "#4F8AFF" }}>Flow</span>
-              <span style={{ fontSize: 9, fontWeight: 600, color: "#F59E0B", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "1px 5px", borderRadius: 6, marginLeft: 6 }}>BETA</span>
+              <span style={{ fontSize: 9, fontWeight: 600, color: "#F59E0B", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", padding: "1px 5px", borderRadius: 6, marginLeft: 6 }}>{t('dashboard.beta')}</span>
             </span>
           </Link>
 
@@ -1156,8 +1158,8 @@ export default function LandingPage() {
 
               {/* Explore Community CTA */}
               <a
-                href="#what-others-built"
-                onClick={e => { e.preventDefault(); document.getElementById("what-others-built")?.scrollIntoView({ behavior: "smooth" }); }}
+                href="#community"
+                onClick={e => { e.preventDefault(); document.getElementById("community")?.scrollIntoView({ behavior: "smooth" }); }}
                 style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "10px 20px", borderRadius: 10,
@@ -1198,7 +1200,7 @@ export default function LandingPage() {
               zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
               cursor: "pointer",
             }}
-            onClick={() => document.getElementById("what-others-built")?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => document.getElementById("community")?.scrollIntoView({ behavior: "smooth" })}
           >
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase",
@@ -1679,40 +1681,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── CTA Banner — Community Roadmap ─────────────────────────── */}
-        <div className="landing-roadmap-cta-strip" style={{
-          position: "relative", padding: "28px 48px",
-          borderTop: "1px solid rgba(245,158,11,0.15)",
-          borderBottom: "1px solid rgba(245,158,11,0.15)",
-          background: "linear-gradient(90deg, rgba(245,158,11,0.04) 0%, rgba(184,115,51,0.04) 50%, rgba(245,158,11,0.04) 100%)",
-        }}>
-          {/* Glow lines */}
-          <div style={{ position: "absolute", top: -1, left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.3), transparent)" }} />
-          <div style={{ position: "absolute", bottom: -1, left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent, rgba(184,115,51,0.3), transparent)" }} />
-          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <ClipboardList size={18} style={{ color: "#F59E0B", flexShrink: 0 }} />
-              <span className="blueprint-annotation" style={{ fontSize: 9, fontWeight: 700, letterSpacing: "2px", color: "#F59E0B", textTransform: "uppercase" as const }}>{t('landing.roadmap.ctaLabel')}</span>
-              <span style={{ fontSize: 15, fontWeight: 600, color: "#F0F0F5" }}>{t('landing.roadmap.ctaText')}</span>
-            </div>
-            <a
-              href="#community"
-              onClick={e => { e.preventDefault(); document.getElementById("community")?.scrollIntoView({ behavior: "smooth" }); }}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                padding: "10px 22px", borderRadius: 10, fontSize: 13, fontWeight: 700,
-                background: "rgba(245,158,11,0.12)", color: "#F59E0B",
-                border: "1px solid rgba(245,158,11,0.25)",
-                textDecoration: "none", cursor: "pointer", transition: "all 0.2s",
-                flexShrink: 0,
-              }}
-              onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(245,158,11,0.2)"; el.style.boxShadow = "0 0 16px rgba(245,158,11,0.15)"; }}
-              onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(245,158,11,0.12)"; el.style.boxShadow = "none"; }}
-            >
-              {t('landing.roadmap.ctaButton')} <ArrowRight size={14} />
-            </a>
-          </div>
-        </div>
+        {/* CTA banner removed — merged into unified community section below */}
 
         {/* ── Workflow Showcase — Live Pipeline Demos ───────────────── */}
         <section id="workflows" className="landing-section" style={{
@@ -1811,8 +1780,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Community Social Proof — What Others Built ───────────── */}
-        <section id="what-others-built" className="landing-section" style={{
+        {/* ── Unified Community Hub — Built + Vote ─────────────────── */}
+        <section id="community" className="landing-section" style={{
           padding: "120px 48px", position: "relative", overflow: "hidden",
           background: "linear-gradient(180deg, #07070D 0%, #0A0A16 50%, #07070D 100%)",
         }}>
@@ -1820,282 +1789,291 @@ export default function LandingPage() {
             <div className="blueprint-grid" style={{ opacity: 0.2 }} />
             <div className="orb-drift-2" style={{ position: "absolute", top: "10%", left: "10%", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)", filter: "blur(25px)" }} />
             <div className="orb-drift-3" style={{ position: "absolute", bottom: "10%", right: "8%", width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,138,255,0.06) 0%, transparent 70%)", filter: "blur(20px)" }} />
+            <div className="orb-drift-1" style={{ position: "absolute", top: "60%", right: "12%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)", filter: "blur(20px)" }} />
           </div>
 
           <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
+            {/* Section Header */}
             <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
               variants={fadeUp} transition={{ duration: 0.6, ease: smoothEase }}
-              style={{ textAlign: "center", marginBottom: 64 }}
+              style={{ textAlign: "center", marginBottom: 48 }}
             >
               <span className="blueprint-annotation" style={{ marginBottom: 16, display: "block", color: "rgba(16,185,129,0.5)" }}>
-                COMMUNITY
+                COMMUNITY HUB
               </span>
-              <div className="accent-line" style={{ background: "linear-gradient(90deg, #10B981, #06B6D4)" }} />
+              <div className="accent-line" style={{ background: "linear-gradient(90deg, #10B981, #F59E0B)" }} />
               <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 900, color: "#F0F0F5", letterSpacing: "-0.04em", lineHeight: 1.1 }}>
-                What Others{" "}
-                <span style={{ background: "linear-gradient(135deg, #10B981, #06B6D4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Have Built</span>
+                Built by the{" "}
+                <span style={{ background: "linear-gradient(135deg, #10B981, #06B6D4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Community</span>
+                {", "}Shaped by{" "}
+                <span style={{ background: "linear-gradient(135deg, #F59E0B, #B87333)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Your Votes</span>
               </h2>
-              <p style={{ fontSize: 16, color: "#7C7C96", maxWidth: 520, margin: "16px auto 0", lineHeight: 1.7 }}>
-                Real workflows created by AEC professionals on BuildFlow. Browse, duplicate, and build on what the community has already proven.
+              <p style={{ fontSize: 16, color: "#7C7C96", maxWidth: 580, margin: "16px auto 0", lineHeight: 1.7 }}>
+                Explore proven workflows from AEC professionals, or vote on what we build next. This is your platform.
               </p>
             </motion.div>
 
-            <motion.div
-              initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }}
-              variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
-              className="landing-social-proof-grid"
-              style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}
-            >
-              {(showAllCommunity ? COMMUNITY_WORKFLOWS : COMMUNITY_WORKFLOWS.slice(0, 6)).map((wf, i) => {
-                const rgb = hexToRgb(wf.color);
-                return (
-                  <motion.div key={wf.name} variants={fadeUp} transition={{ duration: 0.5, delay: i * 0.06, ease: smoothEase }}
-                    className="node-card"
-                    style={{ '--node-port-color': wf.color } as React.CSSProperties}
-                  >
-                    {/* Header */}
-                    <div className="node-header" style={{
-                      background: `linear-gradient(135deg, rgba(${rgb}, 0.12), rgba(${rgb}, 0.04))`,
-                      borderBottom: `1px solid rgba(${rgb}, 0.12)`,
-                      borderRadius: "16px 16px 0 0",
-                    }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: wf.color, boxShadow: `0 0 8px ${wf.color}` }} />
-                      <span style={{ color: wf.color }}>{wf.discipline.toUpperCase()}</span>
-                      <span style={{ marginLeft: "auto", fontSize: 8, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{wf.phase}</span>
-                    </div>
-
-                    <div style={{ padding: "20px 20px 16px" }}>
-                      <h4 style={{ fontSize: 15, fontWeight: 700, color: "#F0F0F5", margin: "0 0 12px", lineHeight: 1.3 }}>{wf.name}</h4>
-
-                      {/* Builder info */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: 8,
-                          background: `linear-gradient(135deg, rgba(${rgb}, 0.2), rgba(${rgb}, 0.08))`,
-                          border: `1px solid rgba(${rgb}, 0.2)`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: wf.color, flexShrink: 0,
-                        }}>
-                          <Building2 size={13} />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#F0F0F5" }}>{wf.builder}</div>
-                          <div style={{ fontSize: 10, color: "#5C5C78" }}>{wf.role} · {wf.firm}</div>
-                        </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 12 }} />
-
-                      {/* Stats */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Star size={12} style={{ color: wf.color }} />
-                            <span style={{ fontSize: 12, fontWeight: 700, color: "#F0F0F5", fontFamily: "monospace" }}>{wf.uses.toLocaleString()}</span>
-                            <span style={{ fontSize: 9, color: "#5C5C78" }}>runs</span>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                            <Copy size={11} style={{ color: "#5C5C78" }} />
-                            <span style={{ fontSize: 12, fontWeight: 600, color: "#9898B0", fontFamily: "monospace" }}>{wf.duplicated}</span>
-                            <span style={{ fontSize: 9, color: "#5C5C78" }}>cloned</span>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <div style={{
-                            width: 6, height: 6, borderRadius: "50%",
-                            background: wf.lastRun === 0 ? "#10B981" : wf.lastRun <= 2 ? "#F59E0B" : "#5C5C78",
-                            boxShadow: wf.lastRun === 0 ? "0 0 6px #10B981" : "none",
-                          }} />
-                          <span style={{ fontSize: 9, color: wf.lastRun === 0 ? "#10B981" : "#5C5C78", fontFamily: "monospace" }}>
-                            {wf.lastRun === 0 ? "Active today" : `${wf.lastRun}d ago`}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div style={{ marginTop: 10, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${Math.min((wf.uses / 700) * 100, 100)}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1.2, ease: smoothEase, delay: 0.3 + i * 0.1 }}
-                          style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${wf.color}, rgba(${rgb}, 0.3))` }}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-
-            {/* Show More / Show Less toggle */}
+            {/* Unified Stats Bar */}
             <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true }}
-              variants={fadeUp} transition={{ duration: 0.4, ease: smoothEase, delay: 0.2 }}
-              style={{ textAlign: "center", marginTop: 32 }}
-            >
-              <button
-                onClick={() => setShowAllCommunity(prev => !prev)}
-                style={{
-                  padding: "12px 28px", borderRadius: 12, cursor: "pointer",
-                  fontSize: 13, fontWeight: 600, letterSpacing: "0.5px",
-                  background: "rgba(16,185,129,0.08)",
-                  border: "1px solid rgba(16,185,129,0.2)",
-                  color: "#10B981",
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  transition: "all 0.3s",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = "rgba(16,185,129,0.15)";
-                  e.currentTarget.style.borderColor = "rgba(16,185,129,0.35)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = "rgba(16,185,129,0.08)";
-                  e.currentTarget.style.borderColor = "rgba(16,185,129,0.2)";
-                }}
-              >
-                {showAllCommunity ? (
-                  <>Show Less <ChevronUp size={14} /></>
-                ) : (
-                  <>View All {COMMUNITY_WORKFLOWS.length} Workflows <ChevronDown size={14} /></>
-                )}
-              </button>
-            </motion.div>
-
-            {/* Community stat bar */}
-            <motion.div
-              initial="hidden" whileInView="visible" viewport={{ once: true }}
-              variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase, delay: 0.3 }}
+              variants={fadeUp} transition={{ duration: 0.5, ease: smoothEase }}
               style={{
-                marginTop: 40, display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap",
-                padding: "20px 24px", borderRadius: 14,
-                background: "rgba(18,18,30,0.6)", border: "1px solid rgba(16,185,129,0.1)",
+                marginBottom: 40, display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap",
+                padding: "18px 24px", borderRadius: 14,
+                background: "rgba(18,18,30,0.6)", border: "1px solid rgba(255,255,255,0.06)",
               }}
+              className="landing-community-stats"
             >
               {[
                 { label: "Active Builders", value: 2840, suffix: "+", color: "#10B981" },
                 { label: "Workflows Shared", value: 720, suffix: "+", color: "#06B6D4" },
                 { label: "Total Executions", value: 128, suffix: "K+", color: "#F59E0B" },
+                { label: t('landing.roadmap.totalVotes'), value: totalVotes, suffix: "", color: "#F59E0B" },
+                { label: t('landing.roadmap.itemsApproved'), value: ROADMAP_ITEMS.filter(i => i.status === "approved" || i.status === "in-progress").length, suffix: "", color: "#10B981" },
               ].map(stat => (
-                <div key={stat.label} style={{ textAlign: "center" }}>
+                <div key={stat.label} style={{ textAlign: "center", minWidth: 80 }}>
                   <AnimatedNumber value={stat.value} suffix={stat.suffix} color={stat.color} />
-                  <div style={{ fontSize: 10, color: "#5C5C78", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 2 }}>{stat.label}</div>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ── Community Voting / Tender Board ──────────────────────── */}
-        <section id="community" className="landing-section" style={{
-          padding: "120px 48px", position: "relative", overflow: "hidden",
-          background: "linear-gradient(180deg, #07070D 0%, #0A0A14 50%, #07070D 100%)",
-        }}>
-          {/* Background */}
-          <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-            <div className="blueprint-grid" style={{ opacity: 0.25 }} />
-            <div className="orb-drift-1" style={{ position: "absolute", top: "10%", right: "8%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%)", filter: "blur(25px)" }} />
-            <div className="orb-drift-2" style={{ position: "absolute", bottom: "15%", left: "5%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(184,115,51,0.06) 0%, transparent 70%)", filter: "blur(20px)" }} />
-          </div>
-
-          <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
-            {/* Header */}
-            <motion.div
-              initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
-              variants={stagger}
-              style={{ textAlign: "center", marginBottom: 56 }}
-            >
-              <motion.span variants={fadeUp} className="blueprint-annotation" style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: "3px", color: "#F59E0B",
-                textTransform: "uppercase" as const, display: "block", marginBottom: 16,
-              }}>
-                {t('landing.roadmap.sectionAnnotation')}
-              </motion.span>
-              <motion.div variants={fadeUp} className="accent-line" style={{
-                width: 48, height: 2, margin: "0 auto 24px",
-                background: "linear-gradient(90deg, #F59E0B, #B87333)",
-                borderRadius: 1,
-              }} />
-              <motion.h2 variants={fadeUp} style={{
-                fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 800, color: "#F0F0F5",
-                lineHeight: 1.15, margin: "0 0 16px",
-              }}>
-                {t('landing.roadmap.sectionTitle1')}{' '}
-                <span style={{ background: "linear-gradient(135deg, #F59E0B, #B87333)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                  {t('landing.roadmap.sectionTitle2')}
-                </span>
-              </motion.h2>
-              <motion.p variants={fadeUp} style={{ fontSize: 16, color: "#9898B0", maxWidth: 560, margin: "0 auto" }}>
-                {t('landing.roadmap.sectionSubtitle')}
-              </motion.p>
-            </motion.div>
-
-            {/* Stats strip */}
-            <motion.div
-              initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-              variants={fadeUp}
-              transition={{ duration: 0.5, ease: smoothEase }}
-              style={{
-                display: "flex", justifyContent: "center", gap: 48, marginBottom: 48, flexWrap: "wrap",
-              }}
-            >
-              {[
-                { label: t('landing.roadmap.totalVotes'), value: totalVotes, color: "#F59E0B" },
-                { label: t('landing.roadmap.itemsInPipeline'), value: ROADMAP_ITEMS.length, color: "#4F8AFF" },
-                { label: t('landing.roadmap.itemsApproved'), value: ROADMAP_ITEMS.filter(i => i.status === "approved" || i.status === "in-progress").length, color: "#10B981" },
-              ].map(stat => (
-                <div key={stat.label} style={{ textAlign: "center" }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 28, fontWeight: 800, color: stat.color }}>
-                    <AnimatedNumber value={stat.value} color={stat.color} />
-                  </div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#5C5C78", textTransform: "uppercase" as const, letterSpacing: "1px", marginTop: 4 }}>
-                    {stat.label}
-                  </div>
+                  <div style={{ fontSize: 9, color: "#5C5C78", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: 2 }}>{stat.label}</div>
                 </div>
               ))}
             </motion.div>
 
-            {/* Vote cards grid */}
-            <motion.div
-              initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
-              variants={stagger}
-              className="landing-roadmap-grid"
-              style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 40 }}
-            >
-              {ROADMAP_ITEMS.map(item => (
-                <VoteCard
-                  key={item.id}
-                  item={item}
-                  votes={roadmapVotes[item.id] ?? item.defaultVotes}
-                  hasVoted={votedItems.has(item.id)}
-                  onVote={() => handleVote(item.id)}
-                  t={t}
-                  maxVotes={maxVotes}
-                />
-              ))}
-            </motion.div>
-
-            {/* Footer CTA */}
+            {/* Tab Switcher */}
             <motion.div
               initial="hidden" whileInView="visible" viewport={{ once: true }}
-              variants={fadeUp}
-              transition={{ duration: 0.5, ease: smoothEase }}
-              style={{ textAlign: "center" }}
+              variants={fadeUp} transition={{ duration: 0.4, ease: smoothEase }}
+              style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}
             >
-              <Link
-                href="/login"
-                style={{
-                  fontSize: 14, color: "#F59E0B", textDecoration: "none",
-                  fontWeight: 600, transition: "color 0.2s",
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#FFBF00"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#F59E0B"; }}
-              >
-                {t('landing.roadmap.signUpToVote')} →
-              </Link>
+              <div className="landing-community-tabs" style={{
+                display: "inline-flex", gap: 4, padding: 4, borderRadius: 14,
+                background: "rgba(18,18,30,0.8)", border: "1px solid rgba(255,255,255,0.06)",
+              }}>
+                {([
+                  { key: "built" as const, label: "What Others Built", icon: <Building2 size={14} />, color: "#10B981" },
+                  { key: "vote" as const, label: "Vote on What\u2019s Next", icon: <ClipboardList size={14} />, color: "#F59E0B" },
+                ]).map(tab => {
+                  const isActive = communityTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setCommunityTab(tab.key)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "10px 24px", borderRadius: 10, cursor: "pointer",
+                        fontSize: 13, fontWeight: 600, letterSpacing: "0.3px",
+                        border: "none",
+                        background: isActive
+                          ? `linear-gradient(135deg, rgba(${tab.color === "#10B981" ? "16,185,129" : "245,158,11"}, 0.15), rgba(${tab.color === "#10B981" ? "16,185,129" : "245,158,11"}, 0.05))`
+                          : "transparent",
+                        color: isActive ? tab.color : "#5C5C78",
+                        transition: "all 0.3s",
+                        position: "relative" as const,
+                      }}
+                      onMouseEnter={e => {
+                        if (!isActive) {
+                          e.currentTarget.style.color = "#9898B0";
+                          e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!isActive) {
+                          e.currentTarget.style.color = "#5C5C78";
+                          e.currentTarget.style.background = "transparent";
+                        }
+                      }}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                      {isActive && (
+                        <motion.div
+                          layoutId="community-tab-indicator"
+                          style={{
+                            position: "absolute", bottom: 0, left: "20%", right: "20%",
+                            height: 2, borderRadius: 1,
+                            background: tab.color,
+                            boxShadow: `0 0 8px ${tab.color}`,
+                          }}
+                          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </motion.div>
+
+            {/* ── Tab Content: What Others Built ── */}
+            <AnimatePresence mode="wait">
+              {communityTab === "built" && (
+                <motion.div
+                  key="built-tab"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.35, ease: smoothEase }}
+                >
+                  <motion.div
+                    initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }}
+                    variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+                    className="landing-social-proof-grid"
+                    style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}
+                  >
+                    {(showAllCommunity ? COMMUNITY_WORKFLOWS : COMMUNITY_WORKFLOWS.slice(0, 6)).map((wf, i) => {
+                      const rgb = hexToRgb(wf.color);
+                      return (
+                        <motion.div key={wf.name} variants={fadeUp} transition={{ duration: 0.5, delay: i * 0.06, ease: smoothEase }}
+                          className="node-card"
+                          style={{ '--node-port-color': wf.color } as React.CSSProperties}
+                        >
+                          <div className="node-header" style={{
+                            background: `linear-gradient(135deg, rgba(${rgb}, 0.12), rgba(${rgb}, 0.04))`,
+                            borderBottom: `1px solid rgba(${rgb}, 0.12)`,
+                            borderRadius: "16px 16px 0 0",
+                          }}>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: wf.color, boxShadow: `0 0 8px ${wf.color}` }} />
+                            <span style={{ color: wf.color }}>{wf.discipline.toUpperCase()}</span>
+                            <span style={{ marginLeft: "auto", fontSize: 8, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{wf.phase}</span>
+                          </div>
+
+                          <div style={{ padding: "20px 20px 16px" }}>
+                            <h4 style={{ fontSize: 15, fontWeight: 700, color: "#F0F0F5", margin: "0 0 12px", lineHeight: 1.3 }}>{wf.name}</h4>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                              <div style={{
+                                width: 28, height: 28, borderRadius: 8,
+                                background: `linear-gradient(135deg, rgba(${rgb}, 0.2), rgba(${rgb}, 0.08))`,
+                                border: `1px solid rgba(${rgb}, 0.2)`,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                color: wf.color, flexShrink: 0,
+                              }}>
+                                <Building2 size={13} />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: "#F0F0F5" }}>{wf.builder}</div>
+                                <div style={{ fontSize: 10, color: "#5C5C78" }}>{wf.role} · {wf.firm}</div>
+                              </div>
+                            </div>
+
+                            <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 12 }} />
+
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <Star size={12} style={{ color: wf.color }} />
+                                  <span style={{ fontSize: 12, fontWeight: 700, color: "#F0F0F5", fontFamily: "monospace" }}>{wf.uses.toLocaleString()}</span>
+                                  <span style={{ fontSize: 9, color: "#5C5C78" }}>runs</span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                  <Copy size={11} style={{ color: "#5C5C78" }} />
+                                  <span style={{ fontSize: 12, fontWeight: 600, color: "#9898B0", fontFamily: "monospace" }}>{wf.duplicated}</span>
+                                  <span style={{ fontSize: 9, color: "#5C5C78" }}>cloned</span>
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                                <div style={{
+                                  width: 6, height: 6, borderRadius: "50%",
+                                  background: wf.lastRun === 0 ? "#10B981" : wf.lastRun <= 2 ? "#F59E0B" : "#5C5C78",
+                                  boxShadow: wf.lastRun === 0 ? "0 0 6px #10B981" : "none",
+                                }} />
+                                <span style={{ fontSize: 9, color: wf.lastRun === 0 ? "#10B981" : "#5C5C78", fontFamily: "monospace" }}>
+                                  {wf.lastRun === 0 ? "Active today" : `${wf.lastRun}d ago`}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div style={{ marginTop: 10, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.04)", overflow: "hidden" }}>
+                              <motion.div
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${Math.min((wf.uses / 700) * 100, 100)}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1.2, ease: smoothEase, delay: 0.3 + i * 0.1 }}
+                                style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${wf.color}, rgba(${rgb}, 0.3))` }}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+
+                  {/* Show More / Show Less toggle */}
+                  <div style={{ textAlign: "center", marginTop: 32 }}>
+                    <button
+                      onClick={() => setShowAllCommunity(prev => !prev)}
+                      style={{
+                        padding: "12px 28px", borderRadius: 12, cursor: "pointer",
+                        fontSize: 13, fontWeight: 600, letterSpacing: "0.5px",
+                        background: "rgba(16,185,129,0.08)",
+                        border: "1px solid rgba(16,185,129,0.2)",
+                        color: "#10B981",
+                        display: "inline-flex", alignItems: "center", gap: 8,
+                        transition: "all 0.3s",
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = "rgba(16,185,129,0.15)";
+                        e.currentTarget.style.borderColor = "rgba(16,185,129,0.35)";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = "rgba(16,185,129,0.08)";
+                        e.currentTarget.style.borderColor = "rgba(16,185,129,0.2)";
+                      }}
+                    >
+                      {showAllCommunity ? (
+                        <>Show Less <ChevronUp size={14} /></>
+                      ) : (
+                        <>View All {COMMUNITY_WORKFLOWS.length} Workflows <ChevronDown size={14} /></>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── Tab Content: Vote on What's Next ── */}
+              {communityTab === "vote" && (
+                <motion.div
+                  key="vote-tab"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.35, ease: smoothEase }}
+                >
+                  <motion.div
+                    initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}
+                    variants={stagger}
+                    className="landing-roadmap-grid"
+                    style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 40 }}
+                  >
+                    {ROADMAP_ITEMS.map(item => (
+                      <VoteCard
+                        key={item.id}
+                        item={item}
+                        votes={roadmapVotes[item.id] ?? item.defaultVotes}
+                        hasVoted={votedItems.has(item.id)}
+                        onVote={() => handleVote(item.id)}
+                        t={t}
+                        maxVotes={maxVotes}
+                      />
+                    ))}
+                  </motion.div>
+
+                  {/* Footer CTA */}
+                  <div style={{ textAlign: "center" }}>
+                    <Link
+                      href="/login"
+                      style={{
+                        fontSize: 14, color: "#F59E0B", textDecoration: "none",
+                        fontWeight: 600, transition: "color 0.2s",
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#FFBF00"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#F59E0B"; }}
+                    >
+                      {t('landing.roadmap.signUpToVote')} →
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 
@@ -2883,13 +2861,13 @@ export default function LandingPage() {
             grid-template-columns: 1fr !important;
             gap: 16px !important;
           }
-          .landing-roadmap-cta-strip {
-            padding: 20px 16px !important;
+          .landing-community-tabs {
+            flex-wrap: wrap !important;
+            justify-content: center !important;
           }
-          .landing-roadmap-cta-strip > div {
-            flex-direction: column !important;
-            text-align: center;
-            gap: 12px !important;
+          .landing-community-stats {
+            gap: 16px !important;
+            padding: 16px !important;
           }
 
           /* ── Workflow Request Layout ── */

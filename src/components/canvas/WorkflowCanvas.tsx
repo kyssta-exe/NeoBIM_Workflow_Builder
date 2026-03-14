@@ -58,7 +58,6 @@ import { useWorkflowStore, isUntitledWorkflow } from "@/stores/workflow-store";
 import { SaveWorkflowModal } from "./modals/SaveWorkflowModal";
 import { useExecutionStore } from "@/stores/execution-store";
 import { useUIStore } from "@/stores/ui-store";
-import { useShallow } from "zustand/react/shallow";
 import { NODE_CATALOGUE_MAP, CATEGORY_CONFIG } from "@/constants/node-catalogue";
 import type { WorkflowNodeData, NodeCategory } from "@/types/nodes";
 import type { WorkflowNode, WorkflowEdge } from "@/types/nodes";
@@ -390,32 +389,38 @@ function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerP
   }, [isDirty, currentWorkflow?.id, isSaving, saveWorkflow]);
 
   // ─── Restore execution artifacts from DB ─────────────────────────
+  const restoreAbortRef = useRef<AbortController | null>(null);
   const restoreExecutionArtifacts = useCallback((wfId: string) => {
-    // Small delay to ensure workflow nodes are populated in Zustand before we set statuses
-    setTimeout(() => {
-      fetch(`/api/executions?workflowId=${wfId}&limit=1`)
-        .then(res => res.ok ? res.json() : null)
-        .then((data: { executions?: Array<{
-          id: string; status: string; startedAt: string; completedAt?: string | null;
-          artifacts?: Array<{
-            tileInstanceId: string; nodeId: string; type: string;
-            data: Record<string, unknown>; nodeLabel?: string | null;
-            title?: string; createdAt?: string;
-          }>;
-        }> } | null) => {
-          if (!data?.executions?.length) return;
-          const latest = data.executions[0];
-          if (latest.artifacts && latest.artifacts.length > 0) {
-            restoreArtifactsFromDB(latest.artifacts, {
-              id: latest.id,
-              status: latest.status,
-              startedAt: latest.startedAt,
-              completedAt: latest.completedAt,
-            });
-          }
-        })
-        .catch(() => { /* Non-fatal — execution restore is best-effort */ });
-    }, 100);
+    // Abort any in-flight restore request
+    restoreAbortRef.current?.abort();
+    const controller = new AbortController();
+    restoreAbortRef.current = controller;
+
+    fetch(`/api/executions?workflowId=${wfId}&limit=1`, { signal: controller.signal })
+      .then(res => res.ok ? res.json() : null)
+      .then((data: { executions?: Array<{
+        id: string; status: string; startedAt: string; completedAt?: string | null;
+        artifacts?: Array<{
+          tileInstanceId: string; nodeId: string; type: string;
+          data: Record<string, unknown>; nodeLabel?: string | null;
+          title?: string; createdAt?: string;
+        }>;
+      }> } | null) => {
+        if (!data?.executions?.length) return;
+        const latest = data.executions[0];
+        if (latest.artifacts && latest.artifacts.length > 0) {
+          restoreArtifactsFromDB(latest.artifacts, {
+            id: latest.id,
+            status: latest.status,
+            startedAt: latest.startedAt,
+            completedAt: latest.completedAt,
+          });
+        }
+      })
+      .catch((err) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        /* Non-fatal — execution restore is best-effort */
+      });
   }, [restoreArtifactsFromDB]);
 
   // ─── Load workflow from URL ?id= param ────────────────────────────
@@ -458,18 +463,20 @@ function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerP
       setIsLoadingWorkflow(false);
     });
   }, [urlWorkflowId, currentWorkflow?.id, loadWorkflow, fitView, restoreExecutionArtifacts, clearArtifacts, clearCurrentExecution]);
-  const { isNodeLibraryOpen, setPromptModeActive, isPromptModeActive, toggleNodeLibrary, isDemoMode, setShowExecutionCompleteModal, pendingNodeAdd, clearPendingNodeAdd } = useUIStore(
-    useShallow((s) => ({
-      isNodeLibraryOpen: s.isNodeLibraryOpen,
-      setPromptModeActive: s.setPromptModeActive,
-      isPromptModeActive: s.isPromptModeActive,
-      toggleNodeLibrary: s.toggleNodeLibrary,
-      isDemoMode: s.isDemoMode,
-      setShowExecutionCompleteModal: s.setShowExecutionCompleteModal,
-      pendingNodeAdd: s.pendingNodeAdd,
-      clearPendingNodeAdd: s.clearPendingNodeAdd,
-    }))
-  );
+
+  // Cleanup: abort any in-flight restore fetch on unmount
+  React.useEffect(() => {
+    return () => { restoreAbortRef.current?.abort(); };
+  }, []);
+
+  const isNodeLibraryOpen = useUIStore(s => s.isNodeLibraryOpen);
+  const setPromptModeActive = useUIStore(s => s.setPromptModeActive);
+  const isPromptModeActive = useUIStore(s => s.isPromptModeActive);
+  const toggleNodeLibrary = useUIStore(s => s.toggleNodeLibrary);
+  const isDemoMode = useUIStore(s => s.isDemoMode);
+  const setShowExecutionCompleteModal = useUIStore(s => s.setShowExecutionCompleteModal);
+  const pendingNodeAdd = useUIStore(s => s.pendingNodeAdd);
+  const clearPendingNodeAdd = useUIStore(s => s.clearPendingNodeAdd);
 
   // Execution timing for celebration modal
   const executionStartRef = useRef<number | null>(null);
@@ -510,7 +517,7 @@ function WorkflowCanvasInner({ workflowId: urlWorkflowId }: WorkflowCanvasInnerP
         api.workflows.list().then(({ workflows }) =>
           setExistingNames(workflows.map((w) => w.name))
         ).catch(() => {})
-      );
+      ).catch(() => {});
     }
   }, [isSaveModalOpen]);
 

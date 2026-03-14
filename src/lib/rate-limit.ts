@@ -18,6 +18,9 @@ try {
       token: url.password || "",
     });
   } else {
+    if (process.env.NODE_ENV === "production") {
+      console.error("[rate-limit] WARNING: No Redis configured in production — rate limiting is disabled!");
+    }
     console.warn("[rate-limit] No Redis configured — rate limiting may not persist across restarts");
     redis = new Redis({
       url: "https://placeholder.upstash.io",

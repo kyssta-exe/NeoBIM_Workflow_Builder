@@ -1119,7 +1119,7 @@ export default function SettingsPage() {
               background: "rgba(245,158,11,0.06)",
               fontFamily: "var(--font-jetbrains), monospace",
             }}>
-              BETA
+              {t('dashboard.beta')}
             </span>
           </div>
           <p style={{ fontSize: 11, color: "#5C5C78", marginTop: 2, letterSpacing: "0.02em" }}>

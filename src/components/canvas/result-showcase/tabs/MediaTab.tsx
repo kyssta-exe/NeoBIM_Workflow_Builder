@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, X, Download, ExternalLink, Loader2, ArrowLeft } from "lucide-react";
 import { useLocale } from "@/hooks/useLocale";
@@ -18,6 +19,13 @@ const RENDER_PHASES = ["Exterior Pull-in", "Building Orbit", "Interior Walkthrou
 export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
   const { t } = useLocale();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+
+  // Sanitize SVG content to prevent XSS
+  const sanitizedSvg = useMemo(() =>
+    typeof window !== "undefined" && data.svgContent
+      ? DOMPurify.sanitize(data.svgContent, { USE_PROFILES: { svg: true, svgFilters: true } })
+      : ""
+  , [data.svgContent]);
 
   // Check for video generation progress
   const videoGenProgress = useExecutionStore(s => {
@@ -373,7 +381,7 @@ export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
             overflow: "auto",
           }}>
             <div
-              dangerouslySetInnerHTML={{ __html: data.svgContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizedSvg }}
               style={{ width: "100%", maxHeight: 600 }}
             />
           </div>

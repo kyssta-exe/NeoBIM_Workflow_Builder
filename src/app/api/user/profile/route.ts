@@ -20,11 +20,13 @@ export async function GET() {
       select: { name: true, email: true, image: true },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       name: user?.name ?? null,
       email: user?.email ?? null,
       image: user?.image ?? null,
     });
+    response.headers.set("Cache-Control", "private, max-age=30");
+    return response;
   } catch (error) {
     console.error("[user/profile/GET]", error);
     return NextResponse.json(formatErrorResponse(UserErrors.INTERNAL_ERROR), { status: 500 });

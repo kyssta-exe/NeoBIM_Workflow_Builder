@@ -1,37 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 const STORAGE_KEY = "buildflow_onboarded";
 
-const STEPS = [
-  {
-    title: "Your node library",
-    body: "30+ design nodes organized by category — Input, Transform, Generate, and Export. Drag any node onto the canvas to start building.",
-    hint: "← Drag nodes from here",
-  },
-  {
-    title: "Or use AI",
-    body: "Click the ✨ AI button in the toolbar to describe your workflow in plain English. Try: \"Generate concept images from a text description.\"",
-    hint: "↑ AI Prompt button",
-  },
-  {
-    title: "Input nodes are special",
-    body: "Blue input nodes have text fields and file uploaders built right in. Type your brief, upload a PDF or IFC file — this is where YOUR data enters the workflow.",
-    hint: "Look for blue nodes with INPUT badge",
-  },
-  {
-    title: "Click Run to execute",
-    body: "Once your workflow is connected and inputs are filled, click the Run button. Watch each node light up and produce real results — descriptions, images, cost estimates, and files.",
-    hint: "↑ Run button in toolbar",
-  },
-];
-
 export function OnboardingTour() {
+  const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
+
+  const STEPS = useMemo(() => [
+    {
+      title: t('onboarding.step1Title'),
+      body: t('onboarding.step1Body'),
+      hint: t('onboarding.step1Hint'),
+    },
+    {
+      title: t('onboarding.step2Title'),
+      body: t('onboarding.step2Body'),
+      hint: t('onboarding.step2Hint'),
+    },
+    {
+      title: t('onboarding.step3Title'),
+      body: t('onboarding.step3Body'),
+      hint: t('onboarding.step3Hint'),
+    },
+    {
+      title: t('onboarding.step4Title'),
+      body: t('onboarding.step4Body'),
+      hint: t('onboarding.step4Hint'),
+    },
+  ], [t]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY)) {

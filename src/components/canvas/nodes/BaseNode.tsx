@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
@@ -265,9 +265,24 @@ interface NodeHandleProps {
   color: string;
 }
 
-function NodeHandle({ port, handleType, position, topPct, color }: NodeHandleProps) {
+const NodeHandle = memo(function NodeHandle({ port, handleType, position, topPct, color }: NodeHandleProps) {
   const [hovered, setHovered] = useState(false);
   const rgb = hexToRgb(color);
+
+  const handleStyle = useMemo(() => ({
+    top: `${topPct}%`,
+    width:  hovered ? 12 : 9,
+    height: hovered ? 12 : 9,
+    background: hovered ? color : "#070809",
+    border: `1.5px solid ${hovered ? color : `rgba(${rgb}, 0.5)`}`,
+    borderRadius: "50%",
+    boxShadow: hovered
+      ? `0 0 12px rgba(${rgb}, 0.6), 0 0 4px rgba(${rgb}, 0.3)`
+      : `0 0 6px rgba(${rgb}, 0.1)`,
+    transition: "all 180ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+    cursor: "crosshair",
+    zIndex: 10,
+  }), [topPct, hovered, color, rgb]);
 
   return (
     <Handle
@@ -277,27 +292,14 @@ function NodeHandle({ port, handleType, position, topPct, color }: NodeHandlePro
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       title={`${handleType === "source" ? "Output" : "Input"}: ${port.label}`}
-      style={{
-        top: `${topPct}%`,
-        width:  hovered ? 12 : 9,
-        height: hovered ? 12 : 9,
-        background: hovered ? color : "#070809",
-        border: `1.5px solid ${hovered ? color : `rgba(${rgb}, 0.5)`}`,
-        borderRadius: "50%",
-        boxShadow: hovered
-          ? `0 0 12px rgba(${rgb}, 0.6), 0 0 4px rgba(${rgb}, 0.3)`
-          : `0 0 6px rgba(${rgb}, 0.1)`,
-        transition: "all 180ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-        cursor: "crosshair",
-        zIndex: 10,
-      }}
+      style={handleStyle}
     />
   );
-}
+});
 
 // ─── ProgressBar (absolute bottom, 2px) ─────────────────────────────────────
 
-function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
+const ProgressBar = memo(function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
   const rgb = hexToRgb(color);
 
   return (
@@ -339,11 +341,11 @@ function ProgressBar({ status, color }: { status: NodeStatus; color: string }) {
       )}
     </div>
   );
-}
+});
 
 // ─── Inline Result Display ──────────────────────────────────────────────────
 
-function InlineResult({ artifact, nodeId }: { artifact: ExecutionArtifact; nodeId: string }) {
+const InlineResult = memo(function InlineResult({ artifact, nodeId }: { artifact: ExecutionArtifact; nodeId: string }) {
   const d = artifact.data as Record<string, unknown>;
 
   if (artifact.type === "text") {
@@ -661,7 +663,7 @@ function InlineResult({ artifact, nodeId }: { artifact: ExecutionArtifact; nodeI
   }
 
   return null;
-}
+});
 
 // ─── BaseNode ─────────────────────────────────────────────────────────────────
 

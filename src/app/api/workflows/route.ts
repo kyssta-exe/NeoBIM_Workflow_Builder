@@ -36,7 +36,9 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ workflows });
+    const response = NextResponse.json({ workflows });
+    response.headers.set("Cache-Control", "private, max-age=30");
+    return response;
   } catch (error) {
     console.error("[workflows GET] Error:", error);
     return NextResponse.json(

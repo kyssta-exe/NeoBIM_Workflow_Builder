@@ -39,6 +39,19 @@ export async function PATCH(req: NextRequest) {
 
     const { apiKeys } = await req.json();
 
+    // Validate apiKeys structure
+    if (apiKeys !== null && typeof apiKeys !== "object") {
+      return NextResponse.json(formatErrorResponse({ title: "Invalid format", message: "API keys must be an object.", code: "VAL_001" }), { status: 400 });
+    }
+    if (apiKeys) {
+      const entries = Object.entries(apiKeys);
+      for (const [key, value] of entries) {
+        if (typeof value !== "string" || value.length > 500) {
+          return NextResponse.json(formatErrorResponse({ title: "Invalid value", message: `Invalid value for key "${key}".`, code: "VAL_001" }), { status: 400 });
+        }
+      }
+    }
+
     await prisma.user.update({
       where: { id: session.user.id },
       data: { apiKeys },
