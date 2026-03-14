@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { createPresignedUploadUrl } from "@/lib/r2";
+import { createPresignedUploadUrl, ensureBucketCors } from "@/lib/r2";
 import { formatErrorResponse, UserErrors } from "@/lib/user-errors";
+
+// Auto-ensure CORS on first presigned URL request (self-healing)
+let corsEnsured = false;
+
+async function ensureCorsOnce() {
+  if (corsEnsured) return;
+  try {
+    const result = await ensureBucketCors();
+    if (result.success) {
+      corsEnsured = true;
+      console.log("[upload-url] CORS auto-configured on first request");
+    } else {
+      console.warn("[upload-url] CORS auto-config failed:", result.error);
+    }
+  } catch (err) {
+    console.warn("[upload-url] CORS auto-config error:", err);
+  }
+}
 
 // POST /api/community-videos/upload-url
 // Returns a presigned R2 URL for direct browser upload (bypasses Vercel body limit)
@@ -14,6 +32,9 @@ export async function POST(request: NextRequest) {
         { status: 401 },
       );
     }
+
+    // Ensure bucket CORS is configured (runs once per cold start)
+    await ensureCorsOnce();
 
     const body = await request.json();
     const filename: string = body.filename || "video.mp4";

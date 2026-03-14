@@ -16,6 +16,8 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   ListObjectsV2Command,
+  PutBucketCorsCommand,
+  GetBucketCorsCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -365,6 +367,68 @@ export async function cleanupOldFiles(): Promise<CleanupResult> {
 
   console.log(`[R2 Cleanup] files: ${filesDeleted} deleted (>${CLEANUP_DAYS_FILES}d), ifc: ${ifcDeleted} deleted (>${CLEANUP_DAYS_IFC}d), errors: ${errors}`);
   return { filesDeleted, ifcDeleted, errors };
+}
+
+// ─── CORS Configuration ───────────────────────────────────────────────────
+
+/**
+ * Ensure the R2 bucket has the correct CORS rules for presigned URL uploads.
+ * This must be called at least once; safe to call repeatedly (idempotent).
+ *
+ * Allows PUT/GET/HEAD/DELETE from the production domain and localhost.
+ */
+export async function ensureBucketCors(
+  allowedOrigins?: string[],
+): Promise<{ success: boolean; error?: string }> {
+  const client = getClient();
+  if (!client) return { success: false, error: "R2 not configured" };
+
+  const origins = allowedOrigins ?? [
+    "https://trybuildflow.in",
+    "https://www.trybuildflow.in",
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ];
+
+  try {
+    await client.send(
+      new PutBucketCorsCommand({
+        Bucket: BUCKET_NAME,
+        CORSConfiguration: {
+          CORSRules: [
+            {
+              AllowedOrigins: origins,
+              AllowedMethods: ["GET", "PUT", "POST", "DELETE", "HEAD"],
+              AllowedHeaders: ["*"],
+              ExposeHeaders: ["ETag", "Content-Length", "Content-Type"],
+              MaxAgeSeconds: 86400, // 24 hours
+            },
+          ],
+        },
+      }),
+    );
+
+    console.log("[R2] CORS configured for origins:", origins);
+    return { success: true };
+  } catch (err) {
+    console.error("[R2] Failed to set CORS:", err);
+    return { success: false, error: String(err) };
+  }
+}
+
+/** Read current CORS configuration from the bucket. */
+export async function getBucketCors(): Promise<unknown> {
+  const client = getClient();
+  if (!client) return null;
+
+  try {
+    const result = await client.send(
+      new GetBucketCorsCommand({ Bucket: BUCKET_NAME }),
+    );
+    return result.CORSRules;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Storage Info ──────────────────────────────────────────────────────────
