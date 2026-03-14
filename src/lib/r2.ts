@@ -21,9 +21,9 @@ import {
 // ─── Config ────────────────────────────────────────────────────────────────
 
 const ACCOUNT_ID = process.env.R2_ACCOUNT_ID ?? "";
-const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID ?? "";
-const SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY ?? "";
-const BUCKET_NAME = process.env.R2_BUCKET_NAME ?? "buildflow-files";
+const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY || "";
+const SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_KEY || "";
+const BUCKET_NAME = process.env.R2_BUCKET_NAME || process.env.R2_BUCKET || "buildflow-files";
 const PUBLIC_URL = process.env.R2_PUBLIC_URL ?? ""; // e.g. https://files.yourdomain.com
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB cap for PDFs/XLSX

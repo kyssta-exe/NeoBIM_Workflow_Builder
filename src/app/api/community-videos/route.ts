@@ -40,7 +40,7 @@ export async function GET() {
 // ─── POST — Upload community video (auth required) ──────────────────────────
 
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
+const ALLOWED_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v", "video/3gpp", "video/3gpp2"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,9 +73,15 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
+
+    console.log("[community-videos POST] File type:", file.type, "name:", file.name, "size:", file.size);
+
+    // Accept known video types, or allow by extension if MIME is empty (iOS Safari)
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const isVideoByExt = ["mp4", "webm", "mov", "m4v", "3gp"].includes(ext);
+    if (!ALLOWED_TYPES.includes(file.type) && !(file.type === "" && isVideoByExt) && !file.type.startsWith("video/")) {
       return NextResponse.json(
-        formatErrorResponse(UserErrors.INVALID_INPUT, "Only MP4, WebM, or MOV files are accepted"),
+        formatErrorResponse(UserErrors.INVALID_INPUT, `File type "${file.type || "unknown"}" not accepted. Use MP4, WebM, or MOV.`),
         { status: 400 },
       );
     }
@@ -90,11 +96,13 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const sanitized = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+    console.log("[community-videos POST] Uploading to R2:", sanitized, "size:", buffer.length);
     const result = await uploadVideoToR2(buffer, `community-${sanitized}`);
+    console.log("[community-videos POST] R2 result:", JSON.stringify(result));
 
     if (!result.success) {
       return NextResponse.json(
-        formatErrorResponse(UserErrors.INTERNAL_ERROR, "Video upload failed"),
+        formatErrorResponse(UserErrors.INTERNAL_ERROR, result.error),
         { status: 500 },
       );
     }

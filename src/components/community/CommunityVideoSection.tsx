@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Play, Pause, X, Volume2, VolumeX, Maximize,
-  Upload, Heart, Eye, Clock, Film,
+  Upload, Heart, Eye, Clock, Film, Trash2,
   CloudUpload, CheckCircle, AlertCircle,
 } from "lucide-react";
 
@@ -122,10 +122,15 @@ function CornerMarks({ color }: { color: string }) {
 function CommunityVideoCard({
   video,
   onPlay,
+  currentUserId,
+  onDelete,
 }: {
   video: CommunityVideoData;
   onPlay: (v: CommunityVideoData) => void;
+  currentUserId: string | null;
+  onDelete: (id: string) => void;
 }) {
+  const isOwner = currentUserId === video.author.id;
   const color = CAT_COLORS[video.category] || C.muted;
   const r = rgb(color);
   const [hovered, setHovered] = useState(false);
@@ -357,22 +362,47 @@ function CommunityVideoCard({
             </span>
           </div>
 
-          {/* Like button */}
-          <button
-            onClick={handleLike}
-            style={{
-              display: "flex", alignItems: "center", gap: 3,
-              background: "none", border: "none", cursor: "pointer",
-              color: liked ? C.rose : C.dim,
-              fontSize: 10, fontWeight: 600, padding: "2px 4px",
-              transition: "color 0.2s, transform 0.2s",
-              transform: liked ? "scale(1.05)" : "scale(1)",
-              fontFamily: "var(--font-jetbrains), monospace",
-            }}
-          >
-            <Heart size={12} fill={liked ? C.rose : "none"} />
-            {likeCount > 0 && likeCount}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {/* Like button */}
+            <button
+              onClick={handleLike}
+              style={{
+                display: "flex", alignItems: "center", gap: 3,
+                background: "none", border: "none", cursor: "pointer",
+                color: liked ? C.rose : C.dim,
+                fontSize: 10, fontWeight: 600, padding: "2px 4px",
+                transition: "color 0.2s, transform 0.2s",
+                transform: liked ? "scale(1.05)" : "scale(1)",
+                fontFamily: "var(--font-jetbrains), monospace",
+              }}
+            >
+              <Heart size={12} fill={liked ? C.rose : "none"} />
+              {likeCount > 0 && likeCount}
+            </button>
+
+            {/* Delete button — only for owner */}
+            {isOwner && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm("Delete this video? This cannot be undone.")) {
+                    onDelete(video.id);
+                  }
+                }}
+                style={{
+                  display: "flex", alignItems: "center", gap: 3,
+                  background: "none", border: "none", cursor: "pointer",
+                  color: C.dim, fontSize: 10, padding: "2px 4px",
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = C.rose; }}
+                onMouseLeave={e => { e.currentTarget.style.color = C.dim; }}
+                title="Delete your video"
+              >
+                <Trash2 size={11} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -463,7 +493,8 @@ function UploadModal({
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error?.message || data?.details || "Upload failed");
+        const msg = data?.error?.message || data?.details || `Upload failed (${res.status})`;
+        throw new Error(msg);
       }
 
       setUploadStatus("success");
@@ -472,7 +503,13 @@ function UploadModal({
         onClose();
       }, 1200);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Upload failed. Please try again.");
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      // Network errors (common on mobile) vs server errors
+      if (msg === "Failed to fetch" || msg.includes("NetworkError") || msg.includes("network")) {
+        setErrorMsg("Network error — check your connection and try again. Large files may timeout on mobile.");
+      } else {
+        setErrorMsg(msg);
+      }
       setUploadStatus("error");
     } finally {
       setUploading(false);
@@ -615,7 +652,7 @@ function UploadModal({
             <input
               ref={fileInputRef}
               type="file"
-              accept="video/mp4,video/webm,video/quicktime"
+              accept="video/*"
               onChange={handleFileSelect}
               style={{ display: "none" }}
             />
@@ -1137,8 +1174,17 @@ export default function CommunityVideoSection() {
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [activeVideo, setActiveVideo] = useState<CommunityVideoData | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const inView = useInView(sectionRef, { once: true, margin: "-100px" });
+
+  // Fetch current session to know who's logged in
+  useEffect(() => {
+    fetch("/api/auth/session")
+      .then(r => r.json())
+      .then(data => { setCurrentUserId(data?.user?.id || null); })
+      .catch(() => {});
+  }, []);
 
   const fetchVideos = useCallback(() => {
     setLoading(true);
@@ -1152,6 +1198,20 @@ export default function CommunityVideoSection() {
   }, []);
 
   useEffect(() => { fetchVideos(); }, [fetchVideos]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    // Optimistic removal
+    setVideos(prev => prev.filter(v => v.id !== id));
+    try {
+      const res = await fetch(`/api/community-videos/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        // Revert on failure
+        fetchVideos();
+      }
+    } catch {
+      fetchVideos();
+    }
+  }, [fetchVideos]);
 
   const totalLikes = videos.reduce((sum, v) => sum + v.likes, 0);
   const gr = rgb(C.green);
@@ -1245,7 +1305,13 @@ export default function CommunityVideoSection() {
               gap: 16, flexWrap: "wrap",
             }}>
               <button
-                onClick={() => setShowUpload(true)}
+                onClick={() => {
+                  if (!currentUserId) {
+                    window.location.href = `/login?callbackUrl=${encodeURIComponent("/workflows")}`;
+                    return;
+                  }
+                  setShowUpload(true);
+                }}
                 style={{
                   padding: "10px 24px", borderRadius: 6,
                   fontSize: 13, fontWeight: 700,
@@ -1344,6 +1410,8 @@ export default function CommunityVideoSection() {
                     key={video.id}
                     video={video}
                     onPlay={setActiveVideo}
+                    currentUserId={currentUserId}
+                    onDelete={handleDelete}
                   />
                 ))}
               </AnimatePresence>
@@ -1415,7 +1483,13 @@ export default function CommunityVideoSection() {
                 Show how you use BuildFlow to turn briefs into buildings.
               </p>
               <button
-                onClick={() => setShowUpload(true)}
+                onClick={() => {
+                  if (!currentUserId) {
+                    window.location.href = `/login?callbackUrl=${encodeURIComponent("/workflows")}`;
+                    return;
+                  }
+                  setShowUpload(true);
+                }}
                 style={{
                   padding: "10px 24px", borderRadius: 6,
                   fontSize: 13, fontWeight: 700,
