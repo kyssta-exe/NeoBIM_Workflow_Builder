@@ -901,10 +901,11 @@ export default function LandingPage() {
   const [communityTab, setCommunityTab] = useState<"built" | "vote">("built");
 
   // ─── Video Showcase state ───────────────────────────────────────────────────
+  const SHOWCASE_R2 = "https://pub-27d9a7371b6d47ff94fee1a3228f1720.r2.dev/workflow-demos";
   const DEMO_VIDEOS = [
-    { id: "wv-01", title: "Text Prompt → Concept Building", subtitle: "From brief to 3D in 90 seconds", category: "Concept Design", duration: "1:32", url: "/videos/Text to Conceptual Building.mp4", nodes: ["Text Prompt", "Brief Analyzer", "Massing Generator"], spec: "3 Nodes · AI-Powered · ~90s", previewStart: 105 },
-    { id: "wv-02", title: "2D Floor Plan → Interactive 3D Model", subtitle: "ML-powered spatial intelligence", category: "Floor Plans", duration: "2:45", url: "/videos/2D Floor Plans into Interactive 3D Model.mp4", nodes: ["Image Upload", "Floor Plan Analyzer", "3D Model Builder"], spec: "3 Nodes · ML Vision · ~120s", previewStart: 110 },
-    { id: "wv-03", title: "3D Model Visualization", subtitle: "Interactive architectural 3D models", category: "Visualization", duration: "1:45", url: "/videos/3d model.mp4", nodes: ["Building Data", "3D Engine", "Model Viewer"], spec: "3 Nodes · WebGL · ~45s", previewStart: 5 },
+    { id: "wv-01", title: "Text Prompt → Concept Building", subtitle: "From brief to 3D in 90 seconds", category: "Concept Design", duration: "1:32", url: `${SHOWCASE_R2}/text-to-concept-building.mp4`, nodes: ["Text Prompt", "Brief Analyzer", "Massing Generator"], spec: "3 Nodes · AI-Powered · ~90s", previewStart: 105 },
+    { id: "wv-02", title: "2D Floor Plan → Interactive 3D Model", subtitle: "ML-powered spatial intelligence", category: "Floor Plans", duration: "2:45", url: `${SHOWCASE_R2}/floorplan-to-3d-model.mp4`, nodes: ["Image Upload", "Floor Plan Analyzer", "3D Model Builder"], spec: "3 Nodes · ML Vision · ~120s", previewStart: 110 },
+    { id: "wv-03", title: "3D Model Visualization", subtitle: "Interactive architectural 3D models", category: "Visualization", duration: "1:45", url: "/videos/3d%20model.mp4", nodes: ["Building Data", "3D Engine", "Model Viewer"], spec: "3 Nodes · WebGL · ~45s", previewStart: 5 },
   ];
   interface LandingVideo { id: string; title: string; category: string; videoUrl: string; duration: string | null; views: number; likes: number; author: { name: string | null; image: string | null } }
   const [communityVideos, setCommunityVideos] = useState<LandingVideo[]>([]);
