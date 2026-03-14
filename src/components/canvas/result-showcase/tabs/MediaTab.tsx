@@ -14,10 +14,22 @@ interface MediaTabProps {
   onExpandVideo: () => void;
 }
 
-const RENDER_PHASES = ["Exterior Pull-in", "Building Orbit", "Interior Walkthrough", "Section Rise"];
-
 export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
   const { t } = useLocale();
+
+  const RENDER_PHASES = useMemo(() => [
+    "Exterior Pull-in",
+    "Building Orbit",
+    "Interior Walkthrough",
+    "Section Rise",
+  ], []);
+
+  const PHASE_LABELS: Record<string, string> = useMemo(() => ({
+    "Exterior Pull-in": t('showcase.phaseExterior'),
+    "Building Orbit": t('showcase.phaseOrbit'),
+    "Interior Walkthrough": t('showcase.phaseInterior'),
+    "Section Rise": t('showcase.phaseSection'),
+  }), [t]);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   // Sanitize SVG content to prevent XSS
@@ -64,10 +76,10 @@ export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
 
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.TEXT_PRIMARY, marginBottom: 4 }}>
-                Rendering Walkthrough
+                {t('showcase.renderingWalkthrough')}
               </div>
               <div style={{ fontSize: 11, color: COLORS.TEXT_MUTED }}>
-                {videoGenProgress.phase ?? "Initializing"} — {Math.min(Math.max(videoGenProgress.progress ?? 0, 0), 100)}%
+                {videoGenProgress.phase ?? t('showcase.initializing')} — {Math.min(Math.max(videoGenProgress.progress ?? 0, 0), 100)}%
               </div>
             </div>
 
@@ -113,7 +125,7 @@ export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
                       letterSpacing: "0.05em",
                     }}
                   >
-                    {phase}
+                    {PHASE_LABELS[phase] ?? phase}
                   </div>
                 );
               })}
@@ -324,7 +336,7 @@ export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
                       }}
                     >
                       <Download size={isSingle ? 12 : 10} />
-                      Download
+                      {t('video.download')}
                     </a>
                   </div>
                 </motion.div>
@@ -430,7 +442,7 @@ export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
               }}
             >
               <ArrowLeft size={14} />
-              Back
+              {t('showcase.back')}
             </button>
 
             <div style={{
@@ -460,7 +472,7 @@ export function MediaTab({ data, onExpandVideo }: MediaTabProps) {
                 }}
               >
                 <Download size={14} />
-                Download
+                {t('video.download')}
               </a>
               <button
                 onClick={() => setLightboxUrl(null)}

@@ -203,7 +203,7 @@ const SHOWCASE = [
 
 // ─── Logo Marquee ────────────────────────────────────────────────────────────
 
-const PARTNER_LOGOS = ["BUILT FOR AEC", "COMPLEMENT TO REVIT & RHINO", "NO CAD NEEDED", "SCHEMATIC DESIGN PHASE"];
+const PARTNER_LOGO_KEYS = ['landing.builtForAecBadge', 'landing.complementBadge', 'landing.noCadBadge', 'landing.schematicBadge'] as const;
 
 // ─── Community Social Proof Data ────────────────────────────────────────────
 
@@ -659,8 +659,8 @@ export default function LandingPage() {
           background: "transparent",
           position: "absolute", top: 0, left: 0, right: 0, zIndex: 100,
         }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", marginRight: "auto" }}>
-            <div style={{
+          <Link href="/" className="landing-logo-link" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", marginRight: "auto" }}>
+            <div className="landing-logo-icon" style={{
               width: 40, height: 40, borderRadius: 12, overflow: "hidden",
               boxShadow: "0 2px 12px rgba(79,138,255,0.2)",
               flexShrink: 0,
@@ -678,7 +678,7 @@ export default function LandingPage() {
             {[
               { label: t('landing.workflows'), href: '#workflows' },
               { label: t('landing.community'), href: '#community' },
-              { label: 'Request', href: '#request-workflow' },
+              { label: t('landing.request'), href: '#request-workflow' },
               { label: t('landing.pricing'), href: '#pricing' },
             ].map(l => (
               <a key={l.href} href={l.href} style={{
@@ -710,7 +710,7 @@ export default function LandingPage() {
                 boxShadow: "0 0 8px #00F5FF",
                 animation: "glow-pulse 2s infinite",
               }} />
-              Watch Demos
+              {t('landing.watchDemos')}
             </Link>
             <LanguageSwitcher />
             <Link href="/login" className="landing-login-link" style={{
@@ -854,9 +854,9 @@ export default function LandingPage() {
           <PromptCard labelText={t('landing.aiPrompt')} quoteText={t('landing.promptQuote')} />
 
           {/* Floating node cards */}
-          <FloatingCard label="PDF Upload" category="input" delay={0.6} style={{ right: 80, top: 140, transform: "rotate(3deg)" }} />
-          <FloatingCard label="Massing Gen" category="generate" delay={0.9} style={{ right: 120, bottom: 200, transform: "rotate(-2deg)" }} />
-          <FloatingCard label="Image Render" category="generate" delay={1.2} style={{ left: 140, bottom: 160, transform: "rotate(1deg)" }} />
+          <FloatingCard label={t('landing.pdfUpload')} category="input" delay={0.6} style={{ right: 80, top: 140, transform: "rotate(3deg)" }} />
+          <FloatingCard label={t('landing.massingGen')} category="generate" delay={0.9} style={{ right: 120, bottom: 200, transform: "rotate(-2deg)" }} />
+          <FloatingCard label={t('landing.imageRender')} category="generate" delay={1.2} style={{ left: 140, bottom: 160, transform: "rotate(1deg)" }} />
 
           {/* ── Product Output Fragment Panels ────────────────────── */}
 
@@ -877,7 +877,7 @@ export default function LandingPage() {
           >
             <div style={{ padding: '10px 14px 6px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(59,130,246,0.1)' }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#3B82F6', boxShadow: '0 0 6px #3B82F6' }} />
-              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: '#3B82F6' }}>Floor Plan</span>
+              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: '#3B82F6' }}>{t('landing.floorPlanPanel')}</span>
             </div>
             <div style={{ padding: '12px 14px' }}>
               <svg width="100%" height="140" viewBox="0 0 230 140" fill="none" style={{ display: 'block' }}>
@@ -893,9 +893,9 @@ export default function LandingPage() {
                 <path d="M75 65 A12 12 0 0 1 75 53" stroke="rgba(0,245,255,0.4)" strokeWidth="0.6" fill="none" />
                 <path d="M120 40 A10 10 0 0 0 130 40" stroke="rgba(0,245,255,0.4)" strokeWidth="0.6" fill="none" />
                 {/* Room labels */}
-                <text x="55" y="42" fill="rgba(59,130,246,0.7)" fontSize="8" fontFamily="monospace" textAnchor="middle">Living</text>
+                <text x="55" y="42" fill="rgba(59,130,246,0.7)" fontSize="8" fontFamily="monospace" textAnchor="middle">{t('landing.living')}</text>
                 <text x="55" y="52" fill="rgba(59,130,246,0.4)" fontSize="7" fontFamily="monospace" textAnchor="middle">35 m²</text>
-                <text x="55" y="98" fill="rgba(59,130,246,0.7)" fontSize="8" fontFamily="monospace" textAnchor="middle">Bed</text>
+                <text x="55" y="98" fill="rgba(59,130,246,0.7)" fontSize="8" fontFamily="monospace" textAnchor="middle">{t('landing.bed')}</text>
                 <text x="55" y="108" fill="rgba(59,130,246,0.4)" fontSize="7" fontFamily="monospace" textAnchor="middle">20 m²</text>
                 <text x="148" y="42" fill="rgba(59,130,246,0.7)" fontSize="8" fontFamily="monospace" textAnchor="middle">Kitchen</text>
                 <text x="148" y="52" fill="rgba(59,130,246,0.4)" fontSize="7" fontFamily="monospace" textAnchor="middle">18 m²</text>
@@ -1242,8 +1242,8 @@ export default function LandingPage() {
               zIndex: 30,
             }}
           >
-            {PARTNER_LOGOS.map(name => (
-              <span key={name} style={{
+            {PARTNER_LOGO_KEYS.map(key => (
+              <span key={key} style={{
                 fontSize: 14, fontWeight: 700, color: "#3A3A50",
                 letterSpacing: "2px", textTransform: "uppercase",
                 transition: "color 0.2s", cursor: "default",
@@ -1251,7 +1251,7 @@ export default function LandingPage() {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#5C5C78"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#3A3A50"; }}
               >
-                {name}
+                {t(key as TranslationKey)}
               </span>
             ))}
           </motion.div>
@@ -2742,7 +2742,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p style={{ fontSize: 11, color: "#2A2A3E" }}>
-            © {new Date().getFullYear()} BuildFlow. Concept design tool for architects and AEC teams.
+            {t('landing.copyrightFull').replace('{year}', String(new Date().getFullYear()))}
           </p>
         </div>
 

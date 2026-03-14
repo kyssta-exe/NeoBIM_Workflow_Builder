@@ -6,9 +6,10 @@
  * so React Flow doesn't interfere with typing/clicking.
  */
 
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useWorkflowStore } from "@/stores/workflow-store";
+import { useLocale } from "@/hooks/useLocale";
 import type { WorkflowNodeData } from "@/types/nodes";
 
 // ─── File store (module-level, not in Zustand — files can't serialize) ───────
@@ -23,6 +24,7 @@ function stopAll(e: React.SyntheticEvent) {
 
 export function TextPromptInput({ nodeId, data }: { nodeId: string; data: WorkflowNodeData }) {
   const updateNode = useWorkflowStore(s => s.updateNode);
+  const t = useLocale(s => s.t);
   const value = (data.inputValue as string) ?? "";
 
   const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -38,7 +40,7 @@ export function TextPromptInput({ nodeId, data }: { nodeId: string; data: Workfl
       <textarea
         value={value}
         onChange={onChange}
-        placeholder={"Describe your building project…\ne.g. A 5-story mixed-use building with\nground-floor retail. Modern Nordic style."}
+        placeholder={t('input.describePlaceholder')}
         rows={3}
         style={{
           width: "100%", resize: "none", boxSizing: "border-box",
@@ -76,13 +78,14 @@ interface FileUploadProps {
 
 export function FileUploadInput({ nodeId, data, accept, label, maxMB = 20, showPreview }: FileUploadProps) {
   const updateNode = useWorkflowStore(s => s.updateNode);
+  const t = useLocale(s => s.t);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileName = data.inputValue as string | undefined;
   const hasFile = !!fileName;
 
   const handleFile = useCallback((file: File) => {
     if (maxMB && file.size > maxMB * 1024 * 1024) {
-      toast.error(`File too large. Max ${maxMB}MB.`);
+      toast.error(`${t('input.fileTooLarge')} ${maxMB}MB.`);
       return;
     }
     inputFileStore.set(nodeId, file);
@@ -103,7 +106,7 @@ export function FileUploadInput({ nodeId, data, accept, label, maxMB = 20, showP
 
     // Set filename immediately (base64 follows async)
     updateNode(nodeId, { data: { ...currentNode.data, inputValue: file.name, fileSize: file.size } });
-  }, [nodeId, updateNode, maxMB]);
+  }, [nodeId, updateNode, maxMB, t]);
 
   const onFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -207,7 +210,7 @@ export function FileUploadInput({ nodeId, data, accept, label, maxMB = 20, showP
           }}
         >
           <div style={{ fontSize: 9, color: "#55556A", lineHeight: 1.5 }}>
-            Drop {label} here or <span style={{ color: "#00F5FF" }}>click to browse</span>
+            Drop {label} {t('input.dropHereOr')} <span style={{ color: "#00F5FF" }}>{t('input.clickToBrowse')}</span>
           </div>
           <div style={{ fontSize: 8, color: "#3A3A4E", marginTop: 2 }}>
             {accept} · max {maxMB}MB
@@ -220,12 +223,21 @@ export function FileUploadInput({ nodeId, data, accept, label, maxMB = 20, showP
 
 // ─── Parameter Input (IN-005) ─────────────────────────────────────────────────
 
-const STYLE_OPTIONS = ["Modern", "Nordic", "Classical", "Industrial", "Tropical", "Brutalist", "Minimalist"];
-
 interface Params { floors: number; gfa: number; height: number; style: string }
 
 export function ParameterInput({ nodeId, data }: { nodeId: string; data: WorkflowNodeData }) {
   const updateNode = useWorkflowStore(s => s.updateNode);
+  const t = useLocale(s => s.t);
+
+  const STYLE_OPTIONS = useMemo(() => [
+    { value: "Modern", label: t('input.styleModern') },
+    { value: "Nordic", label: t('input.styleNordic') },
+    { value: "Classical", label: t('input.styleClassical') },
+    { value: "Industrial", label: t('input.styleIndustrial') },
+    { value: "Tropical", label: t('input.styleTropical') },
+    { value: "Brutalist", label: t('input.styleBrutalist') },
+    { value: "Minimalist", label: t('input.styleMinimalist') },
+  ], [t]);
 
   const params: Params = (() => {
     try {
@@ -260,12 +272,12 @@ export function ParameterInput({ nodeId, data }: { nodeId: string; data: Workflo
     transition: "all 150ms ease",
   };
 
-  const rows: Array<{ key: keyof Params; label: string; type: "number" | "select" }> = [
-    { key: "floors", label: "Floors",     type: "number" },
-    { key: "gfa",    label: "GFA (m²)",   type: "number" },
-    { key: "height", label: "Height (m)", type: "number" },
-    { key: "style",  label: "Style",      type: "select" },
-  ];
+  const rows: Array<{ key: keyof Params; label: string; type: "number" | "select" }> = useMemo(() => [
+    { key: "floors", label: t('input.floors'),  type: "number" },
+    { key: "gfa",    label: t('input.gfa'),     type: "number" },
+    { key: "height", label: t('input.height'),  type: "number" },
+    { key: "style",  label: t('input.style'),   type: "select" },
+  ], [t]);
 
   return (
     <div
@@ -291,7 +303,7 @@ export function ParameterInput({ nodeId, data }: { nodeId: string; data: Workflo
               onChange={e => update(row.key, e.target.value)}
               style={{ ...inputStyle, cursor: "pointer" }}
             >
-              {STYLE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              {STYLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           )}
         </div>
@@ -304,6 +316,7 @@ export function ParameterInput({ nodeId, data }: { nodeId: string; data: Workflo
 
 export function LocationInput({ nodeId, data }: { nodeId: string; data: WorkflowNodeData }) {
   const updateNode = useWorkflowStore(s => s.updateNode);
+  const t = useLocale(s => s.t);
   const value = (data.inputValue as string) ?? "";
 
   const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,7 +336,7 @@ export function LocationInput({ nodeId, data }: { nodeId: string; data: Workflow
           type="text"
           value={value}
           onChange={onChange}
-          placeholder="e.g. Alexanderplatz, Berlin"
+          placeholder={t('input.locationPlaceholder')}
           style={{
             width: "100%", boxSizing: "border-box",
             padding: "6px 8px 6px 22px", borderRadius: 6,

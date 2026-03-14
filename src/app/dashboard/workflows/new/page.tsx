@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,62 +9,64 @@ import { Header } from "@/components/dashboard/Header";
 import { useWorkflowStore } from "@/stores/workflow-store";
 import type { CreationMode } from "@/types/workflow";
 import { generateId } from "@/lib/utils";
-
-const MODES: {
-  id: CreationMode;
-  title: string;
-  description: string;
-  details: string[];
-  icon: React.ReactNode;
-  color: string;
-  recommended?: boolean;
-}[] = [
-  {
-    id: "manual",
-    title: "Manual Mode",
-    description: "Build workflows node-by-node with full control",
-    details: [
-      "Drag nodes from the library",
-      "Connect them with typed ports",
-      "Complete control over every tile",
-      "Best for power users",
-    ],
-    icon: <MousePointer2 size={24} strokeWidth={1.5} />,
-    color: "#4F8AFF",
-  },
-  {
-    id: "prompt",
-    title: "AI Prompt Mode",
-    description: "Describe your workflow in natural language",
-    details: [
-      "Type what you want to build",
-      "AI selects and connects nodes",
-      "Generates complete workflow",
-      "Best for getting started fast",
-    ],
-    icon: <Sparkles size={24} strokeWidth={1.5} />,
-    color: "#8B5CF6",
-    recommended: true,
-  },
-  {
-    id: "hybrid",
-    title: "Hybrid Mode",
-    description: "Start with AI, then refine manually",
-    details: [
-      "AI generates initial workflow",
-      "You adjust and customize it",
-      "Best of both worlds",
-      "Recommended for most users",
-    ],
-    icon: <GitMerge size={24} strokeWidth={1.5} />,
-    color: "#10B981",
-  },
-];
+import { useLocale } from "@/hooks/useLocale";
 
 export default function NewWorkflowPage() {
   const [selectedMode, setSelectedMode] = useState<CreationMode>("prompt");
   const { setCreationMode, resetCanvas, setCurrentWorkflow } = useWorkflowStore();
   const router = useRouter();
+  const { t } = useLocale();
+
+  const MODES = useMemo<{
+    id: CreationMode;
+    title: string;
+    description: string;
+    details: string[];
+    icon: React.ReactNode;
+    color: string;
+    recommended?: boolean;
+  }[]>(() => [
+    {
+      id: "manual",
+      title: t('newWorkflow.manualTitle'),
+      description: t('newWorkflow.manualDesc'),
+      details: [
+        t('newWorkflow.manualDetail1'),
+        t('newWorkflow.manualDetail2'),
+        t('newWorkflow.manualDetail3'),
+        t('newWorkflow.manualDetail4'),
+      ],
+      icon: <MousePointer2 size={24} strokeWidth={1.5} />,
+      color: "#4F8AFF",
+    },
+    {
+      id: "prompt",
+      title: t('newWorkflow.promptTitle'),
+      description: t('newWorkflow.promptDesc'),
+      details: [
+        t('newWorkflow.promptDetail1'),
+        t('newWorkflow.promptDetail2'),
+        t('newWorkflow.promptDetail3'),
+        t('newWorkflow.promptDetail4'),
+      ],
+      icon: <Sparkles size={24} strokeWidth={1.5} />,
+      color: "#8B5CF6",
+      recommended: true,
+    },
+    {
+      id: "hybrid",
+      title: t('newWorkflow.hybridTitle'),
+      description: t('newWorkflow.hybridDesc'),
+      details: [
+        t('newWorkflow.hybridDetail1'),
+        t('newWorkflow.hybridDetail2'),
+        t('newWorkflow.hybridDetail3'),
+        t('newWorkflow.hybridDetail4'),
+      ],
+      icon: <GitMerge size={24} strokeWidth={1.5} />,
+      color: "#10B981",
+    },
+  ], [t]);
 
   const handleCreate = () => {
     resetCanvas();
@@ -72,7 +74,7 @@ export default function NewWorkflowPage() {
     setCurrentWorkflow({
       id: generateId(),
       ownerId: "",
-      name: "Untitled Workflow",
+      name: t('newWorkflow.untitledWorkflow'),
       description: "",
       tags: [],
       tileGraph: { nodes: [], edges: [] },
@@ -88,7 +90,7 @@ export default function NewWorkflowPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Header title="New Workflow" subtitle="Choose how you want to build" />
+      <Header title={t('newWorkflow.title')} subtitle={t('newWorkflow.subtitle')} />
 
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-3xl mx-auto">
@@ -98,15 +100,15 @@ export default function NewWorkflowPage() {
             className="flex items-center gap-1.5 text-xs text-[#55556A] hover:text-[#F0F0F5] transition-colors mb-8"
           >
             <ArrowLeft size={12} />
-            Back to workflows
+            {t('newWorkflow.backToWorkflows')}
           </Link>
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-[#F0F0F5] mb-2">
-              How would you like to start?
+              {t('newWorkflow.howToStart')}
             </h2>
             <p className="text-sm text-[#55556A]">
-              You can switch between modes at any time inside the canvas.
+              {t('newWorkflow.switchModes')}
             </p>
           </div>
 
@@ -139,7 +141,7 @@ export default function NewWorkflowPage() {
                     className="absolute -top-2.5 right-3 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
                     style={{ backgroundColor: mode.color, color: "white" }}
                   >
-                    Recommended
+                    {t('newWorkflow.recommended')}
                   </div>
                 )}
 
@@ -195,7 +197,7 @@ export default function NewWorkflowPage() {
             onClick={handleCreate}
             className="flex items-center gap-2 rounded-xl bg-[#4F8AFF] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#3D7AFF] active:scale-[0.99] transition-all shadow-sm"
           >
-            Create Workflow
+            {t('newWorkflow.createWorkflow')}
             <ArrowRight size={15} />
           </button>
         </div>

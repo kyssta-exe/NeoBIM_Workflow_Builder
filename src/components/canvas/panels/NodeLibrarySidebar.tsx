@@ -6,6 +6,7 @@ import * as LucideIcons from "lucide-react";
 import { NODE_CATALOGUE, CATEGORY_CONFIG, LIVE_NODES } from "@/constants/node-catalogue";
 import type { NodeCatalogueItem, NodeCategory } from "@/types/nodes";
 import { useUIStore } from "@/stores/ui-store";
+import { useLocale } from "@/hooks/useLocale";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ interface NodeLibrarySidebarProps {
 }
 
 export function NodeLibrarySidebar({ alwaysOpen = false }: NodeLibrarySidebarProps) {
+  const { t } = useLocale();
   const { isNodeLibraryOpen, toggleNodeLibrary } = useUIStore();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
@@ -112,7 +114,7 @@ export function NodeLibrarySidebar({ alwaysOpen = false }: NodeLibrarySidebarPro
               whiteSpace: "nowrap",
             }}
           >
-            Node Library
+            {t('canvas.nodeLibrary')}
           </span>
           <span
             style={{
@@ -162,7 +164,7 @@ export function NodeLibrarySidebar({ alwaysOpen = false }: NodeLibrarySidebarPro
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search nodes..."
+              placeholder={t('canvas.searchNodes')}
               style={{
                 width: "100%",
                 padding: "7px 28px 7px 27px",
@@ -238,8 +240,8 @@ export function NodeLibrarySidebar({ alwaysOpen = false }: NodeLibrarySidebarPro
             marginBottom: 4,
             paddingLeft: 2,
           }}>
-            {displayNodes.length} node{displayNodes.length !== 1 ? "s" : ""}
-            {activeFilter !== "all" || search ? " shown" : " total"}
+            {displayNodes.length} {t('canvas.nodes')}
+            {activeFilter !== "all" || search ? ` ${t('canvas.shown')}` : ` ${t('canvas.total')}`}
           </div>
 
           {/* Scrollable node list */}
@@ -262,7 +264,7 @@ export function NodeLibrarySidebar({ alwaysOpen = false }: NodeLibrarySidebarPro
                 fontSize: 11,
                 fontFamily: "var(--font-dm-sans), sans-serif",
               }}>
-                No nodes found
+                {t('canvas.noNodes')}
               </div>
             ) : (
               displayNodes.map((node) => (
@@ -286,7 +288,7 @@ export function NodeLibrarySidebar({ alwaysOpen = false }: NodeLibrarySidebarPro
             textAlign: "center",
             letterSpacing: "0.3px",
           }}>
-            DRAG TO CANVAS TO ADD
+            {t('canvas.dragToCanvasLabel')}
           </div>
         </div>
       )}

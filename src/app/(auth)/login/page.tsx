@@ -21,13 +21,13 @@ function LoginForm() {
   const authErrorParam = searchParams.get("error");
   const expiredParam = searchParams.get("expired");
   const authErrorMessages: Record<string, string> = {
-    OAuthAccountNotLinked: "This email is already registered with a password. Please sign in with your email and password instead.",
-    OAuthCallback: "Something went wrong with Google sign-in. Please try again.",
-    OAuthSignin: "Could not start Google sign-in. Please try again.",
-    Default: "An authentication error occurred. Please try again.",
+    OAuthAccountNotLinked: t('auth.oauthAccountNotLinked'),
+    OAuthCallback: t('auth.oauthCallback'),
+    OAuthSignin: t('auth.oauthSignin'),
+    Default: t('auth.defaultAuthError'),
   };
   const initialError = expiredParam === "true"
-    ? "Your session has expired. Please log in again."
+    ? t('auth.sessionExpired')
     : authErrorParam
       ? authErrorMessages[authErrorParam] ?? authErrorMessages.Default
       : "";
@@ -131,7 +131,7 @@ function LoginForm() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
-          <span style={{ color: "#4F8AFF" }}>AUTHENTICATE</span>
+          <span style={{ color: "#4F8AFF" }}>{t('auth.authenticate')}</span>
         </div>
         <LanguageSwitcher />
       </div>
@@ -278,7 +278,7 @@ function LoginForm() {
             <button
               type="button"
               tabIndex={0}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               onClick={() => setShowPassword(v => !v)}
               style={{
                 position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
@@ -298,9 +298,9 @@ function LoginForm() {
         {/* Forgot password hint */}
         <div style={{ textAlign: "right", marginBottom: 14 }}>
           <span style={{ fontSize: 11.5, color: "#5C5C78" }}>
-            Forgot password? Contact{" "}
+            {t('auth.forgotPassword')}{" "}
             <a href="mailto:support@neobim.io" style={{ color: "#4F8AFF", textDecoration: "none" }}>
-              support
+              {t('auth.contactSupport')}
             </a>
           </span>
         </div>

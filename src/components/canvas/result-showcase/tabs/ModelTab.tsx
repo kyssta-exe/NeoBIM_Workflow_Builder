@@ -244,6 +244,7 @@ function FloorPlanLayout({
   children, rooms, bw, bd, totalArea, roomCount, wallCount,
   iframeRef, extra, aiRenderUrl,
 }: FloorPlanLayoutProps) {
+  const { t } = useLocale();
   const [activeView, setActiveView] = useState("top");
   const [showLabels, setShowLabels] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
@@ -721,7 +722,7 @@ function FloorPlanLayout({
             fontSize: 10, color: "#2A2A40",
             fontFamily: "Inter, system-ui, sans-serif",
           }}>
-            BuildFlow Engine &middot; Three.js r128
+            {t('showcase.buildflowEngineFooter')}
           </span>
         </div>
       </motion.div>

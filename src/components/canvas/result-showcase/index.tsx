@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useUIStore } from "@/stores/ui-store";
 import { useExecutionStore } from "@/stores/execution-store";
+import { useLocale } from "@/hooks/useLocale";
 import { useShowcaseData } from "./useShowcaseData";
 import { ShowcaseHeader } from "./ShowcaseHeader";
 import { TabBar } from "./TabBar";
@@ -21,6 +22,7 @@ interface ResultShowcaseProps {
 }
 
 export function ResultShowcase({ onClose }: ResultShowcaseProps) {
+  const { t } = useLocale();
   const data = useShowcaseData();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const hasAutoSwitched = useRef(false);
@@ -97,8 +99,8 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
 
       if (artData.videoGenerationStatus === "processing" && artData.exteriorTaskId && artData.interiorTaskId) {
         // Kling path: import and call pollVideoGeneration dynamically
-        toast.info("Video regenerating in background...", {
-          description: "Kling AI is generating your walkthrough",
+        toast.info(t('toast.videoRegenerating'), {
+          description: t('toast.klingGenerating'),
           duration: 5000,
         });
         const { retryPollVideoGeneration } = await import("@/hooks/useExecution");
@@ -116,8 +118,8 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
         });
       } else if (artData.videoGenerationStatus === "client-rendering") {
         // Three.js path
-        toast.info("Rendering walkthrough...", {
-          description: "Three.js rendering in your browser",
+        toast.info(t('toast.renderingWalkthrough'), {
+          description: t('toast.threejsRendering'),
           duration: 5000,
         });
         const { retryRenderClientWalkthrough } = await import("@/hooks/useExecution");
@@ -140,14 +142,14 @@ export function ResultShowcase({ onClose }: ResultShowcaseProps) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       console.error("[Retry Video] Error:", msg);
-      toast.error("Video retry failed", { description: msg, duration: 6000 });
+      toast.error(t('toast.videoRetryFailed'), { description: msg, duration: 6000 });
       setVideoGenProgress(nodeId, {
         progress: 0,
         status: "failed",
         failureMessage: msg,
       });
     }
-  }, [data.videoData?.nodeId]);
+  }, [data.videoData?.nodeId, t]);
 
   // ── Persist completed video artifact to DB so it survives page refresh ──
   const artifacts = useExecutionStore(s => s.artifacts);

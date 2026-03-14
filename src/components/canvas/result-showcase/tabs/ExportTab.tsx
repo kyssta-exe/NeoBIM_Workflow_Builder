@@ -266,7 +266,7 @@ export function ExportTab({ data }: ExportTabProps) {
             color: COLORS.TEXT_MUTED,
             marginTop: 2,
           }}>
-            {downloadCards.length} {t('showcase.items')} available for download
+            {downloadCards.length} {t('showcase.items')} {t('showcase.availableForDownload')}
           </div>
         </div>
         <div style={{
@@ -422,7 +422,7 @@ export function ExportTab({ data }: ExportTabProps) {
           </span>
         </div>
         <div style={{ fontSize: 9, color: COLORS.TEXT_MUTED, opacity: 0.5 }}>
-          All exports are concept-level outputs
+          {t('showcase.allExportsConceptLevel')}
         </div>
       </div>
 
@@ -476,7 +476,7 @@ export function ExportTab({ data }: ExportTabProps) {
               }}
             >
               <ArrowLeft size={14} />
-              Back
+              {t('showcase.back')}
             </button>
 
             {/* Top-right: Download + Close */}
@@ -507,7 +507,7 @@ export function ExportTab({ data }: ExportTabProps) {
                 }}
               >
                 <Download size={14} />
-                Download
+                {t('video.download')}
               </a>
               <button
                 onClick={() => setPreviewUrl(null)}

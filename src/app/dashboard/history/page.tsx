@@ -377,7 +377,7 @@ function ExecutionRow({ execution, onRerun, onViewDetails, compareSelected, onTo
               <StatusBadge status={execution.status} />
               {execution.artifacts.length > 0 && (
                 <span style={{ padding: "2px 6px", borderRadius: 8, fontSize: 9, fontWeight: 700, background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.15)", color: "#10B981", fontFamily: "var(--font-jetbrains), monospace" }}>
-                  {execution.artifacts.length} artifacts
+                  {execution.artifacts.length} {t('history.artifacts')}
                 </span>
               )}
             </div>
@@ -407,11 +407,11 @@ function ExecutionRow({ execution, onRerun, onViewDetails, compareSelected, onTo
             </button>
             {execution.status === "SUCCESS" && (
               <button onClick={e => { e.stopPropagation(); shareHistoryToTwitter(execution.workflow.name, execution.artifacts.length, dur ?? "—"); }}
-                title="Share on X"
+                title={t('history.shareOnX')}
                 style={{ padding: "5px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "#44445A", fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 3, transition: "all 150ms" }}
                 onMouseEnter={e => { e.currentTarget.style.color = "#8888A0"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
                 onMouseLeave={e => { e.currentTarget.style.color = "#44445A"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; }}>
-                <Share2 size={9} /> Share
+                <Share2 size={9} /> {t('history.share')}
               </button>
             )}
           </div>
@@ -503,7 +503,7 @@ function EmptyState() {
       </svg>
 
       <div style={{ fontSize: 10, letterSpacing: 4, color: "rgba(255,255,255,0.15)", textTransform: "uppercase", marginBottom: 10, fontFamily: "var(--font-jetbrains), monospace" }}>
-        NO MISSIONS LOGGED
+        {t('history.noMissionsLogged')}
       </div>
       <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", maxWidth: 340, margin: "0 auto 24px", lineHeight: 1.7 }}>
         {t('history.noExecutionsDesc')}
@@ -521,7 +521,7 @@ function EmptyState() {
           cursor: "pointer", transition: "all 200ms ease",
         }}
       >
-        <ArrowRight size={14} /> Launch First Workflow
+        <ArrowRight size={14} /> {t('history.launchFirstWorkflow')}
       </motion.button>
     </motion.div>
   );

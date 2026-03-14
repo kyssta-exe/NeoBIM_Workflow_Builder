@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, X } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 interface SaveWorkflowModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function SaveWorkflowModal({
   onSave,
   onClose,
 }: SaveWorkflowModalProps) {
+  const { t } = useLocale();
   const [name, setName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -146,7 +148,7 @@ export function SaveWorkflowModal({
                       lineHeight: 1.3,
                     }}
                   >
-                    Name your workflow
+                    {t('save.nameYourWorkflow')}
                   </h3>
                   <p
                     style={{
@@ -156,7 +158,7 @@ export function SaveWorkflowModal({
                       marginTop: 2,
                     }}
                   >
-                    Required before saving
+                    {t('save.requiredBeforeSaving')}
                   </p>
                 </div>
               </div>
@@ -194,7 +196,7 @@ export function SaveWorkflowModal({
               value={name}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder="e.g. Residential Tower - Mumbai - Concept A"
+              placeholder={t('save.namePlaceholder')}
               style={{
                 width: "100%",
                 background: "rgba(10,12,14,0.7)",
@@ -241,7 +243,7 @@ export function SaveWorkflowModal({
                       lineHeight: 1.4,
                     }}
                   >
-                    You already have a workflow with this name
+                    {t('save.duplicateName')}
                   </span>
                 ) : (
                   <span
@@ -251,7 +253,7 @@ export function SaveWorkflowModal({
                       lineHeight: 1.4,
                     }}
                   >
-                    Give your workflow a meaningful name so you can find it later
+                    {t('save.nameHint')}
                   </span>
                 )}
               </div>
@@ -304,7 +306,7 @@ export function SaveWorkflowModal({
                   e.currentTarget.style.color = "#9898B0";
                 }}
               >
-                Cancel
+                {t('save.cancel')}
               </button>
               <button
                 onClick={handleSubmit}
@@ -342,7 +344,7 @@ export function SaveWorkflowModal({
                   }
                 }}
               >
-                Save Workflow
+                {t('save.saveWorkflow')}
               </button>
             </div>
           </motion.div>

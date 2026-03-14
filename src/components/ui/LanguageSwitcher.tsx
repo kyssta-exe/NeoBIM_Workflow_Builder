@@ -7,6 +7,7 @@ export function LanguageSwitcher() {
 
   return (
     <button
+      className="lang-switcher"
       onClick={() => setLocale(locale === 'en' ? 'de' : 'en')}
       style={{
         display: 'flex',

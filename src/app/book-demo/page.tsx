@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,6 +35,7 @@ const ease = [0.25, 0.4, 0.25, 1] as const;
 // ─── Video Player Component ─────────────────────────────────────────────────
 
 function DemoVideoPlayer() {
+  const { t } = useLocale();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -135,7 +136,7 @@ function DemoVideoPlayer() {
               marginTop: 16, fontSize: 14, fontWeight: 600,
               color: "rgba(255,255,255,0.7)", letterSpacing: "0.04em",
             }}>
-              Watch Platform Demo
+              {t('bookDemo.watchPlatformDemo')}
             </p>
           </motion.div>
         )}
@@ -246,6 +247,19 @@ export default function BookDemoPage() {
   const [submitted, setSubmitted] = useState(false);
   const [messageFocused, setMessageFocused] = useState(false);
 
+  const features = useMemo(() => [
+    { icon: Layers, label: t('bookDemo.visualBuilder'), desc: t('bookDemo.visualBuilderDesc'), color: COLORS.cyan },
+    { icon: Sparkles, label: t('bookDemo.aiNodes'), desc: t('bookDemo.aiNodesDesc'), color: COLORS.purple },
+    { icon: Building2, label: t('bookDemo.bimIntegration'), desc: t('bookDemo.bimIntegrationDesc'), color: COLORS.copper },
+    { icon: ChevronRight, label: t('bookDemo.endToEnd'), desc: t('bookDemo.endToEndDesc'), color: COLORS.green },
+  ], [t]);
+
+  const trustSignals = useMemo(() => [
+    t('bookDemo.noCreditCard'),
+    t('bookDemo.sessionTime'),
+    t('bookDemo.tailored'),
+  ], [t]);
+
   const updateField = (field: string) => (value: string) =>
     setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -348,7 +362,7 @@ export default function BookDemoPage() {
             textDecoration: "none", transition: "all 0.15s",
           }}>
             <Play size={13} />
-            Try Demo
+            {t('bookDemo.tryDemo')}
           </Link>
           <Link href="/dashboard" style={{
             display: "flex", alignItems: "center", gap: 6,
@@ -358,7 +372,7 @@ export default function BookDemoPage() {
             textDecoration: "none", transition: "all 0.15s",
             boxShadow: "0 0 12px rgba(79,138,255,0.15)",
           }}>
-            Get Started
+            {t('bookDemo.getStarted')}
           </Link>
         </div>
       </motion.nav>
@@ -377,7 +391,7 @@ export default function BookDemoPage() {
             transition: "color 0.15s",
           }}>
             <ArrowLeft size={13} />
-            Back to home
+            {t('bookDemo.backToHome')}
           </Link>
         </motion.div>
 
@@ -396,7 +410,7 @@ export default function BookDemoPage() {
           }}>
             <Calendar size={12} style={{ color: COLORS.blue }} />
             <span style={{ fontSize: 11, fontWeight: 600, color: COLORS.blue, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              Personalized Walkthrough
+              {t('bookDemo.personalizedWalkthrough')}
             </span>
           </div>
 
@@ -404,21 +418,20 @@ export default function BookDemoPage() {
             fontSize: 42, fontWeight: 800, color: COLORS.text,
             letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 12,
           }}>
-            See BuildFlow{" "}
+            {t('bookDemo.seeInActionPrefix')}{" "}
             <span style={{
               background: "linear-gradient(135deg, #00F5FF, #4F8AFF, #6366F1)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}>
-              in Action
+              {t('bookDemo.seeInAction')}
             </span>
           </h1>
           <p style={{
             fontSize: 16, color: COLORS.textSecondary, maxWidth: 540, margin: "0 auto",
             lineHeight: 1.6,
           }}>
-            Watch a quick demo of the platform, then book a personalized session
-            with our team to explore how BuildFlow fits your AEC workflow.
+            {t('bookDemo.pageDescription')}
           </p>
         </motion.div>
 
@@ -456,7 +469,7 @@ export default function BookDemoPage() {
                     animation: "pulse 2s ease infinite",
                   }} />
                   <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.textSecondary, letterSpacing: "0.02em" }}>
-                    PLATFORM DEMO
+                    {t('bookDemo.platformDemo')}
                   </span>
                 </div>
                 <div style={{
@@ -464,7 +477,7 @@ export default function BookDemoPage() {
                   fontSize: 10, color: COLORS.textTertiary,
                 }}>
                   <Clock size={10} />
-                  2 min watch
+                  {t('bookDemo.watchTime')}
                 </div>
               </div>
 
@@ -485,16 +498,11 @@ export default function BookDemoPage() {
                 fontSize: 10, fontWeight: 700, color: COLORS.textTertiary,
                 letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12,
               }}>
-                What you&apos;ll see in the demo
+                {t('bookDemo.whatYouSee')}
               </p>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {[
-                  { icon: Layers, label: "Visual Workflow Builder", desc: "Drag-and-drop node canvas", color: COLORS.cyan },
-                  { icon: Sparkles, label: "AI-Powered Nodes", desc: "Text to 3D, renders & BOQ", color: COLORS.purple },
-                  { icon: Building2, label: "BIM Integration", desc: "IFC import and export", color: COLORS.copper },
-                  { icon: ChevronRight, label: "End-to-End Pipeline", desc: "Brief to deliverables", color: COLORS.green },
-                ].map((feat, i) => (
+                {features.map((feat, i) => (
                   <motion.div
                     key={feat.label}
                     initial={{ opacity: 0, y: 8 }}
@@ -546,11 +554,10 @@ export default function BookDemoPage() {
                   fontSize: 18, fontWeight: 700, color: COLORS.text,
                   letterSpacing: "-0.01em", marginBottom: 4,
                 }}>
-                  Book a Personalized Demo
+                  {t('bookDemo.bookPersonalized')}
                 </h2>
                 <p style={{ fontSize: 12, color: COLORS.textSecondary, lineHeight: 1.5 }}>
-                  Our team will walk you through the platform tailored to your AEC practice.
-                  Usually takes 20-30 minutes.
+                  {t('bookDemo.formDesc')}
                 </p>
               </div>
 
@@ -580,13 +587,13 @@ export default function BookDemoPage() {
                       <CheckCircle2 size={28} style={{ color: COLORS.green }} />
                     </motion.div>
                     <h3 style={{ fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 8 }}>
-                      Demo Request Received!
+                      {t('bookDemo.requestReceived')}
                     </h3>
                     <p style={{
                       fontSize: 13, color: COLORS.textSecondary, lineHeight: 1.6,
                       maxWidth: 320, margin: "0 auto 24px",
                     }}>
-                      We&apos;ll reach out within 24 hours to schedule your personalized walkthrough.
+                      {t('bookDemo.reachOut')}
                     </p>
                     <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
                       <Link href="/demo" style={{
@@ -598,7 +605,7 @@ export default function BookDemoPage() {
                         textDecoration: "none",
                       }}>
                         <Play size={14} />
-                        Try Demo Now
+                        {t('bookDemo.tryNow')}
                       </Link>
                       <Link href="/dashboard" style={{
                         display: "flex", alignItems: "center", gap: 6,
@@ -608,7 +615,7 @@ export default function BookDemoPage() {
                         textDecoration: "none",
                         boxShadow: "0 0 12px rgba(79,138,255,0.15)",
                       }}>
-                        Get Started Free
+                        {t('bookDemo.getStartedFree')}
                       </Link>
                     </div>
                   </motion.div>
@@ -621,12 +628,12 @@ export default function BookDemoPage() {
                     {/* Name + Email row */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       <FormField
-                        icon={User} label="Full Name" name="name"
+                        icon={User} label={t('bookDemo.fullName')} name="name"
                         placeholder="Jane Doe" value={formData.name}
                         onChange={updateField("name")}
                       />
                       <FormField
-                        icon={Mail} label="Work Email" name="email" type="email"
+                        icon={Mail} label={t('bookDemo.workEmail')} name="email" type="email"
                         placeholder="jane@studio.com" value={formData.email}
                         onChange={updateField("email")}
                       />
@@ -635,12 +642,12 @@ export default function BookDemoPage() {
                     {/* Phone + Company row */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                       <FormField
-                        icon={Phone} label="Phone" name="phone" type="tel"
+                        icon={Phone} label={t('bookDemo.phone')} name="phone" type="tel"
                         required={false} placeholder="+1 (555) 000-0000"
                         value={formData.phone} onChange={updateField("phone")}
                       />
                       <FormField
-                        icon={Building2} label="Company / Studio" name="company"
+                        icon={Building2} label={t('bookDemo.company')} name="company"
                         placeholder="Archibuild Studio" value={formData.company}
                         onChange={updateField("company")}
                       />
@@ -648,8 +655,8 @@ export default function BookDemoPage() {
 
                     {/* Role */}
                     <FormField
-                      icon={Layers} label="Your Role" name="role"
-                      placeholder="e.g. Architect, BIM Manager, Project Lead"
+                      icon={Layers} label={t('bookDemo.role')} name="role"
+                      placeholder={t('bookDemo.rolePlaceholder')}
                       value={formData.role} onChange={updateField("role")}
                     />
 
@@ -661,12 +668,12 @@ export default function BookDemoPage() {
                         marginBottom: 6, letterSpacing: "0.04em", textTransform: "uppercase",
                       }}>
                         <MessageSquare size={11} />
-                        What are you looking to solve?
+                        {t('bookDemo.lookingToSolve')}
                       </label>
                       <textarea
                         name="message"
                         rows={3}
-                        placeholder="e.g. We need faster concept design turnaround for competitions..."
+                        placeholder={t('bookDemo.messagePlaceholder')}
                         value={formData.message}
                         onChange={e => updateField("message")(e.target.value)}
                         onFocus={() => setMessageFocused(true)}
@@ -714,12 +721,12 @@ export default function BookDemoPage() {
                               borderTopColor: "#fff",
                             }}
                           />
-                          Sending Request...
+                          {t('bookDemo.sendingRequest')}
                         </>
                       ) : (
                         <>
                           <Send size={15} />
-                          Request Demo
+                          {t('bookDemo.requestDemo')}
                         </>
                       )}
                     </motion.button>
@@ -729,11 +736,7 @@ export default function BookDemoPage() {
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 16,
                       paddingTop: 8,
                     }}>
-                      {[
-                        "No credit card required",
-                        "20-30 min session",
-                        "Tailored to your practice",
-                      ].map(signal => (
+                      {trustSignals.map(signal => (
                         <div key={signal} style={{
                           display: "flex", alignItems: "center", gap: 4,
                           fontSize: 10, color: COLORS.textTertiary,

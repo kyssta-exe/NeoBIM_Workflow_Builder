@@ -223,6 +223,7 @@ function GhostTelemetry({ color = "#1B4FFF", label }: { color?: string; label: s
 // ──────────────────────────────────────────────────────────────────
 
 function SkeletonWorkflows() {
+  const { t } = useLocale();
   const router = useRouter();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -236,7 +237,7 @@ function SkeletonWorkflows() {
         />
       ))}
       <div style={{ textAlign: "center", marginTop: 12 }}>
-        <span style={{ fontSize: 12, color: "#44445A" }}>Awaiting workflow telemetry</span>
+        <span style={{ fontSize: 12, color: "#44445A" }}>{t('analytics.awaitingTelemetry')}</span>
         <br />
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -248,7 +249,7 @@ function SkeletonWorkflows() {
             border: "1px solid rgba(79,138,255,0.25)", background: "rgba(79,138,255,0.04)",
             color: "#4F8AFF", fontSize: 12, fontWeight: 600, cursor: "pointer",
           }}>
-          <ArrowRight size={12} /> Go to Canvas
+          <ArrowRight size={12} /> {t('analytics.goToCanvas')}
         </motion.button>
       </div>
     </div>
@@ -345,7 +346,7 @@ export default function AnalyticsPage() {
           style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 24, justifyContent: "flex-end" }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 10px #10B98180", animation: "dp-pulse 2s ease-in-out infinite" }} />
           <span style={{ fontSize: 10, fontWeight: 700, color: "#10B981", letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: "var(--font-jetbrains), monospace" }}>
-            TELEMETRY ACTIVE
+            {t('analytics.telemetryActive')}
           </span>
         </motion.div>
 
@@ -417,7 +418,7 @@ export default function AnalyticsPage() {
                     {i + 1}
                   </span>
                   <span style={{ flex: 1, fontSize: 13, color: "#E0E0EA", fontWeight: 500 }}>{w.name}</span>
-                  <span style={{ fontSize: 12, color: "#55556A", fontFamily: "var(--font-jetbrains), monospace" }}>{w.runs} run{w.runs !== 1 ? "s" : ""}</span>
+                  <span style={{ fontSize: 12, color: "#55556A", fontFamily: "var(--font-jetbrains), monospace" }}>{w.runs} {w.runs !== 1 ? t('analytics.runsCount') : t('analytics.runCount')}</span>
                   <TrendingUp size={12} style={{ color: "#10B981" }} />
                 </motion.div>
               ))}

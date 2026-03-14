@@ -82,22 +82,22 @@ function keywordFallback(
         data: { sourceColor: COLORS[lastNode.data.category as NodeCategory] ?? "#00F5FF", targetColor: COLORS[found.category as NodeCategory] ?? "#00F5FF" },
       });
     }
-    return `Added **${found.name}** to your workflow.`;
+    return t('aiChat.addedToWorkflow').replace('{0}', found.name);
   }
 
   if (/\b(remove|delete|drop|take out)\b/.test(lower)) {
     const found = fuzzyFindNode(message);
     if (!found) return t('aiChat.nodeNotFoundRemove');
     const nodeToRemove = nodes.find(n => n.data.catalogueId === found.id);
-    if (!nodeToRemove) return `**${found.name}** is not on the canvas.`;
+    if (!nodeToRemove) return t('aiChat.notOnCanvas').replace('{0}', found.name);
     removeNode(nodeToRemove.id);
-    return `Removed **${found.name}** from your workflow.`;
+    return t('aiChat.removedFromWorkflow').replace('{0}', found.name);
   }
 
   if (/\b(explain|what does|how|describe)\b/.test(lower)) {
     if (nodes.length === 0) return t('aiChat.canvasEmpty');
     const lines = nodes.map(n => `• **${n.data.label}** — ${n.data.inputs.length > 0 ? n.data.inputs.map(i => i.label).join(", ") : "no input"} → ${n.data.outputs.length > 0 ? n.data.outputs.map(o => o.label).join(", ") : "no output"}`);
-    return `Your workflow has ${nodes.length} nodes:\n${lines.join("\n")}`;
+    return `${t('aiChat.workflowHasNodes')} ${nodes.length} ${t('aiChat.nodesColon')}\n${lines.join("\n")}`;
   }
 
   return "";

@@ -391,7 +391,7 @@ export function NodeLibraryPanel() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search nodes or type a command..."
+              placeholder={t('canvas.searchNodesCommand')}
               style={{
                 width: "100%", height: 46,
                 background: "transparent",
@@ -461,7 +461,7 @@ export function NodeLibraryPanel() {
             fontSize: 10, color: "rgba(184,115,51,0.4)", alignSelf: "center",
             fontFamily: "'Space Mono', monospace",
           }}>
-            {displayNodes.length} nodes
+            {displayNodes.length} {t('canvas.nodes')}
           </span>
         </div>
 
@@ -515,10 +515,10 @@ export function NodeLibraryPanel() {
           fontSize: 10, color: "rgba(184,115,51,0.4)",
           flexShrink: 0,
         }}>
-          <span><kbd style={{ background: "rgba(184,115,51,0.1)", padding: "1px 5px", borderRadius: 3, fontSize: 9 }}>↑↓</kbd> navigate</span>
-          <span><kbd style={{ background: "rgba(184,115,51,0.1)", padding: "1px 5px", borderRadius: 3, fontSize: 9 }}>↵</kbd> add node</span>
-          <span><kbd style={{ background: "rgba(184,115,51,0.1)", padding: "1px 5px", borderRadius: 3, fontSize: 9 }}>esc</kbd> close</span>
-          <span style={{ marginLeft: "auto" }}>drag to canvas</span>
+          <span><kbd style={{ background: "rgba(184,115,51,0.1)", padding: "1px 5px", borderRadius: 3, fontSize: 9 }}>↑↓</kbd> {t('canvas.navigateHint')}</span>
+          <span><kbd style={{ background: "rgba(184,115,51,0.1)", padding: "1px 5px", borderRadius: 3, fontSize: 9 }}>↵</kbd> {t('canvas.addNodeHint')}</span>
+          <span><kbd style={{ background: "rgba(184,115,51,0.1)", padding: "1px 5px", borderRadius: 3, fontSize: 9 }}>esc</kbd> {t('canvas.escCloseHint')}</span>
+          <span style={{ marginLeft: "auto" }}>{t('canvas.dragToCanvas')}</span>
         </div>
       </motion.div>
     </>

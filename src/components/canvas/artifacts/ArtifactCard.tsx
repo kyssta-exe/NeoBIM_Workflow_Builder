@@ -5,24 +5,39 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Download, ChevronDown, X, FileText, Image as ImageIcon, Database, BarChart2, Table2, File, LayoutGrid, Box, RefreshCw, Loader2, Video } from "lucide-react";
 import DOMPurify from "dompurify";
 import dynamic from "next/dynamic";
+import { formatBytes } from "@/lib/utils";
+import { useLocale } from "@/hooks/useLocale";
+import type { TranslationKey } from "@/lib/i18n";
+
+function ArchitecturalViewerLoader() {
+  const { t } = useLocale();
+  return <div style={{ height: 400, background: "#0D0D1A", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>{t('artifact.loadingViewer')}</span></div>;
+}
+
+function Building3DViewerLoader() {
+  const { t } = useLocale();
+  return <div style={{ height: 320, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>{t('artifact.loading3dViewer')}</span></div>;
+}
+
+function VideoBodyLoader() {
+  const { t } = useLocale();
+  return <div style={{ height: 180, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>{t('artifact.loadingVideoPlayer')}</span></div>;
+}
 
 const ArchitecturalViewer = dynamic(() => import("./architectural-viewer/ArchitecturalViewer"), {
   ssr: false,
-  loading: () => <div style={{ height: 400, background: "#0D0D1A", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading Architectural Viewer…</span></div>,
+  loading: () => <ArchitecturalViewerLoader />,
 });
 
 const Building3DViewer = dynamic(() => import("./Building3DViewer"), {
   ssr: false,
-  loading: () => <div style={{ height: 320, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading 3D viewer…</span></div>,
+  loading: () => <Building3DViewerLoader />,
 });
 
 const VideoBody = dynamic(() => import("./VideoBody").then(m => ({ default: m.VideoBody })), {
   ssr: false,
-  loading: () => <div style={{ height: 180, background: "#0D0D1A", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 11, color: "#3A3A50" }}>Loading video player…</span></div>,
+  loading: () => <VideoBodyLoader />,
 });
-
-import { formatBytes } from "@/lib/utils";
-import { useLocale } from "@/hooks/useLocale";
 import type {
   ExecutionArtifact,
   ArtifactType,
@@ -78,39 +93,39 @@ interface QualityBadge {
   bg: string;
 }
 
-function getQualityBadge(artifact: ExecutionArtifact): QualityBadge | null {
+function getQualityBadge(artifact: ExecutionArtifact, t: (key: TranslationKey) => string): QualityBadge | null {
   const meta = artifact.metadata ?? {};
   const isReal = !!meta.real;
   const isMock = !!meta.mock || meta.source === "mock";
 
   if (isMock) {
-    return { label: "Sample Data", color: "#6B7280", bg: "rgba(107,114,128,0.12)" };
+    return { label: t('artifact.sampleData'), color: "#6B7280", bg: "rgba(107,114,128,0.12)" };
   }
 
   if (artifact.type === "image" && isReal) {
-    return { label: "AI Generated · Concept", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" };
+    return { label: t('artifact.aiConcept'), color: "#3B82F6", bg: "rgba(59,130,246,0.12)" };
   }
 
   if (artifact.type === "table" && isReal) {
-    return { label: "AI Estimate · ±15-20%", color: "#F59E0B", bg: "rgba(245,158,11,0.12)" };
+    return { label: t('artifact.aiEstimate'), color: "#F59E0B", bg: "rgba(245,158,11,0.12)" };
   }
 
   if ((artifact.type === "text" || artifact.type === "json" || artifact.type === "kpi") && isReal) {
-    return { label: "AI Generated · Review", color: "#8B5CF6", bg: "rgba(139,92,246,0.12)" };
+    return { label: t('artifact.aiReview'), color: "#8B5CF6", bg: "rgba(139,92,246,0.12)" };
   }
 
   if (artifact.type === "3d" || artifact.type === "svg") {
-    return { label: "AI Generated · Concept", color: "#3B82F6", bg: "rgba(59,130,246,0.12)" };
+    return { label: t('artifact.aiConcept'), color: "#3B82F6", bg: "rgba(59,130,246,0.12)" };
   }
 
   if (artifact.type === "html") {
-    return { label: "Interactive · Three.js", color: "#00F5FF", bg: "rgba(0,245,255,0.12)" };
+    return { label: t('artifact.interactiveThreejs'), color: "#00F5FF", bg: "rgba(0,245,255,0.12)" };
   }
 
   if (artifact.type === "video") {
     const d = artifact.data as Record<string, unknown> | undefined;
     const model = d?.usedOmni === true ? "Kling 3.0 Omni" : "Kling 2.6";
-    return { label: `AI Generated · ${model}`, color: "#00F5FF", bg: "rgba(0,245,255,0.12)" };
+    return { label: `${t('artifact.aiGenerated')} · ${model}`, color: "#00F5FF", bg: "rgba(0,245,255,0.12)" };
   }
 
   return null;
@@ -138,7 +153,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
   const accentColor = nodeCategory ? CATEGORY_COLOR[nodeCategory] : "#4F8AFF";
   const typeColor   = TYPE_COLOR[artifact.type] ?? "#4F8AFF";
   const rgb         = hexToRgb(accentColor);
-  const qualityBadge = getQualityBadge(artifact);
+  const qualityBadge = getQualityBadge(artifact, t);
   const canRegenerate = onRegenerate && (regenRemaining === undefined || regenRemaining > 0);
 
   return (
@@ -211,7 +226,7 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
           <button
             onClick={e => { e.stopPropagation(); onRegenerate!(); }}
             disabled={isRegenerating}
-            title={regenRemaining !== undefined ? `Regenerate (${regenRemaining} left)` : "Regenerate"}
+            title={regenRemaining !== undefined ? `${t('artifact.regenerate')} (${regenRemaining} ${t('artifact.left')})` : t('artifact.regenerate')}
             style={{
               display: "flex", alignItems: "center", gap: 3,
               padding: "3px 8px", borderRadius: 6,
@@ -290,25 +305,35 @@ export function ArtifactCard({ artifact, nodeLabel, nodeCategory, onDismiss, onR
         {!collapsed && (artifact.type === "table" || artifact.type === "kpi") && !!artifact.metadata?.real && (
           <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
             <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
-              Cost estimates are approximate, based on regional averages.
+              {t('artifact.costDisclaimer')}
             </p>
           </div>
         )}
         {!collapsed && artifact.type === "image" && (
           <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
             <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
-              AI-generated concept visualization. Not architecturally accurate.
+              {t('artifact.renderDisclaimer')}
             </p>
           </div>
         )}
         {!collapsed && artifact.type === "video" && (
           <div style={{ padding: "6px 14px 8px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
             <p style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", margin: 0 }}>
-              AI-generated cinematic walkthrough. For presentation purposes only.
+              {t('artifact.videoDisclaimer')}
             </p>
           </div>
         )}
     </motion.div>
+  );
+}
+
+// Functional fallback for error boundary (supports i18n hooks)
+function ArtifactErrorFallback({ type }: { type: string }) {
+  const { t } = useLocale();
+  return (
+    <div style={{ padding: "8px 14px", fontSize: 11, color: "#EF4444" }}>
+      {t('artifact.unableToRender')} {type} {t('artifact.artifact')}
+    </div>
   );
 }
 
@@ -328,11 +353,7 @@ class ArtifactErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div style={{ padding: "8px 14px", fontSize: 11, color: "#EF4444" }}>
-          Unable to render {this.props.fallbackType} artifact
-        </div>
-      );
+      return <ArtifactErrorFallback type={this.props.fallbackType} />;
     }
     return this.props.children;
   }
@@ -476,7 +497,7 @@ function TableBody({ data }: { data: TableArtifactData }) {
       {/* Project type badge for cost tables */}
       {isCostTable && projectType && (
         <div style={{ padding: "4px 14px 2px", fontSize: 9, color: "#F59E0B", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-          {projectType} estimate · AACE Class 4
+          {projectType} {t('artifact.estimate')} · {t('artifact.aaceClass4')}
         </div>
       )}
       <div style={{ overflow: "auto", maxHeight: 200 }}>
@@ -540,7 +561,7 @@ function TableBody({ data }: { data: TableArtifactData }) {
           lineHeight: 1.5,
           fontStyle: "italic",
         }}>
-          {disclaimer || "Preliminary estimate (±15-20% accuracy). Based on RSMeans 2024/2025. Valid 90 days. Not for contract pricing."}
+          {disclaimer || t('artifact.preliminaryEstimate')}
         </div>
       )}
     </div>
@@ -616,7 +637,7 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
         {isTextTo3D && (
           <div style={{ marginBottom: 8 }}>
             <div style={{ fontSize: 10, color: "#6A6A80", marginBottom: 4, fontWeight: 500 }}>
-              Source Image (DALL-E 3)
+              {t('artifact.sourceImage')}
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -633,7 +654,7 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
           </div>
         )}
         <div style={{ fontSize: 10, color: "#6A6A80", marginBottom: 4, fontWeight: 500 }}>
-          {isTextTo3D ? "3D Model (SAM 3D)" : "3D Model"}
+          {isTextTo3D ? t('artifact.model3dSam') : t('artifact.model3d')}
         </div>
         <Building3DViewer glbUrl={glbData.glbUrl as string} height={320} />
         <div style={{ marginTop: 6, display: "flex", gap: 6 }}>
@@ -644,7 +665,7 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
             rel="noopener noreferrer"
             style={{ fontSize: 10, color: "#4FC3F7", textDecoration: "underline" }}
           >
-            Download GLB
+            {t('artifact.downloadGlb')}
           </a>
           {typeof glbData.plyUrl === "string" && (
             <a
@@ -654,12 +675,12 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
               rel="noopener noreferrer"
               style={{ fontSize: 10, color: "#4FC3F7", textDecoration: "underline" }}
             >
-              Download PLY
+              {t('artifact.downloadPly')}
             </a>
           )}
         </div>
         <div style={{ fontSize: 9, color: "#4A4A60", fontStyle: "italic", marginTop: 4 }}>
-          {pipeline ? `Pipeline: ${pipeline}` : "Generated via SAM 3D (Meta)"} · Files expire in 7 days
+          {pipeline ? `${t('artifact.pipelineLabel')}: ${pipeline}` : t('artifact.generatedViaSam')} · {t('artifact.filesExpire')}
         </div>
       </div>
     );
@@ -720,7 +741,7 @@ function Massing3dBody({ data }: { data: Massing3dData }) {
               marginBottom: 4, letterSpacing: "0.02em",
             }}>
               <Box size={12} style={{ display: "inline", verticalAlign: "-1px", marginRight: 5 }} />
-              Load 3D View
+              {t('artifact.load3dView')}
             </div>
             <div style={{ fontSize: 10, color: "#3A3A50" }}>
               {data.floors}F · {data.height.toFixed(1)}m · {data.footprint} m²
@@ -798,19 +819,19 @@ function HtmlBody({ data }: { data: HtmlArtifactData }) {
             background: "#07070D",
           }}
           sandbox="allow-scripts allow-same-origin allow-pointer-lock"
-          title={data?.label ?? "Interactive 3D Model"}
+          title={data?.label ?? t('artifact.interactive3dModel')}
         />
       ) : (
         <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#5C5C78", fontSize: 11 }}>
-          No HTML content available
+          {t('artifact.noHtmlContent')}
         </div>
       )}
       {/* Download link */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
         <div style={{ fontSize: 10, color: "#5C5C78" }}>
-          {data?.roomCount ? `${data.roomCount} rooms` : ""}
-          {data?.wallCount ? ` · ${data.wallCount} walls` : ""}
-          {!data?.roomCount && !data?.wallCount ? "Interactive 3D Model" : ""}
+          {data?.roomCount ? `${data.roomCount} ${t('artifact.rooms')}` : ""}
+          {data?.wallCount ? ` · ${data.wallCount} ${t('artifact.walls')}` : ""}
+          {!data?.roomCount && !data?.wallCount ? t('artifact.interactive3dModel') : ""}
         </div>
         {downloadUrl && (
           <a

@@ -454,8 +454,8 @@ export function CanvasToolbar({
                 >
                   <div style={{ padding: 4 }}>
                     {[
-                      { label: "Share on X", action: () => shareWorkflowToTwitter(workflowName) },
-                      { label: "Copy Link", action: () => copyShareLink() },
+                      { label: t('canvas.shareOnX'), action: () => shareWorkflowToTwitter(workflowName) },
+                      { label: t('canvas.copyLink'), action: () => copyShareLink() },
                     ].map(item => (
                       <button
                         key={item.label}

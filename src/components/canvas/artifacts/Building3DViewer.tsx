@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { Loader2, AlertCircle, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 interface Building3DViewerProps {
   glbUrl: string;
@@ -17,6 +18,7 @@ export default function Building3DViewer({
   height = 320,
   onError,
 }: Building3DViewerProps) {
+  const { t } = useLocale();
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const animFrameRef = useRef<number>(0);
@@ -210,7 +212,7 @@ export default function Building3DViewer({
           }}
           className="rounded p-1.5 transition-colors"
           style={{ background: "rgba(13, 13, 26, 0.8)", color: "#4FC3F7" }}
-          title="Reset camera"
+          title={t('viewer.resetCamera')}
         >
           <RotateCcw size={14} />
         </button>
@@ -218,7 +220,7 @@ export default function Building3DViewer({
           onClick={() => setExpanded((v) => !v)}
           className="rounded p-1.5 transition-colors"
           style={{ background: "rgba(13, 13, 26, 0.8)", color: "#4FC3F7" }}
-          title={expanded ? "Collapse" : "Expand"}
+          title={expanded ? t('viewer.collapse') : t('viewer.expand')}
         >
           {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </button>
@@ -232,7 +234,7 @@ export default function Building3DViewer({
         >
           <Loader2 size={24} className="animate-spin" style={{ color: "#4FC3F7" }} />
           <span style={{ fontSize: 11, color: "#6B6B80" }}>
-            Loading 3D model{progress > 0 ? ` (${progress}%)` : "..."}
+            {t('viewer.loading3dModel')}{progress > 0 ? ` (${progress}%)` : "..."}
           </span>
         </div>
       )}
@@ -250,7 +252,7 @@ export default function Building3DViewer({
             className="rounded px-3 py-1 text-xs transition-colors"
             style={{ background: "rgba(79, 195, 247, 0.15)", color: "#4FC3F7", border: "1px solid rgba(79, 195, 247, 0.3)" }}
           >
-            Retry
+            {t('viewer.retry')}
           </button>
         </div>
       )}

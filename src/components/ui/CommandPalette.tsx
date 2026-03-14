@@ -13,6 +13,7 @@ import { NODE_CATALOGUE } from "@/constants/node-catalogue";
 import { PREBUILT_WORKFLOWS } from "@/constants/prebuilt-workflows";
 import { useWorkflowStore } from "@/stores/workflow-store";
 import { useExecution } from "@/hooks/useExecution";
+import { useLocale } from "@/hooks/useLocale";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,6 +64,7 @@ export function CommandPalette() {
   const router = useRouter();
   const { resetCanvas, loadFromTemplate } = useWorkflowStore();
   const { runWorkflow } = useExecution();
+  const { t } = useLocale();
 
   const close = useCallback(() => {
     setOpen(false);
@@ -96,26 +98,26 @@ export function CommandPalette() {
     const q = query.trim();
 
     const navItems: CommandItem[] = [
-      { id: "nav-dashboard",  label: "Dashboard",    description: "Go to dashboard home",        icon: <LayoutDashboard size={14} />, action: () => { router.push("/dashboard");              close(); } },
-      { id: "nav-canvas",     label: "Canvas",       description: "Open workflow canvas",        icon: <Zap size={14} />,             action: () => { router.push("/dashboard/canvas");       close(); } },
-      { id: "nav-workflows",  label: "My Workflows", description: "View all your workflows",     icon: <Workflow size={14} />,        action: () => { router.push("/dashboard/workflows");    close(); } },
-      { id: "nav-templates",  label: "Templates",    description: "Browse prebuilt templates",   icon: <BookOpen size={14} />,        action: () => { router.push("/dashboard/templates");    close(); } },
-      { id: "nav-settings",   label: "Settings",     description: "Account and plan settings",   icon: <Settings size={14} />,        action: () => { router.push("/dashboard/settings");     close(); } },
+      { id: "nav-dashboard",  label: t('nav.dashboard'),    description: t('command.goToDashboard'),        icon: <LayoutDashboard size={14} />, action: () => { router.push("/dashboard");              close(); } },
+      { id: "nav-canvas",     label: "Canvas",              description: t('command.openCanvas'),           icon: <Zap size={14} />,             action: () => { router.push("/dashboard/canvas");       close(); } },
+      { id: "nav-workflows",  label: t('nav.myWorkflows'),  description: t('command.viewWorkflows'),        icon: <Workflow size={14} />,        action: () => { router.push("/dashboard/workflows");    close(); } },
+      { id: "nav-templates",  label: t('nav.templates'),    description: t('command.browseTemplates'),      icon: <BookOpen size={14} />,        action: () => { router.push("/dashboard/templates");    close(); } },
+      { id: "nav-settings",   label: t('nav.settings'),     description: t('command.accountSettings'),      icon: <Settings size={14} />,        action: () => { router.push("/dashboard/settings");     close(); } },
     ];
 
     const actionItems: CommandItem[] = [
       {
-        id: "act-new",   label: "New Workflow",  description: "Create a new workflow",
+        id: "act-new",   label: t('nav.newWorkflow'),  description: t('command.createWorkflow'),
         icon: <Plus size={14} />, badge: "⌘N",
         action: () => { router.push("/dashboard/workflows/new"); close(); },
       },
       {
-        id: "act-run",   label: "Run Workflow",  description: "Execute the current workflow",
+        id: "act-run",   label: t('canvas.runWorkflow'),  description: t('command.executeWorkflow'),
         icon: <Play size={14} />, badge: "⌘↵",
         action: () => { runWorkflow(); close(); },
       },
       {
-        id: "act-reset", label: "Clear Canvas",  description: "Remove all nodes and edges",
+        id: "act-reset", label: t('contextMenu.clearCanvas'),  description: t('command.clearCanvas'),
         icon: <RotateCcw size={14} />,
         action: () => { resetCanvas(); router.push("/dashboard/canvas"); close(); },
       },
@@ -150,21 +152,21 @@ export function CommandPalette() {
     const result: CommandSection[] = [];
 
     if (!q) {
-      result.push({ id: "navigate", label: "Navigate", items: navItems });
-      result.push({ id: "actions",  label: "Actions",  items: actionItems });
+      result.push({ id: "navigate", label: t('command.navigateLabel'), items: navItems });
+      result.push({ id: "actions",  label: t('command.actionsLabel'),  items: actionItems });
     } else {
       const fn  = navItems.filter(i => matches(i, q));
       const fa  = actionItems.filter(i => matches(i, q));
       const fnd = nodeItems.filter(i => matches(i, q)).slice(0, 6);
       const ft  = templateItems.filter(i => matches(i, q)).slice(0, 4);
-      if (fn.length)  result.push({ id: "navigate",  label: "Navigate",  items: fn });
-      if (fa.length)  result.push({ id: "actions",   label: "Actions",   items: fa });
-      if (fnd.length) result.push({ id: "nodes",     label: "Nodes",     items: fnd });
-      if (ft.length)  result.push({ id: "templates", label: "Templates", items: ft });
+      if (fn.length)  result.push({ id: "navigate",  label: t('command.navigateLabel'),  items: fn });
+      if (fa.length)  result.push({ id: "actions",   label: t('command.actionsLabel'),   items: fa });
+      if (fnd.length) result.push({ id: "nodes",     label: t('command.nodesLabel'),     items: fnd });
+      if (ft.length)  result.push({ id: "templates", label: t('command.templatesLabel'), items: ft });
     }
 
     return result;
-  }, [query, router, close, resetCanvas, loadFromTemplate, runWorkflow]);
+  }, [query, router, close, resetCanvas, loadFromTemplate, runWorkflow, t]);
 
   // ── Flat item list for keyboard nav ───────────────────────────────────────
   const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections]);
@@ -260,7 +262,7 @@ export function CommandPalette() {
                 ref={inputRef}
                 value={query}
                 onChange={e => { setQuery(e.target.value); setSelected(0); }}
-                placeholder="Search nodes, templates, commands…"
+                placeholder={t('command.searchPlaceholder')}
                 style={{
                   flex: 1, background: "transparent", border: "none", outline: "none",
                   fontSize: 14, color: "#E0E0EA", fontFamily: "inherit",
@@ -286,7 +288,7 @@ export function CommandPalette() {
                   padding: "36px 16px", textAlign: "center",
                   fontSize: 13, color: "#3A3A50",
                 }}>
-                  No results for &ldquo;{query}&rdquo;
+                  {t('command.noResults')} &ldquo;{query}&rdquo;
                 </div>
               ) : (
                 sections.map(section => (
@@ -324,9 +326,9 @@ export function CommandPalette() {
               borderTop: "1px solid #1A1A26",
               fontSize: 10, color: "#2E2E44",
             }}>
-              <span>↑↓ navigate</span>
-              <span>↵ select</span>
-              <span>esc close</span>
+              <span>{t('command.navigateHint')}</span>
+              <span>{t('command.selectHint')}</span>
+              <span>{t('command.closeHint')}</span>
               <div style={{ flex: 1 }} />
               <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                 <div style={{

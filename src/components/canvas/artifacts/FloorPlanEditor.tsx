@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useMemo } from "react";
+import { useLocale } from "@/hooks/useLocale";
 import type { FloorPlanGeometry, FloorPlanRoom, FloorPlanRoomType } from "@/types/floor-plan";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ function rectToPolygon(room: FloorPlanRoom): [number, number][] {
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export function FloorPlanEditor({ geometry, sourceImageUrl, onGenerate3D }: FloorPlanEditorProps) {
+  const { t } = useLocale();
   const [rooms, setRooms] = useState<EditorRoom[]>(() =>
     geometry.rooms.map((r, i) => ({
       ...r,
@@ -351,7 +353,7 @@ export function FloorPlanEditor({ geometry, sourceImageUrl, onGenerate3D }: Floo
           position: "absolute", bottom: 12, left: 12,
           fontSize: 11, color: TEXT_MUTED, lineHeight: 1.6,
         }}>
-          Click room to select · Drag to move · Drag vertices to reshape
+          {t('floorPlan.instructions')}
         </div>
       </div>
 
@@ -364,7 +366,7 @@ export function FloorPlanEditor({ geometry, sourceImageUrl, onGenerate3D }: Floo
         display: "flex", flexDirection: "column", gap: 14,
       }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, letterSpacing: "0.02em" }}>
-          Floor Plan Editor
+          {t('floorPlan.editor')}
         </div>
         <div style={{ fontSize: 11, color: TEXT_MUTED, lineHeight: 1.5, marginTop: -8 }}>
           {rooms.length} rooms · {geometry.walls.length} walls
@@ -379,7 +381,7 @@ export function FloorPlanEditor({ geometry, sourceImageUrl, onGenerate3D }: Floo
           />
         ) : (
           <div style={{ color: TEXT_DIM, fontSize: 12, padding: "16px 0" }}>
-            Click a room to edit properties
+            {t('floorPlan.clickToEdit')}
           </div>
         )}
 
@@ -392,7 +394,7 @@ export function FloorPlanEditor({ geometry, sourceImageUrl, onGenerate3D }: Floo
           padding: "10px 0", borderRadius: 8, cursor: "pointer",
           transition: "all 0.15s",
         }}>
-          + Add Room
+          {t('floorPlan.addRoom')}
         </button>
 
         <button onClick={handleGenerate} style={{
@@ -404,7 +406,7 @@ export function FloorPlanEditor({ geometry, sourceImageUrl, onGenerate3D }: Floo
           boxShadow: "0 4px 20px rgba(79,138,255,0.3)",
           transition: "all 0.2s",
         }}>
-          Generate 3D →
+          {t('floorPlan.generate3d')}
         </button>
       </div>
     </div>
@@ -419,6 +421,7 @@ function RoomPanel({ room, onUpdate, onDelete, onAddVertex }: {
   onDelete: () => void;
   onAddVertex: () => void;
 }) {
+  const { t } = useLocale();
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "8px 10px",
     background: "rgba(255,255,255,0.05)",
@@ -437,7 +440,7 @@ function RoomPanel({ room, onUpdate, onDelete, onAddVertex }: {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <div style={{ fontSize: 12, fontWeight: 600, color: CYAN, marginBottom: 4 }}>
-        Room Properties
+        {t('floorPlan.roomProperties')}
       </div>
 
       <div style={labelStyle}>Name</div>
@@ -453,8 +456,8 @@ function RoomPanel({ room, onUpdate, onDelete, onAddVertex }: {
         onChange={e => onUpdate({ type: e.target.value as FloorPlanRoomType })}
         style={{ ...inputStyle, appearance: "none" }}
       >
-        {ROOM_TYPES.map(t => (
-          <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+        {ROOM_TYPES.map(rt => (
+          <option key={rt} value={rt}>{rt.charAt(0).toUpperCase() + rt.slice(1)}</option>
         ))}
       </select>
 
@@ -490,7 +493,7 @@ function RoomPanel({ room, onUpdate, onDelete, onAddVertex }: {
         borderRadius: 6, color: CYAN,
         fontSize: 11, fontWeight: 500, cursor: "pointer",
       }}>
-        + Add Vertex
+        {t('floorPlan.addVertex')}
       </button>
 
       <button onClick={onDelete} style={{
@@ -500,7 +503,7 @@ function RoomPanel({ room, onUpdate, onDelete, onAddVertex }: {
         borderRadius: 6, color: "#EF4444",
         fontSize: 11, fontWeight: 500, cursor: "pointer",
       }}>
-        Delete Room
+        {t('floorPlan.deleteRoom')}
       </button>
     </div>
   );

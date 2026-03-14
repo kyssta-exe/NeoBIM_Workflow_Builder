@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Play, Maximize2, Loader2, Download, RefreshCw } from "lucide-react";
 import { useLocale } from "@/hooks/useLocale";
@@ -15,10 +15,22 @@ interface HeroSectionProps {
   onRetryVideo?: () => void;
 }
 
-const RENDER_PHASES = ["Exterior Pull-in", "Building Orbit", "Interior Walkthrough", "Section Rise"];
-
 export function HeroSection({ videoData, heroImageUrl, onExpandVideo, onRetryVideo }: HeroSectionProps) {
   const { t } = useLocale();
+
+  const RENDER_PHASES = useMemo(() => [
+    "Exterior Pull-in",
+    "Building Orbit",
+    "Interior Walkthrough",
+    "Section Rise",
+  ], []);
+
+  const PHASE_LABELS: Record<string, string> = useMemo(() => ({
+    "Exterior Pull-in": t('showcase.phaseExterior'),
+    "Building Orbit": t('showcase.phaseOrbit'),
+    "Interior Walkthrough": t('showcase.phaseInterior'),
+    "Section Rise": t('showcase.phaseSection'),
+  }), [t]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [segmentIndex, setSegmentIndex] = useState(0);
 
@@ -100,10 +112,10 @@ export function HeroSection({ videoData, heroImageUrl, onExpandVideo, onRetryVid
 
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.TEXT_PRIMARY, marginBottom: 4 }}>
-              Rendering Walkthrough
+              {t('showcase.renderingWalkthrough')}
             </div>
             <div style={{ fontSize: 11, color: COLORS.TEXT_MUTED }}>
-              {videoGenProgress.phase ?? "Initializing"} — {Math.min(Math.max(videoGenProgress.progress ?? 0, 0), 100)}%
+              {videoGenProgress.phase ?? t('showcase.initializing')} — {Math.min(Math.max(videoGenProgress.progress ?? 0, 0), 100)}%
             </div>
           </div>
 
@@ -149,7 +161,7 @@ export function HeroSection({ videoData, heroImageUrl, onExpandVideo, onRetryVid
                     letterSpacing: "0.05em",
                   }}
                 >
-                  {phase}
+                  {PHASE_LABELS[phase] ?? phase}
                 </div>
               );
             })}
@@ -177,7 +189,7 @@ export function HeroSection({ videoData, heroImageUrl, onExpandVideo, onRetryVid
           </div>
           <div style={{ textAlign: "center", maxWidth: 400 }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: "#ff5050", marginBottom: 6 }}>
-              Video Rendering Failed
+              {t('showcase.videoRenderingFailed')}
             </div>
             <div style={{ fontSize: 11, color: COLORS.TEXT_MUTED, lineHeight: 1.5 }}>
               {videoGenProgress.failureMessage ?? "An error occurred during video rendering. Please try again."}
@@ -203,7 +215,7 @@ export function HeroSection({ videoData, heroImageUrl, onExpandVideo, onRetryVid
               }}
             >
               <RefreshCw size={12} />
-              Retry Video
+              {t('showcase.retryVideo')}
             </button>
           )}
         </div>
@@ -295,7 +307,7 @@ export function HeroSection({ videoData, heroImageUrl, onExpandVideo, onRetryVid
                     }}
                   >
                     <Download size={10} />
-                    Download
+                    {t('video.download')}
                   </button>
                 </a>
               )}

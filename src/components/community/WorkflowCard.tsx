@@ -8,6 +8,7 @@ import { MiniWorkflowDiagram } from "@/components/shared/MiniWorkflowDiagram";
 import { LIVE_NODES } from "@/constants/node-catalogue";
 import type { WorkflowTemplate } from "@/types/workflow";
 import type { NodeCategory } from "@/types/nodes";
+import { useLocale } from "@/hooks/useLocale";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -131,9 +132,10 @@ export function WorkflowCard({
   authorName,
   publishedAt,
   isFeatured = false,
-  buttonLabel = "Use Template",
+  buttonLabel,
   index = 0,
 }: WorkflowCardProps) {
+  const { t } = useLocale();
   const nodeCount       = workflow.tileGraph.nodes.length;
   const catalogueIds = workflow.tileGraph.nodes.map(n => n.data.catalogueId).filter(Boolean);
   const nonInputIds = catalogueIds.filter(id => !id.startsWith("IN-")); // Input nodes don't count
@@ -198,7 +200,7 @@ export function WorkflowCard({
           letterSpacing: "0.4px",
         }}>
           <Crown size={9} />
-          FEATURED
+          {t('community.featured')}
         </div>
       )}
 
@@ -228,7 +230,7 @@ export function WorkflowCard({
             e.stopPropagation();
             shareTemplateToTwitter(workflow.name);
           }}
-          title="Share template"
+          title={t('community.shareTemplate')}
           style={{
             position: "absolute", top: 8, right: isFeatured ? 90 : 8,
             width: 26, height: 26, borderRadius: 7,
@@ -300,7 +302,7 @@ export function WorkflowCard({
                 background: "rgba(16,185,129,0.1)",
                 border: "1px solid rgba(16,185,129,0.25)",
                 marginLeft: 4,
-              }}>Verified</span>
+              }}>{t('community.verified')}</span>
             )}
             {publishedAt && (
               <span style={{ fontSize: 10, color: "#3A3A50", marginLeft: "auto" }}>{publishedAt}</span>
@@ -315,7 +317,7 @@ export function WorkflowCard({
             {cloneCount !== undefined && (
               <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 10, color: "#4A4A60" }}>
                 <GitFork size={9} />
-                <span>{cloneCount.toLocaleString()} clones</span>
+                <span>{cloneCount.toLocaleString()} {t('community.clones')}</span>
               </div>
             )}
           </div>
@@ -347,7 +349,7 @@ export function WorkflowCard({
               fontFamily: "monospace",
             }}>
               <Zap size={9} style={{ color: "rgba(79,138,255,0.5)" }} />
-              {nodeCount} nodes
+              {nodeCount} {t('community.nodes')}
             </div>
             {/* Time */}
             {workflow.estimatedRunTime && (
@@ -369,7 +371,7 @@ export function WorkflowCard({
                 background: "rgba(16,185,129,0.08)",
                 border: "1px solid rgba(16,185,129,0.15)",
               }}>
-                Fully Live
+                {t('community.fullyLive')}
               </div>
             )}
             {isPartiallyLive && (
@@ -380,7 +382,7 @@ export function WorkflowCard({
                 background: "rgba(245,158,11,0.08)",
                 border: "1px solid rgba(245,158,11,0.15)",
               }}>
-                Partially Live
+                {t('community.partiallyLive')}
               </div>
             )}
           </div>
@@ -408,7 +410,7 @@ export function WorkflowCard({
                 (e.currentTarget as HTMLElement).style.transform = "scale(1)";
               }}
             >
-              {buttonLabel}
+              {buttonLabel ?? t('community.useTemplate')}
             </button>
           )}
         </div>

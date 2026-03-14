@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Copy, Trash2, Maximize2, Eraser, ZoomIn } from "lucide-react";
+import { useLocale } from "@/hooks/useLocale";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,7 @@ export function ContextMenu({
   onFitView, onClearCanvas,
   onDuplicateNode, onDeleteNode, onFitToNode,
 }: ContextMenuProps) {
+  const { t } = useLocale();
   const ref = useRef<HTMLDivElement>(null);
 
   // Close on click outside
@@ -144,24 +146,24 @@ export function ContextMenu({
         fontSize: 9, fontWeight: 700, color: "#2E2E44",
         textTransform: "uppercase", letterSpacing: "0.6px",
       }}>
-        {menu.type === "node" ? "Node" : "Canvas"}
+        {menu.type === "node" ? t('contextMenu.node') : t('contextMenu.canvas')}
       </div>
 
       {menu.type === "node" && menu.nodeId ? (
         <>
           <MenuItem
-            label="Duplicate"
+            label={t('contextMenu.duplicate')}
             icon={<Copy size={13} />}
             onClick={() => { onDuplicateNode(menu.nodeId!); onClose(); }}
           />
           <MenuItem
-            label="Fit to Node"
+            label={t('contextMenu.fitToNode')}
             icon={<ZoomIn size={13} />}
             onClick={() => { onFitToNode(menu.nodeId!); onClose(); }}
           />
           <Separator />
           <MenuItem
-            label="Delete Node"
+            label={t('contextMenu.deleteNode')}
             icon={<Trash2 size={13} />}
             onClick={() => { onDeleteNode(menu.nodeId!); onClose(); }}
             danger
@@ -170,13 +172,13 @@ export function ContextMenu({
       ) : (
         <>
           <MenuItem
-            label="Fit to View"
+            label={t('contextMenu.fitToView')}
             icon={<Maximize2 size={13} />}
             onClick={() => { onFitView(); onClose(); }}
           />
           <Separator />
           <MenuItem
-            label="Clear Canvas"
+            label={t('contextMenu.clearCanvas')}
             icon={<Eraser size={13} />}
             onClick={() => { onClearCanvas(); onClose(); }}
             danger

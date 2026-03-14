@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Zap, Users, Workflow, TrendingUp, Box, Play, FileCode, Sparkles } from "lucide-react";
 import { PREBUILT_WORKFLOWS } from "@/constants/prebuilt-workflows";
+import { useLocale } from "@/hooks/useLocale";
 
 const smoothEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
@@ -14,6 +16,22 @@ function hexToRgb(hex: string): string {
 }
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useLocale();
+
+  const stats = useMemo(() => [
+    { icon: <Zap size={16} />, value: "31", label: t('auth.aecNodeTypes'), color: "#4F8AFF", type: "INPUT" },
+    { icon: <Workflow size={16} />, value: String(PREBUILT_WORKFLOWS.length), label: t('auth.readyTemplates'), color: "#10B981", type: "WORKFLOW" },
+    { icon: <TrendingUp size={16} />, value: "Free", label: t('auth.freeToStart'), color: "#F59E0B", type: "CONFIG" },
+    { icon: <Users size={16} />, value: "2-3 min", label: t('auth.avgGeneration'), color: "#8B5CF6", type: "GENERATE" },
+  ], [t]);
+
+  const pipelineNodes = useMemo(() => [
+    { icon: <Sparkles size={12} />, label: t('auth.brief'), color: "#3B82F6" },
+    { icon: <Box size={12} />, label: t('auth.mass3d'), color: "#8B5CF6" },
+    { icon: <Play size={12} />, label: t('auth.render'), color: "#10B981" },
+    { icon: <FileCode size={12} />, label: t('auth.export'), color: "#F59E0B" },
+  ], [t]);
+
   return (
     <div
       style={{
@@ -122,36 +140,31 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}
         >
           <span className="blueprint-annotation" style={{ marginBottom: 12, display: "block" }}>
-            AEC WORKFLOW AUTOMATION
+            {t('auth.aecAutomation')}
           </span>
           <h1 style={{
             fontSize: 36, fontWeight: 900, color: "#F0F0F5",
             lineHeight: 1.1, marginBottom: 18, letterSpacing: "-0.04em",
           }}>
-            From brief to building
+            {t('auth.fromBriefToBuilding')}
             <br />
             <span style={{
               background: "linear-gradient(135deg, #4F8AFF, #8B5CF6, #C084FC)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
             }}>
-              in minutes
+              {t('auth.inMinutes')}
             </span>
           </h1>
           <p style={{
             fontSize: 15, color: "#7C7C96", lineHeight: 1.7,
             marginBottom: 36, maxWidth: 400, letterSpacing: "-0.005em",
           }}>
-            Join thousands of AEC professionals automating workflows with AI-powered visual pipelines.
+            {t('auth.joinThousands')}
           </p>
 
           {/* Stats as mini node cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 32 }}>
-            {[
-              { icon: <Zap size={16} />, value: "31", label: "AEC Node Types", color: "#4F8AFF", type: "INPUT" },
-              { icon: <Workflow size={16} />, value: String(PREBUILT_WORKFLOWS.length), label: "Ready-Made Templates", color: "#10B981", type: "WORKFLOW" },
-              { icon: <TrendingUp size={16} />, value: "Free", label: "To Start", color: "#F59E0B", type: "CONFIG" },
-              { icon: <Users size={16} />, value: "2-3 min", label: "Avg Generation", color: "#8B5CF6", type: "GENERATE" },
-            ].map((stat, i) => {
+            {stats.map((stat, i) => {
               const rgb = hexToRgb(stat.color);
               return (
                 <motion.div
@@ -207,17 +220,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               letterSpacing: "1.5px", color: "#4F8AFF",
             }}>
               <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
-              SAMPLE PIPELINE
+              {t('auth.samplePipeline')}
             </div>
             <div style={{ padding: "16px 18px" }}>
               {/* Mini inline workflow: Brief → Massing → Render → Export */}
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
-                {[
-                  { icon: <Sparkles size={12} />, label: "Brief", color: "#3B82F6" },
-                  { icon: <Box size={12} />, label: "3D Mass", color: "#8B5CF6" },
-                  { icon: <Play size={12} />, label: "Render", color: "#10B981" },
-                  { icon: <FileCode size={12} />, label: "Export", color: "#F59E0B" },
-                ].map((node, i, arr) => (
+                {pipelineNodes.map((node, i, arr) => (
                   <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <div style={{
                       display: "flex", alignItems: "center", gap: 5,
@@ -240,10 +248,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 ))}
               </div>
               <p style={{ fontSize: 13, color: "#9898B0", lineHeight: 1.6, marginBottom: 10 }}>
-                From PDF brief to 3D massing, concept renders, and BOQ exports — all in one visual pipeline.
+                {t('auth.pipelineDesc')}
               </p>
               <div style={{ fontSize: 10, color: "#5C5C78", fontFamily: "monospace", letterSpacing: "0.5px" }}>
-                Built for architects, engineers, and BIM managers
+                {t('auth.builtForArchitects')}
               </div>
             </div>
           </motion.div>
@@ -260,7 +268,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             fontFamily: "monospace",
           }}
         >
-          No credit card required &middot; Free tier forever
+          {t('auth.noCreditCard')} &middot; {t('auth.freeTierForever')}
         </motion.div>
       </div>
 

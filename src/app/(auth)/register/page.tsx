@@ -9,21 +9,22 @@ import { motion } from "framer-motion";
 import { useLocale } from "@/hooks/useLocale";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { trackCompleteRegistration, trackLead } from "@/lib/meta-pixel";
+import type { TranslationKey } from "@/lib/i18n";
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
 
-function validateRegisterForm(name: string, email: string, password: string): string | null {
-  if (!name.trim()) return "Name is required";
-  if (!email.trim()) return "Email is required";
-  if (!EMAIL_REGEX.test(email.trim().toLowerCase())) return "Please enter a valid email address";
-  if (!password) return "Password is required";
-  if (password.length < 8) return "Password must be at least 8 characters";
-  if (!PASSWORD_REGEX.test(password)) return "Password must include uppercase, lowercase, and a number";
+function validateRegisterForm(name: string, email: string, password: string, t: (key: TranslationKey) => string): string | null {
+  if (!name.trim()) return t('auth.nameRequired');
+  if (!email.trim()) return t('auth.emailRequired');
+  if (!EMAIL_REGEX.test(email.trim().toLowerCase())) return t('auth.invalidEmail');
+  if (!password) return t('auth.passwordRequired');
+  if (password.length < 8) return t('auth.passwordMinLength');
+  if (!PASSWORD_REGEX.test(password)) return t('auth.passwordComplexity');
   return null;
 }
 
-function extractErrorMessage(err: unknown): string {
-  if (!err) return "Something went wrong. Please try again.";
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (!err) return fallback;
   if (typeof err === "string") return err;
   if (typeof err === "object") {
     const obj = err as Record<string, unknown>;
@@ -35,7 +36,7 @@ function extractErrorMessage(err: unknown): string {
     }
     if (typeof obj.title === "string") return obj.title;
   }
-  return "Something went wrong. Please try again.";
+  return fallback;
 }
 
 export default function RegisterPage() {
@@ -54,7 +55,7 @@ export default function RegisterPage() {
     setError("");
 
     // Client-side validation before round-trip
-    const validationError = validateRegisterForm(name, email, password);
+    const validationError = validateRegisterForm(name, email, password, t);
     if (validationError) {
       setError(validationError);
       return;
@@ -72,7 +73,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(extractErrorMessage(data.error ?? data));
+        setError(extractErrorMessage(data.error ?? data, t('auth.somethingWentWrong')));
         return;
       }
 
@@ -88,14 +89,14 @@ export default function RegisterPage() {
       if (signInRes?.error) {
         // Account was created but auto-login failed (e.g. DB replication lag).
         // Show success and redirect to login so user can sign in manually.
-        setError("Account created successfully! Please sign in.");
+        setError(t('auth.accountCreated'));
         setTimeout(() => router.push("/login"), 1500);
       } else {
         router.push("/dashboard");
         router.refresh();
       }
     } catch (err) {
-      setError(extractErrorMessage(err));
+      setError(extractErrorMessage(err, t('auth.somethingWentWrong')));
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export default function RegisterPage() {
       trackCompleteRegistration({ content_name: "google_signup" });
       await signIn("google", { callbackUrl: "/dashboard" });
     } catch (err) {
-      setError(extractErrorMessage(err));
+      setError(extractErrorMessage(err, t('auth.somethingWentWrong')));
       setGoogleLoading(false);
     }
   }
@@ -142,7 +143,7 @@ export default function RegisterPage() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
-          <span style={{ color: "#10B981" }}>NEW ACCOUNT</span>
+          <span style={{ color: "#10B981" }}>{t('auth.newAccount')}</span>
         </div>
         <LanguageSwitcher />
       </div>
@@ -290,7 +291,7 @@ export default function RegisterPage() {
             <button
               type="button"
               tabIndex={0}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               onClick={() => setShowPassword(v => !v)}
               style={{
                 position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
@@ -306,7 +307,7 @@ export default function RegisterPage() {
             </button>
           </div>
               <p style={{ fontSize: 11, color: "#5C5C78", marginTop: 4, lineHeight: 1.4 }}>
-                Min 8 characters with uppercase, lowercase, and a number
+                {t('auth.passwordRequirements')}
               </p>
         </motion.div>
 

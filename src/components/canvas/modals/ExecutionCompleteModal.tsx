@@ -7,6 +7,7 @@ import { useUIStore } from "@/stores/ui-store";
 import {
   shareExecutionToTwitter,
 } from "@/lib/share";
+import { useLocale } from "@/hooks/useLocale";
 
 // Inline SVG icons to avoid heavy lucide imports for brand marks
 function XIcon() {
@@ -40,6 +41,7 @@ export function ExecutionCompleteModal({
   durationText,
   onViewResults,
 }: ExecutionCompleteModalProps) {
+  const { t } = useLocale();
   const { showExecutionCompleteModal, setShowExecutionCompleteModal } = useUIStore();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -119,10 +121,10 @@ export function ExecutionCompleteModal({
             </div>
 
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#F0F0F5", marginBottom: 6 }}>
-              Workflow Complete!
+              {t('execution.workflowComplete')}
             </h2>
             <p style={{ fontSize: 13, color: "#8888A0", marginBottom: 16 }}>
-              Your concept was generated in {durationText}
+              {t('execution.generatedIn')} {durationText}
             </p>
 
             {/* Summary pills */}
@@ -132,14 +134,14 @@ export function ExecutionCompleteModal({
                 background: "rgba(79,138,255,0.10)", border: "1px solid rgba(79,138,255,0.20)",
                 color: "#4F8AFF",
               }}>
-                {nodeCount} steps executed
+                {nodeCount} {t('execution.stepsExecuted')}
               </span>
               <span style={{
                 padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600,
                 background: "rgba(16,185,129,0.10)", border: "1px solid rgba(16,185,129,0.20)",
                 color: "#10B981",
               }}>
-                {artifactCount} outputs
+                {artifactCount} {t('execution.outputs')}
               </span>
             </div>
 
@@ -162,7 +164,7 @@ export function ExecutionCompleteModal({
               onMouseEnter={(e) => { e.currentTarget.style.filter = "brightness(1.1)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.filter = "brightness(1)"; }}
             >
-              View Results
+              {t('execution.viewResults')}
             </button>
 
             {/* Share row */}
@@ -194,7 +196,7 @@ export function ExecutionCompleteModal({
                   e.currentTarget.style.color = "#9898B0";
                 }}
               >
-                <XIcon /> Share on X
+                <XIcon /> {t('execution.shareOnX')}
               </button>
             </div>
           </motion.div>

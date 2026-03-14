@@ -58,6 +58,70 @@
   .landing-nav-cta .landing-login-link {
     display: none !important;
   }
+
+  /* Logo — compact on mobile */
+  .landing-logo-link {
+    gap: 6px !important;
+  }
+
+  .landing-logo-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .landing-logo-link span {
+    font-size: 15px !important;
+  }
+
+  /* Compact CTA row on mobile */
+  .landing-nav-cta {
+    gap: 8px !important;
+  }
+
+  /* Watch Demos button — smaller on mobile */
+  .landing-nav-cta .landing-demos-link {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Sign Up — compact on mobile */
+  .landing-nav-cta a[href="/dashboard"] {
+    padding: 7px 14px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Very small screens — compact all nav items */
+  .landing-nav-cta .landing-demos-link {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  .landing-nav-cta a[href="/dashboard"] {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* Language switcher — icon only on very small screens */
+  .landing-nav-cta .lang-switcher {
+    padding: 5px 6px !important;
+    gap: 0 !important;
+  }
+
+  .landing-nav-cta .lang-switcher span:last-child {
+    display: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  /* Tiny screens — hide language switcher entirely */
+  .landing-nav-cta .lang-switcher {
+    display: none !important;
+  }
 }
 
 /* ─── LANDING PAGE — HERO SECTION ───────────────────────────────── */

@@ -28,12 +28,13 @@ model User {
   updatedAt     DateTime               @updatedAt
   accounts      Account[]
   achievements  UserAchievement[]
-  publications  CommunityPublication[]
-  executions    Execution[]
-  reviews       Review[]
-  sessions      Session[]
-  clones        WorkflowClone[]
-  workflows     Workflow[]
+  publications    CommunityPublication[]
+  communityVideos CommunityVideo[]
+  executions      Execution[]
+  reviews         Review[]
+  sessions        Session[]
+  clones          WorkflowClone[]
+  workflows       Workflow[]
 
   @@map("users")
 }
@@ -235,6 +236,29 @@ enum ArtifactType {
   TABLE
   KPI
   VIDEO
+}
+
+// ─── Community Videos ──────────────────────────────────────────────
+
+model CommunityVideo {
+  id           String   @id @default(cuid())
+  authorId     String
+  title        String
+  description  String?
+  category     String   @default("General")
+  videoUrl     String
+  duration     String?
+  views        Int      @default(0)
+  likes        Int      @default(0)
+  isApproved   Boolean  @default(true)
+  isFeatured   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("community_videos")
 }
 
 // ─── Gamification ──────────────────────────────────────────────────

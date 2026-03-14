@@ -4,6 +4,7 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { Download, Maximize2, Clock, DollarSign, Clapperboard, SkipForward, Loader2, Film } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { useExecutionStore } from "@/stores/execution-store";
+import { useLocale } from "@/hooks/useLocale";
 import type { VideoArtifactData, VideoSegment } from "@/types/execution";
 
 interface VideoBodyProps {
@@ -12,6 +13,7 @@ interface VideoBodyProps {
 }
 
 export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
+  const { t } = useLocale();
   // Guard against null/undefined data
   const data = rawData ?? ({} as VideoArtifactData);
   const setVideoPlayerNodeId = useUIStore(s => s.setVideoPlayerNodeId);
@@ -135,7 +137,7 @@ export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
             marginBottom: 4,
             fontFamily: "'Space Mono', monospace",
           }}>
-            {isFailed ? "Generation Failed" : "Generating Video..."}
+            {isFailed ? t('showcase.generationFailed') : t('showcase.generatingVideo')}
           </div>
 
           <div style={{
@@ -147,7 +149,7 @@ export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
             {isFailed
               ? (videoGenProgress?.failureMessage ?? "Unknown error")
               : isClientRendering
-                ? `Three.js walkthrough${currentPhase ? ` — ${currentPhase}` : ""}`
+                ? `${t('video.threejsWalkthrough')}${currentPhase ? ` — ${currentPhase}` : ""}`
                 : "15s AEC walkthrough (exterior + interior)"
             }
           </div>
@@ -191,23 +193,31 @@ export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
             }}>
               {isClientRendering ? (
                 // 4-phase indicators for Three.js client rendering
-                ["Exterior Pull-in", "Building Orbit", "Interior Walkthrough", "Section Rise"].map((phase) => {
+                (() => {
                   const phases = ["Exterior Pull-in", "Building Orbit", "Interior Walkthrough", "Section Rise"];
-                  const isActive = currentPhase === phase;
-                  const isPast = phases.indexOf(phase) < phases.indexOf(currentPhase ?? "");
-                  return (
-                    <span key={phase} style={{
-                      padding: "2px 6px", borderRadius: 3,
-                      background: isActive ? "rgba(0,245,255,0.1)" : isPast ? "rgba(139,92,246,0.06)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${isActive ? "rgba(0,245,255,0.2)" : isPast ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.06)"}`,
-                      fontSize: 7, fontWeight: 500,
-                      color: isActive ? "#00F5FF" : isPast ? "#8B5CF6" : "#3C3C50",
-                      fontFamily: "'Space Mono', monospace",
-                    }}>
-                      {phase} {isPast ? "✓" : isActive ? "..." : ""}
-                    </span>
-                  );
-                })
+                  const phaseLabels: Record<string, string> = {
+                    "Exterior Pull-in": t('showcase.phaseExterior'),
+                    "Building Orbit": t('showcase.phaseOrbit'),
+                    "Interior Walkthrough": t('showcase.phaseInterior'),
+                    "Section Rise": t('showcase.phaseSection'),
+                  };
+                  return phases.map((phase) => {
+                    const isActive = currentPhase === phase;
+                    const isPast = phases.indexOf(phase) < phases.indexOf(currentPhase ?? "");
+                    return (
+                      <span key={phase} style={{
+                        padding: "2px 6px", borderRadius: 3,
+                        background: isActive ? "rgba(0,245,255,0.1)" : isPast ? "rgba(139,92,246,0.06)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${isActive ? "rgba(0,245,255,0.2)" : isPast ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.06)"}`,
+                        fontSize: 7, fontWeight: 500,
+                        color: isActive ? "#00F5FF" : isPast ? "#8B5CF6" : "#3C3C50",
+                        fontFamily: "'Space Mono', monospace",
+                      }}>
+                        {phaseLabels[phase] ?? phase} {isPast ? "\u2713" : isActive ? "..." : ""}
+                      </span>
+                    );
+                  });
+                })()
               ) : (
                 // 2-segment indicators for Kling API
                 <>
@@ -295,7 +305,7 @@ export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
             color: "#5C5C78",
           }}>
             <Film size={16} style={{ marginRight: 6, opacity: 0.5 }} />
-            No video available
+            {t('video.noVideoAvailable')}
           </div>
         )}
 
@@ -457,7 +467,7 @@ export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
             onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "#8888A0"; }}
           >
             <Maximize2 size={10} />
-            Fullscreen
+            {t('video.fullscreen')}
           </button>
         )}
 
@@ -478,7 +488,7 @@ export function VideoBody({ data: rawData, nodeId }: VideoBodyProps) {
           onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,245,255,0.08)"; e.currentTarget.style.borderColor = "rgba(0,245,255,0.2)"; }}
         >
           <Download size={10} />
-          Download
+          {t('video.download')}
         </a>}
       </div>
     </div>

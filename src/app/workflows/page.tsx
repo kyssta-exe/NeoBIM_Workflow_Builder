@@ -7,6 +7,7 @@ import {
   Play, Pause, X, Volume2, VolumeX, Maximize,
   ArrowRight, ChevronDown, Clock,
 } from "lucide-react";
+import CommunityVideoSection from "@/components/community/CommunityVideoSection";
 
 // ─── Design Tokens ───────────────────────────────────────────────────────────
 
@@ -1184,6 +1185,9 @@ export default function WorkflowShowcasePage() {
             </AnimatePresence>
           </div>
         </section>
+
+        {/* ── Community Showcase ── */}
+        <CommunityVideoSection />
 
         {/* ── CTA ── */}
         <section className="wf-cta" style={{ position: "relative", overflow: "hidden", padding: "80px 24px 100px", borderTop: `1px solid ${C.border}` }}>

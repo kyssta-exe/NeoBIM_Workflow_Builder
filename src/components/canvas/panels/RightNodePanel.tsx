@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Layers3 } from "lucide-react";
 import { NodeLibrarySidebar } from "./NodeLibrarySidebar";
+import { useLocale } from "@/hooks/useLocale";
 
 /**
  * Right-side collapsible panel that houses the Node Library on the canvas page.
@@ -10,6 +11,7 @@ import { NodeLibrarySidebar } from "./NodeLibrarySidebar";
  * Expanded: 280px panel with full search/filter/node list.
  */
 export function RightNodePanel() {
+  const { t } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -36,7 +38,7 @@ export function RightNodePanel() {
         onClick={() => setIsOpen((o) => !o)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        title={isOpen ? "Collapse Node Library" : "Expand Node Library"}
+        title={isOpen ? t('canvas.collapseNodeLibrary') : t('canvas.expandNodeLibrary')}
         style={{
           width: 44,
           height: "100%",
@@ -87,7 +89,7 @@ export function RightNodePanel() {
             whiteSpace: "nowrap",
           }}
         >
-          NODE LIBRARY
+          {t('canvas.nodeLibraryLabel')}
         </span>
       </button>
 

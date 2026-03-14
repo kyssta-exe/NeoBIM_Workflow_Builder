@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useWorkflowStore } from "@/stores/workflow-store";
+import { useLocale } from "@/hooks/useLocale";
 import type { WorkflowNodeData } from "@/types/nodes";
-
-const VIEW_TYPE_OPTIONS = [
-  { value: "exterior", label: "Exterior Render" },
-  { value: "floor_plan", label: "Floor Plan" },
-  { value: "site_plan", label: "Site Plan" },
-  { value: "interior", label: "Interior View" },
-] as const;
 
 export function ViewTypeSelect({ nodeId, data }: { nodeId: string; data: WorkflowNodeData }) {
   const updateNode = useWorkflowStore(s => s.updateNode);
+  const t = useLocale(s => s.t);
+
+  const VIEW_TYPE_OPTIONS = useMemo(() => [
+    { value: "exterior", label: t('generate.exteriorRender') },
+    { value: "floor_plan", label: t('generate.floorPlan') },
+    { value: "site_plan", label: t('generate.sitePlan') },
+    { value: "interior", label: t('generate.interiorView') },
+  ], [t]);
 
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {

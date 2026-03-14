@@ -84,7 +84,7 @@ export function OverviewTab({ data, onExpandVideo, onNavigateTab, onRetryVideo }
     }));
 
   // Derive tech stack from pipeline
-  const techStack = deriveTechStack(data);
+  const techStack = deriveTechStack(data, t);
 
   const hasKpis = data.kpiMetrics.length > 0;
   const hasHero = !!data.videoData || !!data.heroImageUrl;
@@ -485,8 +485,8 @@ export function OverviewTab({ data, onExpandVideo, onNavigateTab, onRetryVideo }
             {data.model3dData && (
               <QuickActionButton
                 icon={<Box size={14} />}
-                label={data.model3dData.kind === "html-iframe" ? "Explore 3D Model" : t('showcase.view3dModel')}
-                description={data.model3dData.kind === "html-iframe" ? "Interactive walkthrough with WASD controls" : t('showcase.interactiveMassing')}
+                label={data.model3dData.kind === "html-iframe" ? t('showcase.explore3dModel') : t('showcase.view3dModel')}
+                description={data.model3dData.kind === "html-iframe" ? t('showcase.interactiveWasd') : t('showcase.interactiveMassing')}
                 color={COLORS.CYAN}
                 onClick={() => onNavigateTab("model")}
               />
@@ -687,7 +687,7 @@ interface TechItem {
   statusBadge?: { text: string; badgeColor: string; link?: string };
 }
 
-function deriveTechStack(data: ShowcaseData): TechItem[] {
+function deriveTechStack(data: ShowcaseData, t: (key: TranslationKey) => string): TechItem[] {
   const techs: TechItem[] = [];
   const seen = new Set<string>();
 
@@ -708,41 +708,41 @@ function deriveTechStack(data: ShowcaseData): TechItem[] {
       const artData = (videoArtifact.data ?? {}) as Record<string, unknown>;
       klingModelName = artData.usedOmni === true ? "Kling 3.0 Omni" : "Kling 2.6";
       if (meta.engine === "kling-official" && artData.videoGenerationStatus === "complete") {
-        klingBadge = { text: "Active", badgeColor: COLORS.EMERALD };
+        klingBadge = { text: t("showcase.active"), badgeColor: COLORS.EMERALD };
       } else if (meta.engine === "kling-official" && artData.videoGenerationStatus === "processing") {
-        klingBadge = { text: "Generating", badgeColor: COLORS.AMBER };
+        klingBadge = { text: t("showcase.generatingStatus"), badgeColor: COLORS.AMBER };
       } else if (meta.engine === "threejs-client") {
-        klingBadge = { text: "Fallback", badgeColor: COLORS.TEXT_MUTED };
+        klingBadge = { text: t("showcase.fallback"), badgeColor: COLORS.TEXT_MUTED };
       }
     }
     // Check videoGenProgress for balance errors
     const progressStates = useExecutionStore.getState().videoGenProgress;
     for (const [, state] of progressStates) {
       if (state.status === "failed" && state.failureMessage?.toLowerCase().includes("balance")) {
-        klingBadge = { text: "No Credits", badgeColor: "#ff5050", link: "https://klingai.com" };
+        klingBadge = { text: t("showcase.noCredits"), badgeColor: "#ff5050", link: "https://klingai.com" };
       }
     }
   }
 
   data.pipelineSteps.forEach(step => {
     const cat = step.category;
-    if (cat === "input") add("User Input", "Data source", "#64748B");
+    if (cat === "input") add(t("showcase.techUserInput"), "Data source", "#64748B");
     if (step.label.includes("Brief") || step.label.includes("Analyzer") || step.label.includes("Understanding") || step.label.includes("Parser") || step.label.includes("Extractor")) {
-      add("GPT-4o mini", "AI analysis", "#8B5CF6");
+      add(t("showcase.techGpt4o"), "AI analysis", "#8B5CF6");
     }
-    if (step.label.includes("Massing")) add("Procedural Engine", "3D geometry", COLORS.AMBER);
-    if (step.label.includes("Style") || step.label.includes("Composer")) add("GPT-4o mini", "Prompt engineering", "#8B5CF6");
-    if (step.label.includes("Concept Render")) add("DALL-E 3", "Image generation", COLORS.EMERALD);
+    if (step.label.includes("Massing")) add(t("showcase.techProceduralEngine"), "3D geometry", COLORS.AMBER);
+    if (step.label.includes("Style") || step.label.includes("Composer")) add(t("showcase.techGpt4o"), "Prompt engineering", "#8B5CF6");
+    if (step.label.includes("Concept Render")) add(t("showcase.techDalle3"), "Image generation", COLORS.EMERALD);
     if (step.label.includes("Video") || step.label.includes("Walkthrough")) add(klingModelName, "Video synthesis", COLORS.CYAN, klingBadge);
-    if (step.label.includes("3D Recon")) add("Meshy v4", "3D reconstruction", COLORS.AMBER);
-    if (step.label.includes("Floor Plan Gen")) add("GPT-4o + SVG", "Plan generation", "#14B8A6");
-    if (step.label.includes("Interactive 3D") || step.label.includes("3D Viewer")) add("Three.js r128", "3D visualization", COLORS.CYAN);
+    if (step.label.includes("3D Recon")) add(t("showcase.techMeshy"), "3D reconstruction", COLORS.AMBER);
+    if (step.label.includes("Floor Plan Gen")) add(t("showcase.techSvg"), "Plan generation", "#14B8A6");
+    if (step.label.includes("Interactive 3D") || step.label.includes("3D Viewer")) add(t("showcase.techThreejs"), "3D visualization", COLORS.CYAN);
     if (step.label.includes("Floor Plan Anal")) add("GPT-4o", "Vision analysis", "#8B5CF6");
-    if (step.label.includes("Quantity") || step.label.includes("BOQ")) add("web-ifc Parser", "BIM extraction", "#F59E0B");
+    if (step.label.includes("Quantity") || step.label.includes("BOQ")) add(t("showcase.techWebIfc"), "BIM extraction", "#F59E0B");
   });
 
   if (techs.length === 0) {
-    add("NeoBIM Engine", "Workflow orchestration", COLORS.CYAN);
+    add(t("showcase.neobimEngine"), "Workflow orchestration", COLORS.CYAN);
   }
 
   return techs;
@@ -794,7 +794,7 @@ function AECFooter() {
         ))}
       </div>
       <div style={{ fontSize: 9, color: COLORS.TEXT_MUTED, opacity: 0.5 }}>
-        NeoBIM Workflow Engine v2.0
+        {t('showcase.neobimEngineVersion')}
       </div>
     </motion.div>
   );

@@ -235,7 +235,7 @@ export function Sidebar() {
                   fontFamily: "var(--font-jetbrains), monospace",
                   marginTop: 3,
                 }}>
-                  DESIGN WORKSPACE
+                  {t('nav.designWorkspace')}
                 </span>
               </motion.div>
             )}
@@ -311,7 +311,7 @@ export function Sidebar() {
               className="sb-section-label"
             >
               <span className="sb-section-tick" />
-              MAIN
+              {t('nav.main')}
             </motion.div>
           )}
 
@@ -341,7 +341,7 @@ export function Sidebar() {
               className="sb-section-label"
             >
               <span className="sb-section-tick" />
-              MORE
+              {t('nav.more')}
             </motion.div>
           )}
 

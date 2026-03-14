@@ -103,7 +103,7 @@ export function OnboardingTour() {
 
             {/* Step number */}
             <div style={{ fontSize: 10, color: "#00F5FF", fontWeight: 700, marginBottom: 6, letterSpacing: 1 }}>
-              STEP {step + 1} OF {STEPS.length}
+              {t('onboarding.step')} {step + 1} {t('onboarding.of')} {STEPS.length}
             </div>
 
             {/* Title */}
@@ -146,7 +146,7 @@ export function OnboardingTour() {
                     border: "none", cursor: "pointer", padding: "4px 8px",
                   }}
                 >
-                  Skip tour
+                  {t('onboarding.skipTour')}
                 </button>
                 <button
                   onClick={next}
@@ -156,7 +156,7 @@ export function OnboardingTour() {
                     fontSize: 12, fontWeight: 600, cursor: "pointer",
                   }}
                 >
-                  {step < STEPS.length - 1 ? "Next →" : "Let's build →"}
+                  {step < STEPS.length - 1 ? t('onboarding.next') : t('onboarding.letsGo')}
                 </button>
               </div>
             </div>
