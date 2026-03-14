@@ -470,19 +470,18 @@ function UploadModal({
     setErrorMsg("");
 
     try {
-      const formData = new FormData();
-      formData.append("video", file);
-      formData.append("title", title.trim());
-      if (description.trim()) formData.append("description", description.trim());
-      formData.append("category", category);
-      if (duration) formData.append("duration", duration);
-
-      const res = await fetch("/api/community-videos", {
+      // Step 1: Get presigned upload URL from our API
+      const urlRes = await fetch("/api/community-videos/upload-url", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type || "video/mp4",
+          fileSize: file.size,
+        }),
       });
 
-      if (res.status === 401) {
+      if (urlRes.status === 401) {
         setErrorMsg("Please sign in to upload. Redirecting...");
         setUploadStatus("error");
         setTimeout(() => {
@@ -491,9 +490,40 @@ function UploadModal({
         return;
       }
 
+      if (!urlRes.ok) {
+        const data = await urlRes.json().catch(() => ({}));
+        throw new Error(data?.error?.message || `Failed to prepare upload (${urlRes.status})`);
+      }
+
+      const { uploadUrl, publicUrl } = await urlRes.json();
+
+      // Step 2: Upload file directly to R2 via presigned URL (bypasses Vercel body limit)
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "video/mp4" },
+        body: file,
+      });
+
+      if (!putRes.ok) {
+        throw new Error(`Direct upload failed (${putRes.status})`);
+      }
+
+      // Step 3: Create DB record with the public URL
+      const res = await fetch("/api/community-videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoUrl: publicUrl,
+          title: title.trim(),
+          description: description.trim() || null,
+          category,
+          duration: duration || null,
+        }),
+      });
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        const msg = data?.error?.message || data?.details || `Upload failed (${res.status})`;
+        const msg = data?.error?.message || data?.details || `Save failed (${res.status})`;
         throw new Error(msg);
       }
 
@@ -504,7 +534,6 @@ function UploadModal({
       }, 1200);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed";
-      // Network errors (common on mobile) vs server errors
       if (msg === "Failed to fetch" || msg.includes("NetworkError") || msg.includes("network")) {
         setErrorMsg("Network error — check your connection and try again. Large files may timeout on mobile.");
       } else {

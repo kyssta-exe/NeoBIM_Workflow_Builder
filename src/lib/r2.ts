@@ -17,6 +17,7 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // ─── Config ────────────────────────────────────────────────────────────────
 
@@ -159,6 +160,46 @@ export async function uploadVideoToR2(
   } catch (err) {
     console.error("[R2] Video upload failed:", err);
     return { success: false, error: String(err) };
+  }
+}
+
+// ─── Presigned Upload URL ───────────────────────────────────────────────────
+
+/**
+ * Generate a presigned PUT URL for direct browser-to-R2 upload.
+ * Bypasses server body size limits (e.g. Vercel 4.5MB cap).
+ * Returns { uploadUrl, key, publicUrl } — client PUTs directly to uploadUrl.
+ */
+export async function createPresignedUploadUrl(
+  filename: string,
+  contentType: string,
+  expiresIn = 600, // 10 minutes
+): Promise<{ uploadUrl: string; key: string; publicUrl: string } | null> {
+  const client = getClient();
+  if (!client) return null;
+
+  const now = new Date();
+  const datePath = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getDate()).padStart(2, "0")}`;
+  const uniqueId = Math.random().toString(36).slice(2, 10);
+  const key = `videos/${datePath}/${uniqueId}-${filename}`;
+
+  try {
+    const command = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      ContentType: contentType,
+      Metadata: { "uploaded-at": now.toISOString() },
+    });
+
+    const uploadUrl = await getSignedUrl(client, command, { expiresIn });
+    const publicUrl = PUBLIC_URL
+      ? `${PUBLIC_URL}/${key}`
+      : `https://${BUCKET_NAME}.${ACCOUNT_ID}.r2.cloudflarestorage.com/${key}`;
+
+    return { uploadUrl, key, publicUrl };
+  } catch (err) {
+    console.error("[R2] Presigned URL generation failed:", err);
+    return null;
   }
 }
 
