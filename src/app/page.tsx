@@ -3518,6 +3518,13 @@ export default function LandingPage() {
           .landing-login-link {
             display: none !important;
           }
+          .landing-logo-icon {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .landing-logo-text {
+            font-size: 15px !important;
+          }
           .landing-nav-cta {
             gap: 6px !important;
           }
@@ -3705,9 +3712,14 @@ export default function LandingPage() {
             height: 30px !important;
           }
 
-          /* ── Buttons: ensure tappable size ── */
-          button, a[href] {
+          /* ── Buttons: ensure tappable size (exclude navbar) ── */
+          main button, main a[href], footer a[href] {
             min-height: 44px;
+          }
+          .landing-nav-cta a, .landing-nav-cta button {
+            min-height: 36px !important;
+            display: flex !important;
+            align-items: center !important;
           }
 
           /* ── Hero heading ── */
@@ -3724,9 +3736,6 @@ export default function LandingPage() {
         /* ─── Small phones: 480px and below ───────────────────── */
         @media (max-width: 480px) {
           /* ── Navbar ── */
-          .landing-logo-text {
-            display: none !important;
-          }
           .landing-demos-link {
             font-size: 10px !important;
             padding: 4px 8px !important;
@@ -3757,6 +3766,9 @@ export default function LandingPage() {
         /* ─── Min 320px safety ─────────────────────────────────── */
         @media (max-width: 360px) {
           /* ── Navbar ── */
+          .landing-logo-text {
+            display: none !important;
+          }
           .landing-demos-link {
             display: none !important;
           }
